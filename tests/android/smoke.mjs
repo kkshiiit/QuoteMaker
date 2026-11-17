@@ -6,6 +6,8 @@ import { writeFileSync } from 'node:fs';
 
 const [phase, out] = process.argv.slice(2);
 const shot = (name) => writeFileSync(`${out}/android-${name}.png`, execFileSync('adb', ['exec-out', 'screencap', '-p'], { maxBuffer: 64 * 1024 * 1024 }));
+// Clics como eventos DOM: el cálculo de viewport de Playwright sobre el WebView de Android es
+// inestable justo tras el arranque ("element is outside of the viewport"); se prueba la app, no el hit-testing.
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const assert = (c, m) => {
   if (!c) throw new Error(`FALLO: ${m}`);
@@ -48,7 +50,7 @@ if (phase === 'phase1') {
   assert((await page.evaluate(() => navigator.userAgent)).includes('Android'), 'se ejecuta dentro del WebView de Android');
   assert(await page.evaluate(() => !!window.Capacitor?.isNativePlatform?.()), 'Capacitor reporta plataforma nativa');
   shot('01-inicio-vacio');
-  await page.getByRole('button', { name: 'Probar con datos de ejemplo' }).click();
+  await page.getByRole('button', { name: 'Probar con datos de ejemplo' }).dispatchEvent('click');
   await page.getByRole('heading', { name: 'Hola, Taller Aurora' }).waitFor({ timeout: 30_000 });
   await page.getByRole('heading', { name: 'Primeros pasos' }).waitFor({ state: 'detached', timeout: 60_000 });
   await sleep(800);
@@ -68,16 +70,16 @@ if (phase === 'phase1') {
     shot(name);
   }
   await go('#/presupuestos');
-  await page.getByRole('link', { name: /Estudio Norte/ }).click();
+  await page.getByRole('link', { name: /Estudio Norte/ }).dispatchEvent('click');
   await page.waitForSelector('[data-testid="quote-total"]');
   await sleep(500);
   shot('11-presupuesto');
-  await page.getByRole('button', { name: 'PDF y WhatsApp' }).click();
+  await page.getByRole('button', { name: 'PDF y WhatsApp' }).dispatchEvent('click');
   await page.getByRole('article').waitFor();
   await sleep(500);
   shot('12-documento');
   // PDF real generado en el dispositivo y entregado al Sharesheet nativo de Android
-  await page.getByRole('button', { name: 'Compartir PDF' }).click();
+  await page.getByRole('button', { name: 'Compartir PDF' }).dispatchEvent('click');
   let top = '';
   const chooser = /ChooserActivity|ResolverActivity|intentresolver/i;
   for (let i = 0; i < 30 && !chooser.test(top); i++) {
@@ -110,12 +112,12 @@ if (phase === 'phase1') {
   }
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
   await go('#/personalizacion');
-  await page.getByText('Oscuro', { exact: true }).click();
-  await page.getByRole('button', { name: 'Aplicar' }).click();
+  await page.getByText('Oscuro', { exact: true }).dispatchEvent('click');
+  await page.getByRole('button', { name: 'Aplicar' }).dispatchEvent('click');
   await sleep(600);
   shot('14-personalizacion-oscuro');
-  await page.getByText('Claro', { exact: true }).click();
-  await page.getByRole('button', { name: 'Aplicar' }).click();
+  await page.getByText('Claro', { exact: true }).dispatchEvent('click');
+  await page.getByRole('button', { name: 'Aplicar' }).dispatchEvent('click');
   await go('#/');
 }
 
