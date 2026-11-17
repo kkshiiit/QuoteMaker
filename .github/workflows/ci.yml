@@ -50,6 +50,10 @@ jobs:
         run: npm run test:e2e
         env:
           QM_ALL_BROWSERS: '1'
+      - name: Contexto de pruebas e2e fallidas
+        if: failure()
+        run: |
+          for f in $(find test-results -name error-context.md 2>/dev/null); do echo "=== $f"; sed -n '1,200p' "$f"; done
       - name: Tamaño del bundle
         run: |
           echo "## Bundle web" >> $GITHUB_STEP_SUMMARY
