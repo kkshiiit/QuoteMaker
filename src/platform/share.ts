@@ -108,5 +108,10 @@ export async function copyText(text: string): Promise<boolean> {
 }
 
 export function openExternal(url: string) {
+  if (isNative()) {
+    // En Android, Capacitor deriva las URLs externas al sistema (abre WhatsApp o el navegador).
+    window.location.href = url;
+    return;
+  }
   window.open(url, '_blank', 'noopener,noreferrer');
 }
