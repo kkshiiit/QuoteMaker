@@ -1,17 +1,14 @@
 import { expect, type Page } from '@playwright/test';
 
+/**
+ * Playwright crea un contexto nuevo (almacenamiento vacío, sin service worker) para cada prueba,
+ * así que no hace falta borrar IndexedDB: borrarlo con la app abierta queda «bloqueado» y se
+ * ejecuta más tarde, en medio de la prueba (fuente de fallos intermitentes según el navegador).
+ */
 export async function fresh(page: Page) {
   await page.goto('/');
-  await page.evaluate(async () => {
-    localStorage.clear();
-    await new Promise<void>((res) => {
-      const r = indexedDB.deleteDatabase('quotemaker');
-      r.onsuccess = r.onerror = r.onblocked = () => res();
-    });
-  });
-  await page.goto('/');
-  await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.length)).toBe(0);
 }
 
 export async function loadDemo(page: Page) {
