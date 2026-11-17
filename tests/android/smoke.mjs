@@ -60,13 +60,16 @@ if (phase === 'phase1') {
   shot('12-documento');
   // PDF real generado en el dispositivo y entregado al Sharesheet nativo de Android
   await page.getByRole('button', { name: 'Compartir PDF' }).click();
-  let focus = '';
-  for (let i = 0; i < 20 && !/Chooser|Resolver|intentresolver/i.test(focus); i++) {
+  let top = '';
+  const chooser = /ChooserActivity|ResolverActivity|intentresolver/i;
+  for (let i = 0; i < 30 && !chooser.test(top); i++) {
     await sleep(500);
-    focus = execFileSync('adb', ['shell', 'dumpsys', 'window', 'windows']).toString().match(/mCurrentFocus=.*$/m)?.[0] ?? '';
+    const acts = execFileSync('adb', ['shell', 'dumpsys', 'activity', 'activities']).toString();
+    top = (acts.match(/(topResumedActivity|mResumedActivity|ResumedActivity)[^\n]*/g) ?? []).join(' | ');
   }
+  console.log(`Actividad en primer plano: ${top}`);
   shot('13-sharesheet-pdf');
-  assert(/Chooser|Resolver|intentresolver/i.test(focus), `se abrió el selector nativo para compartir el PDF (${focus.trim()})`);
+  assert(chooser.test(top), 'se abrió el selector nativo de Android para compartir el PDF');
   execFileSync('adb', ['shell', 'input', 'keyevent', 'KEYCODE_BACK']);
   await sleep(1500);
   const cached = execFileSync('adb', ['shell', 'run-as', 'app.quotemaker.mobile', 'ls', '-l', 'cache']).toString();

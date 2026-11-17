@@ -1,0 +1,20 @@
+{
+  "carga_escritorio_sin_limite": {
+    "domContentLoaded": 64,
+    "load": 64,
+    "fcp": 112,
+    "transferKB": 156,
+    "dashboardVisible": 207
+  },
+  "carga_movil_cpu4x_fast3g": {
+    "domContentLoaded": 1153,
+    "load": 1154,
+    "fcp": 1320,
+    "transferKB": 156,
+    "dashboardVisible": 1704
+  },
+  "lista_2000_productos_ms": 91,
+  "lista_1000_presupuestos_ms": 113,
+  "inicio_con_1000_presupuestos_ms": 42,
+  "heap_usado_MB_con_2000_productos_1000_presupuestos": 7.7
+}
