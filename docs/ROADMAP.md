@@ -33,6 +33,7 @@ Leyenda: ✅ implementado y probado · 🟡 implementado, verificación parcial 
 1. **Sincronización real con Supabase**: crear un proyecto Supabase Free, aplicar la migración y compilar con `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` ([INSTALLATION.md](INSTALLATION.md#supabase-opcional)). Para que un agente lo verifique desde este entorno además hace falta permitir el host `<project-ref>.supabase.co` en la red del entorno.
 2. **APK firmado de release**: crear un keystore y cargar los 4 secretos `ANDROID_*` en GitHub. Sin eso, CI entrega un APK *debug* instalable.
 3. **Publicación web**: decidir si se habilita GitHub Pages (hace pública la app, no los datos).
+4. **APK en GitHub Releases**: el workflow publica automáticamente al empujar una etiqueta. Para una versión candidata: `git tag -a v1.0.0-rc.1 -m "RC1" && git push origin v1.0.0-rc.1` (se marca como *pre-release*); tras fusionar el PR, `v1.0.0`. No se creó ninguna etiqueta: requiere decisión del titular.
 
 ## Próximos pasos propuestos
 
