@@ -1,3 +1,3 @@
-APK: 4795186 bytes
+APK: 4796076 bytes
     versionCode=1 minSdk=23 targetSdk=35
     versionName=1.0.0
