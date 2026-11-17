@@ -1,0 +1,202 @@
+name: CI
+
+# Todo corre en runners estándar de GitHub (gratuitos para repositorios públicos).
+on:
+  push:
+    branches: [main, releases]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web · tipos, lint, pruebas y build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: Pruebas unitarias
+        run: npm test
+      - name: Pruebas de integración (Postgres real, migración, RLS, sync)
+        run: npm run test:integration
+        env:
+          QM_PG_URL: postgres://postgres:postgres@localhost:5432/postgres
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - name: Pruebas e2e (Playwright + axe; Chromium, Firefox, WebKit)
+        run: npm run test:e2e
+        env:
+          QM_ALL_BROWSERS: '1'
+      - name: Estabilidad en iPhone emulado (4 repeticiones del flujo completo)
+        run: npx playwright test --trace off --project iphone --repeat-each 4 -g "flujo completo"
+        env:
+          QM_ALL_BROWSERS: '1'
+      - name: Contexto de pruebas e2e fallidas
+        if: failure()
+        run: |
+          for f in $(find test-results -name error-context.md 2>/dev/null); do echo "=== $f"; sed -n '1,200p' "$f"; done
+      - name: Tamaño del bundle
+        run: |
+          echo "## Bundle web" >> $GITHUB_STEP_SUMMARY
+          du -sh dist | tee -a $GITHUB_STEP_SUMMARY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: dist
+          retention-days: 14
+
+  android:
+    name: Android · APK, lint y unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Compilar APK, lint y pruebas JVM
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug lintDebug testDebugUnitTest
+      - name: Firmar release (sólo si hay secretos configurados)
+        if: env.HAS_KEYSTORE == 'true'
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          QM_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          QM_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          QM_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: android
+        run: |
+          echo "$KEYSTORE" | base64 -d > release.keystore
+          QM_KEYSTORE_FILE=$PWD/release.keystore ./gradlew --no-daemon assembleRelease
+          rm release.keystore
+      - name: Tamaño del APK
+        run: |
+          echo "## APK" >> $GITHUB_STEP_SUMMARY
+          ls -l android/app/build/outputs/apk/*/*.apk | tee -a $GITHUB_STEP_SUMMARY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quotemaker-apk
+          path: android/app/build/outputs/apk/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-lint
+          path: android/app/build/reports/
+          retention-days: 14
+
+  android-emulator:
+    name: Android · prueba en emulador
+    needs: android
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: quotemaker-apk
+          path: apk
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Emulador (API 34) + prueba de humo con Playwright sobre el WebView
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: bash tests/android/run-smoke.sh apk/debug/app-debug.apk android-evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-evidence
+          path: android-evidence
+          retention-days: 30
+      - name: Guardar capturas Android reales en el repositorio (rama releases)
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/releases'
+        run: |
+          mkdir -p docs/media/android
+          for f in android-evidence/*.png; do
+            convert "$f" -resize 540x -strip -quality 85 "docs/media/android/$(basename "$f")" 2>/dev/null || cp "$f" docs/media/android/
+          done
+          cp android-evidence/package-info.txt docs/media/android/ 2>/dev/null || true
+          cp android-evidence/android-presupuesto.pdf docs/media/android/ 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/media/android
+          if git diff --cached --quiet; then echo "Sin cambios"; exit 0; fi
+          git commit -m "docs(media): capturas reales de Android desde el emulador de CI [skip ci]"
+          git pull --rebase origin releases
+          git push origin HEAD:releases
+
+  release:
+    name: Publicar APK en GitHub Releases
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [web, android, android-emulator]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: quotemaker-apk
+          path: apk
+      - name: Crear release con el APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          FILE=$(ls apk/release/*.apk 2>/dev/null | head -1 || true)
+          [ -n "$FILE" ] || FILE=apk/debug/app-debug.apk
+          cp "$FILE" "QuoteMaker-${GITHUB_REF_NAME}.apk"
+          PRE=""
+          case "$GITHUB_REF_NAME" in *-*) PRE="--prerelease";; esac
+          KIND=$(basename "$(dirname "$FILE")")
+          gh release create "$GITHUB_REF_NAME" "QuoteMaker-${GITHUB_REF_NAME}.apk" --repo "$GITHUB_REPOSITORY" $PRE \
+            --title "QuoteMaker ${GITHUB_REF_NAME}" \
+            --notes "APK Android ($KIND) compilado y probado en CI (build, lint, pruebas JVM y prueba en emulador). Instalación y cambios: ver docs/INSTALLATION.md y CHANGELOG.md."
