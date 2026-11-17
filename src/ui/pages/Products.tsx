@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useDeferredValue, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { db } from '../../data/db';
+import { matches } from '../search';
 import { suggestedPrice } from '../../data/services';
 import { D } from '../../domain/money';
 import { Icon } from '../components/Icon';
@@ -30,7 +31,6 @@ export default function Products() {
   const list = useMemo(() => {
     if (!products) return [];
     const staleLimit = new Date(Date.now() - settings.costStaleDays * 86400000).toISOString();
-    const needle = query.trim().toLocaleLowerCase('es');
     const rows = products
       .filter((p) => {
         if (filter === 'activos') return !p.archived && p.active;
@@ -41,7 +41,7 @@ export default function Products() {
         return !p.archived;
       })
       .filter((p) => !cat || p.categoryId === cat)
-      .filter((p) => !needle || `${p.name} ${p.sku} ${p.description}`.toLocaleLowerCase('es').includes(needle))
+      .filter((p) => matches(`${p.name} ${p.sku} ${p.description}`, query))
       .map((p) => ({ p, price: p.manualPrice ?? suggestedPrice(p, settings) }));
     const cmpDec = (a: string | null, b: string | null) => (a === null ? 1 : b === null ? -1 : D(a).cmp(D(b)));
     rows.sort((a, b) => {

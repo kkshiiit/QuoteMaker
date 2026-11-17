@@ -33,6 +33,7 @@ if (phase === 'phase1') {
   shot('01-inicio-vacio');
   await page.getByRole('button', { name: 'Probar con datos de ejemplo' }).click();
   await page.getByRole('heading', { name: 'Hola, Taller Aurora' }).waitFor({ timeout: 30_000 });
+  await page.getByRole('heading', { name: 'Primeros pasos' }).waitFor({ state: 'detached', timeout: 60_000 });
   await sleep(800);
   shot('02-inicio');
   for (const [hash, name] of [

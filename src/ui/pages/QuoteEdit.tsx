@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../data/db';
+import { matches } from '../search';
 import { newId, todayIso } from '../../data/defaults';
 import { changeQuoteStatus, customerSnapshot, duplicateQuote, itemFromProduct, saveQuote, suggestedPrice } from '../../data/services';
 import { D } from '../../domain/money';
@@ -406,8 +407,7 @@ function ProductPicker({ open, onClose, onPick, suggested }: { open: boolean; on
   const money = useMoney();
   const [q, setQ] = useState('');
   const list = useMemo(() => {
-    const n = q.trim().toLocaleLowerCase('es');
-    return (products ?? []).filter((p) => !n || `${p.name} ${p.sku}`.toLocaleLowerCase('es').includes(n)).sort((a, b) => a.name.localeCompare(b.name, 'es')).slice(0, 40);
+    return (products ?? []).filter((p) => matches(`${p.name} ${p.sku}`, q)).sort((a, b) => a.name.localeCompare(b.name, 'es')).slice(0, 40);
   }, [products, q]);
   return (
     <Dialog open={open} onClose={onClose} title="Agregar producto" actions={<button className="btn" onClick={onClose}>Cerrar</button>}>

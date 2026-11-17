@@ -178,3 +178,47 @@ test('offline: la app (PWA) abre sin conexión, guarda y conserva datos', async 
   await expect(page.getByRole('link', { name: /Solo en este dispositivo/ }).first()).toBeAttached();
   await context.setOffline(false);
 });
+
+test('recorrido completo sólo con teclado: crear presupuesto y abrir el documento', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'Teclado físico: escritorio');
+  await loadDemo(page);
+  /** Avanza con Tab hasta que el foco esté en el control con ese nombre accesible (sin usar el mouse). */
+  async function tabTo(name: RegExp, max = 120) {
+    for (let i = 0; i < max; i++) {
+      await page.keyboard.press('Tab');
+      const label = await page.evaluate(() => {
+        const el = document.activeElement as HTMLElement | null;
+        if (!el || el === document.body || el.id === 'main') return '';
+        return (el.getAttribute('aria-label') ?? el.innerText ?? '').trim();
+      });
+      if (name.test(label)) return;
+    }
+    throw new Error(`No se alcanzó ${name} con el teclado`);
+  }
+  await tabTo(/^Presupuestos$/);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#page-title')).toHaveText('Presupuestos');
+  await tabTo(/Nuevo presupuesto/);
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.type('martin');
+  await tabTo(/Martín Gómez/);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#page-title')).toContainText('Presupuesto TA-');
+  await tabTo(/Agregar producto/);
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Lámpara');
+  await tabTo(/Lámpara de pie/);
+  await page.keyboard.press('Enter');
+  await expect(page.getByLabel('Descripción comercial')).toHaveValue(/Lámpara de pie/);
+  await tabTo(/^Cant\.$|^1$/, 40).catch(() => {});
+  await tabTo(/Guardar borrador/);
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('Borrador guardado')).toBeVisible();
+  await page.keyboard.press('Shift+Tab');
+  await tabTo(/PDF y WhatsApp/);
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#page-title')).toContainText('Documento TA-');
+  await expect(page.getByRole('article')).toContainText('Martín Gómez');
+  await expect(page.getByRole('article')).toContainText('Lámpara de pie');
+});

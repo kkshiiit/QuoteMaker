@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { db } from '../../data/db';
+import { matches } from '../search';
 import { createQuote } from '../../data/services';
 import { quoteTotals } from '../../domain/quote';
 import { QUOTE_STATUS_LABELS, type Customer, type QuoteStatus } from '../../domain/types';
@@ -15,8 +16,7 @@ export function CustomerPicker({ open, onClose, onPick }: { open: boolean; onClo
   const customers = useLiveQuery(() => db.customers.filter((c) => !c.archived).toArray(), []);
   const [q, setQ] = useState('');
   const list = useMemo(() => {
-    const n = q.trim().toLocaleLowerCase('es');
-    return (customers ?? []).filter((c) => !n || `${c.name} ${c.phone} ${c.email}`.toLocaleLowerCase('es').includes(n)).sort((a, b) => a.name.localeCompare(b.name, 'es')).slice(0, 30);
+    return (customers ?? []).filter((c) => matches(`${c.name} ${c.phone} ${c.email}`, q)).sort((a, b) => a.name.localeCompare(b.name, 'es')).slice(0, 30);
   }, [customers, q]);
   return (
     <Dialog
@@ -79,10 +79,9 @@ export default function Quotes() {
   }, [params, setParams]);
 
   const rows = useMemo(() => {
-    const n = query.trim().toLocaleLowerCase('es');
     return (quotes ?? [])
       .filter((x) => !status || x.status === status)
-      .filter((x) => !n || `${x.number} ${x.customerSnapshot.name}`.toLocaleLowerCase('es').includes(n))
+      .filter((x) => matches(`${x.number} ${x.customerSnapshot.name}`, query))
       .map((x) => ({ q: x, total: quoteTotals(x).totals.total }));
   }, [quotes, status, query]);
 

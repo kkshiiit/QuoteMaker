@@ -18,6 +18,8 @@ export async function loadDemo(page: Page) {
   await fresh(page);
   await page.getByRole('button', { name: 'Probar con datos de ejemplo' }).click();
   await expect(page.getByRole('heading', { name: 'Hola, Taller Aurora' })).toBeVisible({ timeout: 20_000 });
+  // La carga termina cuando se crea el último presupuesto: ahí desaparece «Primeros pasos».
+  await expect(page.getByRole('heading', { name: 'Primeros pasos' })).toHaveCount(0, { timeout: 20_000 });
 }
 
 /** Navega usando la UI real: sidebar en escritorio, barra inferior / "Más" en móvil. */

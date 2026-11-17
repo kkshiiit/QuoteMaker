@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { db } from '../../data/db';
+import { matches } from '../search';
 import { emptyExpense, saveExpense, voidExpense } from '../../data/services';
 import { ALLOCATION_METHOD_HELP, ALLOCATION_METHOD_LABELS, type AllocationMethod } from '../../domain/allocation';
 import { allLots, computeExpenseAllocations, latestLotByProduct, lotsOfPurchase, type Lot } from '../../domain/costing';
@@ -142,7 +143,7 @@ export default function ExpenseEdit() {
               <input id="pf" className="input" placeholder="Filtrar…" value={prodFilter} onChange={(e) => setProdFilter(e.target.value)} style={{ marginBottom: 8 }} />
               <div style={{ maxHeight: 260, overflowY: 'auto', border: '1px solid var(--line)', borderRadius: 8, padding: '4px 10px' }}>
                 {products
-                  .filter((p) => p.name.toLocaleLowerCase('es').includes(prodFilter.toLocaleLowerCase('es')))
+                  .filter((p) => matches(p.name, prodFilter))
                   .map((p) => {
                     const has = latest.has(p.id);
                     return (

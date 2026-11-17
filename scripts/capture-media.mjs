@@ -25,6 +25,7 @@ async function seed(page) {
   await page.reload();
   await page.getByRole('button', { name: 'Probar con datos de ejemplo' }).click();
   await page.getByRole('heading', { name: 'Hola, Taller Aurora' }).waitFor({ timeout: 30000 });
+  await page.getByRole('heading', { name: 'Primeros pasos' }).waitFor({ state: 'detached', timeout: 30000 });
 }
 const go = async (page, hash) => {
   await page.goto(`${BASE}/#${hash}`);

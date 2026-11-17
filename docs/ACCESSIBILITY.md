@@ -8,7 +8,8 @@ Objetivo: **WCAG 2.2 AA** en web y criterios equivalentes en Android (la app And
 - Tema oscuro: axe sin violaciones en Inicio, Productos, Presupuestos y Calculadora.
 - Color personalizado ilegible (#ffee00) → se ajusta automáticamente a contraste ≥ 4,5:1.
 - Sin scroll horizontal accidental en todas las pantallas (escritorio y móvil), y en 8 pantallas dentro de Android real (emulador).
-- Teclado: el primer Tab enfoca «Saltar al contenido»; Enter mueve el foco al contenido principal; el foco siempre tiene contorno visible.
+- Teclado: el primer Tab enfoca «Saltar al contenido»; Enter mueve el foco al contenido principal; el foco siempre tiene contorno visible. Un presupuesto completo se crea sólo con Tab/Enter.
+- Búsquedas insensibles a mayúsculas y acentos («martin» encuentra «Martín»).
 - `prefers-reduced-motion: reduce` desactiva transiciones y animaciones.
 - Formularios: errores en un resumen con `role="alert"` que recibe el foco; cada campo inválido tiene `aria-invalid` y `aria-describedby` hacia su mensaje.
 
@@ -29,7 +30,7 @@ Objetivo: **WCAG 2.2 AA** en web y criterios equivalentes en Android (la app And
 |---|---|
 | Revisión visual de capturas reales (escritorio, móvil, Android) en tema claro y oscuro | Hecha. Se corrigieron barras de acción que tapaban formularios y filas de ítems demasiado estrechas |
 | Equivalente a zoom 200 % (ancho efectivo ≤ 683 px) | Cubierto por las pruebas automáticas a 412 px de ancho: sin pérdida de contenido ni scroll horizontal |
-| Recorrido completo sólo con teclado | **Parcial**: automatizado para el enlace de salto, foco visible y validación. El recorrido completo de punta a punta sólo con teclado queda pendiente |
+| Recorrido completo sólo con teclado | Hecho y automatizado: elegir cliente (búsqueda sin acentos), agregar producto, guardar y abrir el documento usando sólo Tab/Enter (`tests/e2e/quality.spec.ts`) |
 | TalkBack (Android) / VoiceOver (iOS/macOS) / NVDA | **Pendiente**: no hay lector de pantalla disponible en este entorno |
 
 Pendientes registrados en [ROADMAP](ROADMAP.md).

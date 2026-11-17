@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { db } from '../../data/db';
+import { matches } from '../search';
 import { putRecord } from '../../data/repo';
 import { createQuote, emptyCustomer, findDuplicateCustomer, validateContact } from '../../data/services';
 import { quoteTotals } from '../../domain/quote';
@@ -21,10 +22,9 @@ function CustomerList() {
   const [showArchived, setShowArchived] = useState(false);
   const customers = useLiveQuery(() => db.customers.toArray(), []);
   const list = useMemo(() => {
-    const n = query.trim().toLocaleLowerCase('es');
     return (customers ?? [])
       .filter((c) => c.archived === showArchived)
-      .filter((c) => !n || `${c.name} ${c.phone} ${c.email} ${c.taxId}`.toLocaleLowerCase('es').includes(n))
+      .filter((c) => matches(`${c.name} ${c.phone} ${c.email} ${c.taxId}`, query))
       .sort((a, b) => a.name.localeCompare(b.name, 'es'));
   }, [customers, query, showArchived]);
   return (
