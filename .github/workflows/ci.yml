@@ -199,6 +199,16 @@ jobs:
           # La etiqueta apunta siempre al commit exacto que se compiló y probó.
           TARGET: ${{ github.sha }}
         run: |
+          # Validaciones del disparo manual: formato de etiqueta, rama main y etiqueta coherente con el commit probado.
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::Etiqueta inválida «$TAG». Formato esperado: v1.2.3 o v1.2.3-rc.1"; exit 1
+          fi
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Las versiones se publican desde main (se disparó desde $GITHUB_REF)."; exit 1
+          fi
+          if EXISTING=$(gh api "repos/$GITHUB_REPOSITORY/commits/refs/tags/$TAG" --jq .sha 2>/dev/null) && [ "$EXISTING" != "$TARGET" ]; then
+            echo "::error::La etiqueta $TAG ya existe en $EXISTING, distinto del commit compilado ($TARGET)."; exit 1
+          fi
           FILE=$(ls apk/release/*.apk 2>/dev/null | head -1 || true)
           [ -n "$FILE" ] || FILE=apk/debug/app-debug.apk
           cp "$FILE" "QuoteMaker-${TAG}.apk"
