@@ -13,10 +13,6 @@ on:
         description: 'Etiqueta a publicar en Releases (ej. v1.0.0-rc.1). Vacío = sólo correr CI.'
         required: false
         default: ''
-      release_target:
-        description: 'Rama o commit al que apunta la etiqueta (si no existe, la crea GitHub)'
-        required: false
-        default: 'main'
 
 permissions:
   contents: read
@@ -200,7 +196,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.release_tag || github.ref_name }}
-          TARGET: ${{ inputs.release_target || github.sha }}
+          # La etiqueta apunta siempre al commit exacto que se compiló y probó.
+          TARGET: ${{ github.sha }}
         run: |
           FILE=$(ls apk/release/*.apk 2>/dev/null | head -1 || true)
           [ -n "$FILE" ] || FILE=apk/debug/app-debug.apk
