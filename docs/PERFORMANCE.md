@@ -47,7 +47,7 @@ Las pruebas fallan si hay una regresión grave (límites de 1 a 5 s).
 
 | Métrica | Valor | Fuente |
 |---|---|---|
-| APK debug | **4.796.073 bytes (4,6 MB)** | `docs/media/android/package-info.txt` (CI, última compilación) |
+| APK debug | **≈ 4,6 MB** (4.796.184 bytes en la última compilación; varía unos bytes entre builds) | `docs/media/android/package-info.txt` (CI) |
 | Arranque en frío (emulador API 34, x86_64, CI) | `TotalTime: 5733 ms` (`am start -W`) | Log del job «Android · prueba en emulador» |
 
 El arranque en el emulador de CI (sin aceleración de GPU) es más lento que en un teléfono real; no se midió en un dispositivo físico.
