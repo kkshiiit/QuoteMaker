@@ -47,7 +47,7 @@ Las pruebas fallan si hay una regresión grave (límites de 1 a 5 s).
 
 | Métrica | Valor | Fuente |
 |---|---|---|
-| APK debug | **4.795.186 bytes (4,6 MB)** | `docs/media/android/package-info.txt` (CI) |
+| APK debug | **4.796.073 bytes (4,6 MB)** | `docs/media/android/package-info.txt` (CI, última compilación) |
 | Arranque en frío (emulador API 34, x86_64, CI) | `TotalTime: 5733 ms` (`am start -W`) | Log del job «Android · prueba en emulador» |
 
 El arranque en el emulador de CI (sin aceleración de GPU) es más lento que en un teléfono real; no se midió en un dispositivo físico.
@@ -58,6 +58,6 @@ No medida contra un servidor Supabase real (no hay proyecto configurado). Contra
 
 ## No medido
 
-- Firefox y Safari.
+- Rendimiento en Firefox y Safari (funcionalidad sí probada en CI).
 - Consumo de batería en Android.
 - Rendimiento en teléfonos físicos de gama baja.

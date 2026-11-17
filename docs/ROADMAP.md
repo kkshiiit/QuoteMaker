@@ -24,7 +24,7 @@ Leyenda: ✅ implementado y probado · 🟡 implementado, verificación parcial 
 | App Android en emulador API 34: abre en el WebView con Capacitor nativo, carga datos, 8 pantallas sin scroll horizontal, PDF generado en el dispositivo sin filtraciones y entregado al Sharesheet nativo, estado y datos persisten tras `force-stop` y reapertura | ✅ | CI «Android · prueba en emulador» + capturas en `docs/media/android/` |
 | Migración Supabase + RLS + motor de sync | 🟡 | Probado contra **PostgreSQL 16 real** (2 usuarios, anónimo, idempotencia, conflictos, 2 dispositivos). **No probado contra un proyecto Supabase real.** |
 | Login Supabase (Auth) | ⏳ | Implementado con supabase-js; sin proyecto no se pudo probar |
-| Compatibilidad Firefox / Safari / Edge | ⏳ | Sólo Chromium disponible en el entorno (Edge usa el mismo motor, pero no se probó) |
+| Navegadores | ✅ / 🟡 | CI: flujo completo (incluye PDF sin filtraciones) en **Chromium, Firefox, WebKit (motor de Safari) e iPhone 14 emulado**; axe y responsive en Chromium escritorio y móvil. Edge comparte motor con Chromium. Safari real en macOS/iOS no se probó |
 | Lector de pantalla (TalkBack/VoiceOver/NVDA) | ⏳ | Sin lector disponible |
 | Teléfono Android físico | ⏳ | Sólo emulador |
 
@@ -36,7 +36,6 @@ Leyenda: ✅ implementado y probado · 🟡 implementado, verificación parcial 
 
 ## Próximos pasos propuestos
 
-- Pruebas en Firefox y WebKit en CI (`npx playwright install firefox webkit`).
 - Numeración de presupuestos a prueba de dos dispositivos offline (hoy cada dispositivo usa el contador sincronizado; dos dispositivos sin conexión podrían emitir el mismo número: se recomienda prefijos distintos por dispositivo).
 - Sincronización en segundo plano en Android (hoy sólo con la app abierta).
 - Bloqueo con PIN/biometría y cifrado opcional del respaldo.

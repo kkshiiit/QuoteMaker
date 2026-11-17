@@ -33,7 +33,7 @@ Android APK: download the `quotemaker-apk` artifact from the [CI workflow](https
 
 - Cloud sync was verified against a **real PostgreSQL 16** (migration, RLS with two users, sync engine with two devices), **not against a live Supabase project** (no credentials available).
 - Android is built with Capacitor (system WebView), not Kotlin/Compose — see `docs/ARCHITECTURE.md`.
-- Automated browser tests run on Chromium only.
+- E2E tests run in CI on Chromium, Firefox, WebKit (Safari engine) and an emulated iPhone; real Safari on Apple devices was not tested.
 
 Docs (Spanish): [User guide](docs/USER_GUIDE.md) · [Installation](docs/INSTALLATION.md) · [Architecture](docs/ARCHITECTURE.md) · [Database](docs/DATABASE.md) · [Security](docs/SECURITY.md) · [Performance](docs/PERFORMANCE.md) · [Accessibility](docs/ACCESSIBILITY.md) · [Zero cost](docs/ZERO-COST.md) · [Roadmap](docs/ROADMAP.md).
 

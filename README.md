@@ -76,7 +76,7 @@ Lo verificado y lo pendiente está detallado en [docs/ROADMAP.md](docs/ROADMAP.m
 
 - La sincronización cloud está implementada y probada contra **PostgreSQL real** (migración + RLS + motor de sync), pero **no contra un proyecto Supabase real**: no hay credenciales en este entorno. Sin configurarla, la app muestra «Solo en este dispositivo» y nunca finge sincronizar.
 - Android usa **Capacitor** (WebView nativo), no Kotlin/Compose. Ver la justificación en [ARCHITECTURE.md](docs/ARCHITECTURE.md#por-qué-capacitor-y-no-kotlincompose).
-- Pruebas automáticas de navegador sólo en Chromium (escritorio y emulación móvil). Firefox y Safari no se probaron.
+- Pruebas e2e en CI con Chromium, Firefox, WebKit (motor de Safari) e iPhone emulado. Safari real en un dispositivo Apple no se probó.
 
 ## Licencia
 
