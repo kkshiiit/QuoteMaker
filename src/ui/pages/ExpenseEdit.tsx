@@ -60,7 +60,7 @@ export default function ExpenseEdit() {
   if (stored === null && !isNew) return <PageHeader title="Gasto no encontrado" back={{ to: '/costos/gastos', label: 'Gastos' }} />;
   if (!form || !purchases || !products) return <p role="status">Cargando…</p>;
 
-  const set = <K extends keyof Expense>(k: K, v: Expense[K]) => setForm({ ...form, [k]: v });
+  const set = <K extends keyof Expense>(k: K, v: Expense[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
   const isVoid = form.status === 'void';
   const methodValuesSum = form.method === 'percent' || form.method === 'amount' ? lots.reduce((a, l) => a.plus(D(form.manualValues[l.lotKey] || '0')), D(0)) : null;
 

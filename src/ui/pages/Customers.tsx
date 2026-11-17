@@ -96,7 +96,7 @@ function CustomerDetail({ id }: { id: string }) {
 
   if (stored === null && !isNew) return <PageHeader title="Cliente no encontrado" back={{ to: '/clientes', label: 'Clientes' }} />;
   if (!form) return <p role="status">Cargando…</p>;
-  const set = <K extends keyof Customer>(k: K, v: Customer[K]) => setForm({ ...form, [k]: v });
+  const set = <K extends keyof Customer>(k: K, v: Customer[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
 
   const onSave = async () => {
     const errs = validateContact(form, 'cliente');

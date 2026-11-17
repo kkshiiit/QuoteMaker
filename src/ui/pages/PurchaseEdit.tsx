@@ -55,9 +55,9 @@ export default function PurchaseEdit() {
   if (stored === null && !isNew) return <PageHeader title="Compra no encontrada" back={{ to: '/costos/compras', label: 'Compras' }} />;
   if (!form || !products) return <p role="status">Cargando…</p>;
 
-  const set = <K extends keyof Purchase>(k: K, v: Purchase[K]) => setForm({ ...form, [k]: v });
-  const setItem = (i: number, patch: Partial<PurchaseItem>) => set('items', form.items.map((it, j) => (j === i ? { ...it, ...patch } : it)));
-  const addItem = () => set('items', [...form.items, { id: newId(), productId: '', quantity: '1', unitPrice: '', discount: '0', unitWeight: '0', unitVolume: '0' }]);
+  const set = <K extends keyof Purchase>(k: K, v: Purchase[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
+  const setItem = (i: number, patch: Partial<PurchaseItem>) => setForm((f) => (f ? { ...f, items: f.items.map((it, j) => (j === i ? { ...it, ...patch } : it)) } : f));
+  const addItem = () => setForm((f) => (f ? { ...f, items: [...f.items, { id: newId(), productId: '', quantity: '1', unitPrice: '', discount: '0', unitWeight: '0', unitVolume: '0' }] } : f));
   const totals = (() => {
     try {
       return purchaseTotals({ ...form, items: form.items.map((i) => ({ ...i, quantity: i.quantity || '0', unitPrice: i.unitPrice || '0', discount: i.discount || '0' })) });
@@ -179,7 +179,7 @@ export default function PurchaseEdit() {
                       {lot ? money(lot.unitCost) : '—'}
                     </span>
                   </div>
-                  <button type="button" className="btn btn-icon btn-ghost" aria-label={`Quitar ${productName(it.productId) || `artículo ${i + 1}`}`} onClick={() => set('items', form.items.filter((_, j) => j !== i))}>
+                  <button type="button" className="btn btn-icon btn-ghost" aria-label={`Quitar ${productName(it.productId) || `artículo ${i + 1}`}`} onClick={() => setForm((f) => (f ? { ...f, items: f.items.filter((_, j) => j !== i) } : f))}>
                     <Icon name="trash" />
                   </button>
                   {it.productId && (

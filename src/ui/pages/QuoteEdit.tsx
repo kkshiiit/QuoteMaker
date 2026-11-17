@@ -56,11 +56,12 @@ export default function QuoteEdit() {
 
   const locked = !!form.frozen;
   const items = locked ? form.frozen!.items : form.items;
-  const update = (patch: Partial<Quote>) => {
-    setForm({ ...form, ...patch });
+  /** Actualizaciones funcionales: varios cambios seguidos (p. ej. autocompletado) no se pisan entre sí. */
+  const update = (patch: Partial<Quote> | ((q: Quote) => Partial<Quote>)) => {
+    setForm((f) => (f ? { ...f, ...(typeof patch === 'function' ? patch(f) : patch) } : f));
     setDirty(true);
   };
-  const setItem = (i: number, patch: Partial<QuoteItem>) => update({ items: form.items.map((it, j) => (j === i ? { ...it, ...patch } : it)) });
+  const setItem = (i: number, patch: Partial<QuoteItem>) => update((q) => ({ items: q.items.map((it, j) => (j === i ? { ...it, ...patch } : it)) }));
   const moveItem = (i: number, dir: -1 | 1) => {
     const j = i + dir;
     if (j < 0 || j >= form.items.length) return;
@@ -202,7 +203,7 @@ export default function QuoteEdit() {
                   </button>
                   <button
                     className="btn btn-sm"
-                    onClick={() => update({ items: [...form.items, { id: newId(), productId: null, description: '', unit: 'u', quantity: '1', unitPrice: '', discountPct: '0', unitCost: '0' }] })}
+                    onClick={() => update((q) => ({ items: [...q.items, { id: newId(), productId: null, description: '', unit: 'u', quantity: '1', unitPrice: '', discountPct: '0', unitCost: '0' }] }))}
                   >
                     <Icon name="plus" />
                     Concepto libre
@@ -233,7 +234,7 @@ export default function QuoteEdit() {
                         <button type="button" className="btn btn-icon btn-ghost" aria-label={`Subir ítem ${i + 1}`} onClick={() => moveItem(i, -1)} disabled={i === 0}>
                           <span aria-hidden="true">↑</span>
                         </button>
-                        <button type="button" className="btn btn-icon btn-ghost" aria-label={`Quitar ítem ${i + 1}`} onClick={() => update({ items: form.items.filter((_, j) => j !== i) })}>
+                        <button type="button" className="btn btn-icon btn-ghost" aria-label={`Quitar ítem ${i + 1}`} onClick={() => update((q) => ({ items: q.items.filter((_, j) => j !== i) }))}>
                           <Icon name="trash" />
                         </button>
                       </div>
@@ -380,7 +381,7 @@ export default function QuoteEdit() {
         open={adding}
         onClose={() => setAdding(false)}
         onPick={(item) => {
-          update({ items: [...form.items, item] });
+          update((q) => ({ items: [...q.items, item] }));
           setAdding(false);
         }}
         suggested={(p) => suggestedPrice(p, settings)}

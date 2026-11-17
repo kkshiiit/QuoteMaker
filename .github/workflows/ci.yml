@@ -50,6 +50,10 @@ jobs:
         run: npm run test:e2e
         env:
           QM_ALL_BROWSERS: '1'
+      - name: Estabilidad en iPhone emulado (4 repeticiones del flujo completo)
+        run: npx playwright test --trace off --project iphone --repeat-each 4 -g "flujo completo"
+        env:
+          QM_ALL_BROWSERS: '1'
       - name: Contexto de pruebas e2e fallidas
         if: failure()
         run: |

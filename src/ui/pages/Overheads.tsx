@@ -96,7 +96,7 @@ function OverheadDetail({ id }: { id: string }) {
   }, [isNew, stored, form, settings.currency]);
   if (stored === null && !isNew) return <PageHeader title="Gasto no encontrado" back={{ to: '/gastos-generales', label: 'Gastos generales' }} />;
   if (!form) return <p role="status">Cargando…</p>;
-  const set = <K extends keyof Overhead>(k: K, v: Overhead[K]) => setForm({ ...form, [k]: v });
+  const set = <K extends keyof Overhead>(k: K, v: Overhead[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
   const onSave = async () => {
     const errs: string[] = [];
     if (!form.name.trim()) errs.push('Poné un nombre.');

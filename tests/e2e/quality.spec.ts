@@ -222,3 +222,4 @@ test('recorrido completo sólo con teclado: crear presupuesto y abrir el documen
   await expect(page.getByRole('article')).toContainText('Martín Gómez');
   await expect(page.getByRole('article')).toContainText('Lámpara de pie');
 });
+

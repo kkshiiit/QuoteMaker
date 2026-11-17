@@ -75,7 +75,7 @@ function SupplierDetail({ id }: { id: string }) {
   }, [isNew, stored, form]);
   if (stored === null && !isNew) return <PageHeader title="Proveedor no encontrado" back={{ to: '/proveedores', label: 'Proveedores' }} />;
   if (!form) return <p role="status">Cargando…</p>;
-  const set = <K extends keyof Supplier>(k: K, v: Supplier[K]) => setForm({ ...form, [k]: v });
+  const set = <K extends keyof Supplier>(k: K, v: Supplier[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
   const onSave = async () => {
     const errs = validateContact(form, 'proveedor');
     const all = await db.suppliers.toArray();

@@ -20,7 +20,7 @@ export default function SettingsPage() {
     });
   }, []);
   if (!form) return <p role="status">Cargando…</p>;
-  const set = <K extends keyof BusinessSettings>(k: K, v: BusinessSettings[K]) => setForm({ ...form, [k]: v });
+  const set = <K extends keyof BusinessSettings>(k: K, v: BusinessSettings[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
 
   const onSave = async () => {
     const e: string[] = [];
