@@ -32,6 +32,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // Dependencias opcionales de jsPDF que QuoteMaker no usa (html(), SVG, sanitizado HTML)
+        globIgnores: ['**/html2canvas*.js', '**/purify*.js', '**/index.es-*.js'],
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
       },

@@ -27,5 +27,5 @@ sleep 2
 launch
 node tests/android/smoke.mjs phase2 "$OUT"
 
-adb shell dumpsys package "$PKG" | grep -E "versionName|targetSdk" | tee "$OUT/package-info.txt"
+{ echo "APK: $(stat -c%s "$APK") bytes"; adb shell dumpsys package "$PKG" | grep -E "versionName|targetSdk|minSdk"; } | tee "$OUT/package-info.txt"
 echo "Prueba de humo Android OK"

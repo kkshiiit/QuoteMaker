@@ -58,7 +58,8 @@ QuoteMaker es una herramienta **privada** para emprendedores que venden producto
 ```bash
 npm ci
 npm run dev          # servidor de desarrollo
-npm test             # unitarias + integración (Postgres si está disponible)
+npm test             # pruebas unitarias
+npm run test:integration  # PostgreSQL real: migración + RLS + sync
 npm run test:e2e     # Playwright + axe (requiere npm run build)
 npm run android:apk  # requiere Android SDK + JDK 21
 ```

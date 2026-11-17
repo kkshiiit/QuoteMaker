@@ -38,8 +38,10 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      - name: Pruebas unitarias e integración (Postgres real, RLS)
+      - name: Pruebas unitarias
         run: npm test
+      - name: Pruebas de integración (Postgres real, migración, RLS, sync)
+        run: npm run test:integration
         env:
           QM_PG_URL: postgres://postgres:postgres@localhost:5432/postgres
       - run: npm run build

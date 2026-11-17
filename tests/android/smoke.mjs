@@ -77,8 +77,18 @@ if (phase === 'phase1') {
   assert(/Presupuesto-TA-00001\.pdf/.test(cached), 'el PDF existe en la caché privada con nombre sin datos sensibles');
   const size = Number(cached.match(/\s(\d+)\s+\S+\s+\S+\s+Presupuesto-TA-00001\.pdf/)?.[1] ?? 0);
   assert(size > 1000, `el PDF tiene contenido (${size} bytes)`);
-  execFileSync('adb', ['shell', 'run-as', 'app.quotemaker.mobile', 'cp', 'cache/Presupuesto-TA-00001.pdf', '/data/local/tmp/qm.pdf']);
-  execFileSync('adb', ['pull', '/data/local/tmp/qm.pdf', `${out}/android-presupuesto.pdf`]);
+  const pdfBytes = execFileSync('adb', ['exec-out', 'run-as', 'app.quotemaker.mobile', 'cat', 'cache/Presupuesto-TA-00001.pdf'], { maxBuffer: 32 * 1024 * 1024 });
+  writeFileSync(`${out}/android-presupuesto.pdf`, pdfBytes);
+  // El PDF generado EN el dispositivo tampoco filtra datos internos
+  const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const pdf = await getDocument({ data: new Uint8Array(pdfBytes), isEvalSupported: false }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) text += (await (await pdf.getPage(i)).getTextContent()).items.map((it) => it.str ?? '').join(' ');
+  const meta = JSON.stringify((await pdf.getMetadata()).info).toLowerCase();
+  assert(text.includes('Estudio Norte Arquitectura') && text.includes('TOTAL'), 'el PDF generado en Android tiene el contenido comercial');
+  for (const f of ['costo', 'margen', 'markup', 'ganancia', 'proveedor', 'maderera', 'combustible', 'peaje', 'paga a 30']) {
+    assert(!text.toLowerCase().includes(f) && !meta.includes(f), `el PDF generado en Android no contiene "${f}"`);
+  }
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
   await go('#/personalizacion');
   await page.getByText('Oscuro', { exact: true }).click();

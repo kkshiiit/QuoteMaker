@@ -14,13 +14,16 @@
     "preview": "vite preview --port 4173 --strictPort",
     "typecheck": "tsc -b",
     "lint": "eslint .",
-    "test": "vitest run",
+    "test": "vitest run tests/unit",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test --trace off",
-    "test:all": "npm run typecheck && npm run lint && npm run test && npm run build && npm run test:e2e",
+    "test:all": "npm run typecheck && npm run lint && npm run test && npm run test:integration && npm run build && npm run test:e2e",
     "cap:sync": "npm run build && cap sync android",
-    "android:apk": "npm run cap:sync && cd android && ./gradlew assembleDebug"
+    "android:apk": "npm run cap:sync && cd android && ./gradlew assembleDebug",
+    "test:integration": "vitest run tests/integration",
+    "media": "node scripts/capture-media.mjs",
+    "perf": "node scripts/measure-perf.mjs"
   },
   "dependencies": {
     "@capacitor/android": "7.6.10",
