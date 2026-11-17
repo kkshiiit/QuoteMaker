@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="QuoteMaker: costos reales, precios y presupuestos privados para emprendedores." />
+    <meta name="theme-color" content="#f6f5f1" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="./favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <title>QuoteMaker</title>
+    <script>
+      // Aplica el tema antes del primer pintado para evitar destellos.
+      (function () {
+        try {
+          var p = JSON.parse(localStorage.getItem('qm-theme') || '{}');
+          var dark = p.themeMode === 'dark' || ((!p.themeMode || p.themeMode === 'system') && matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+          if (dark) { document.documentElement.style.background = '#121314'; }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>QuoteMaker necesita JavaScript habilitado.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

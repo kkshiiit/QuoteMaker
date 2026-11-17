@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { db, useTestDatabase } from '../../src/data/db';
+import { db, openTestDatabase } from '../../src/data/db';
 import { setCloudActive } from '../../src/data/repo';
 import {
   changeQuoteStatus,
@@ -31,7 +31,7 @@ import type { Product } from '../../src/domain/types';
 
 let n = 0;
 beforeEach(() => {
-  useTestDatabase(`svc-${++n}`);
+  openTestDatabase(`svc-${++n}`);
   setCloudActive(false);
 });
 
@@ -50,10 +50,10 @@ async function buy(productId: string, qty: string, price: string, date = '2026-0
 describe('persistencia local', () => {
   it('los datos persisten al reabrir la base (cierre y apertura de la app)', async () => {
     const name = `persist-${n}`;
-    useTestDatabase(name);
+    openTestDatabase(name);
     const p = await product('Taza');
     db.close();
-    const reopened = useTestDatabase(name);
+    const reopened = openTestDatabase(name);
     expect((await reopened.products.get(p.id))!.name).toBe('Taza');
     expect(await reopened.outbox.count()).toBeGreaterThan(0); // cola durable para sincronizar luego
   });
@@ -212,7 +212,7 @@ describe('backup', () => {
     await createQuote();
     const file = JSON.parse(JSON.stringify(await exportBackup()));
     expect(file.format).toBe('quotemaker-backup');
-    useTestDatabase(`restore-${n}`);
+    openTestDatabase(`restore-${n}`);
     const r = await importBackup(file, 'replace');
     expect(r.ok).toBe(true);
     expect((await db.products.get(mesa.id))!.currentCost).toBe('10.0000');
@@ -222,7 +222,7 @@ describe('backup', () => {
   it('merge no borra lo existente', async () => {
     const a = await product('A');
     const file = JSON.parse(JSON.stringify(await exportBackup()));
-    useTestDatabase(`merge-${n}`);
+    openTestDatabase(`merge-${n}`);
     const b = await product('B');
     await importBackup(file, 'merge');
     expect(await db.products.get(a.id)).toBeDefined();

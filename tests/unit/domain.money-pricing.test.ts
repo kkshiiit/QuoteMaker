@@ -27,6 +27,11 @@ describe('money', () => {
     ['abc', null],
     ['', null],
     ['1,2,3', '123'],
+    ['100.000', '100000'],
+    ['1.234', '1234'],
+    ['0.125', '0.125'],
+    ['12.50', '12.5'],
+    ['1234.567', '1234.567'],
   ])('parseDecimalInput(%s) → %s', (input, expected) => {
     expect(parseDecimalInput(input)).toBe(expected);
   });

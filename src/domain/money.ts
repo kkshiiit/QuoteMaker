@@ -58,6 +58,7 @@ export function compare(a: Big | Dec, b: Big | Dec): -1 | 0 | 1 {
 /**
  * Interpreta texto ingresado por la persona usuaria (formatos es-AR y en-US).
  * "1.234,56" → "1234.56" · "1234,5" → "1234.5" · "1,234.56" → "1234.56" · "12.5" → "12.5"
+ * "100.000" → "100000" (miles, convención es-AR) · "0.125" → "0.125"
  * Devuelve null si el texto no es un número válido.
  */
 export function parseDecimalInput(raw: string): Dec | null {
@@ -81,6 +82,10 @@ export function parseDecimalInput(raw: string): Dec | null {
   } else if (lastDot >= 0 && (s.match(/\./g) ?? []).length > 1) {
     // "1.234.567" → miles
     s = s.split('.').join('');
+  } else if (lastDot >= 0 && /^[1-9]\d{0,2}\.\d{3}$/.test(s)) {
+    // Convención es-AR: "100.000" son cien mil (un solo punto + 3 dígitos = separador de miles).
+    // Para decimales con 3 cifras usar coma: "100,000" o "0.125".
+    s = s.replace('.', '');
   }
   if (!/^\d*\.?\d*$/.test(s) || s === '.' ) return null;
   try {

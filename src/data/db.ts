@@ -98,7 +98,7 @@ export class QuoteMakerDB extends Dexie {
 export let db = new QuoteMakerDB();
 
 /** Sólo para pruebas: abre una base aislada. */
-export function useTestDatabase(name: string): QuoteMakerDB {
+export function openTestDatabase(name: string): QuoteMakerDB {
   db = new QuoteMakerDB(name);
   return db;
 }

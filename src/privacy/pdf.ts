@@ -14,12 +14,15 @@ export function formatDate(iso: string, locale = 'es-AR'): string {
 
 /** Las fuentes estándar de PDF usan WinAnsi: se normalizan caracteres no representables. */
 export function pdfSafe(text: string): string {
-  return text
-    .replace(/[‘’]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/[–—]/g, '-')
-    .replace(/ | /g, ' ')
-    .replace(/[^\x09\x0A\x0D\x20-\x7E\xA1-\xFF€•…]/g, '');
+  return (
+    text
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2013\u2014\u2212]/g, '-')
+      .replace(/[\u00A0\u202F]/g, ' ')
+      // Conserva tab/saltos, ASCII imprimible, Latin-1 y € • … (representables en WinAnsi)
+      .replace(/[^\t\n\r\x20-\x7E\xA1-\xFF\u20AC\u2022\u2026]/g, '')
+  );
 }
 
 export interface PdfOptions {

@@ -14,7 +14,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { useTestDatabase, db } from '../../src/data/db';
+import { openTestDatabase, db } from '../../src/data/db';
 import { putRecord, setCloudActive } from '../../src/data/repo';
 import { SyncEngine, resolveConflict, enqueueLocalOnly, type PushResult, type RemoteRow, type SyncRemote } from '../../src/sync/engine';
 import type { CollectionName, Product } from '../../src/domain/types';
@@ -186,8 +186,8 @@ describe.runIf(process.env.QM_SKIP_PG !== '1')('Motor de sincronización: dos di
     await pool.query('insert into auth.users (id) values ($1)', [USER]);
     const remote1 = new PgRemote(USER);
     const remote2 = new PgRemote(USER);
-    const dev1 = () => useTestDatabase('device-1');
-    const dev2 = () => useTestDatabase('device-2');
+    const dev1 = () => openTestDatabase('device-1');
+    const dev2 = () => openTestDatabase('device-2');
 
     // Dispositivo 1 trabaja offline (nube no configurada) y luego activa la nube
     dev1();
@@ -254,7 +254,7 @@ describe.runIf(process.env.QM_SKIP_PG !== '1')('Motor de sincronización: dos di
   it('ciclos concurrentes no duplican envíos', async () => {
     const USER = '44444444-4444-4444-8444-444444444444';
     await pool.query('insert into auth.users (id) values ($1)', [USER]);
-    useTestDatabase('device-3');
+    openTestDatabase('device-3');
     setCloudActive(true);
     for (let i = 0; i < 5; i++) await putRecord('products', product(`P${i}`));
     const engine = new SyncEngine(new PgRemote(USER));
