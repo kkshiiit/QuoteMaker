@@ -36,10 +36,28 @@ async function withPage(fn) {
     return fn();
   }
 }
+/**
+ * Espera a que la pantalla esté realmente pintada antes de una captura: título presente (y con el
+ * texto esperado, si se indica), sin «Cargando…» y dos cuadros dibujados. El compositor del emulador
+ * puede ir detrás del DOM, por eso queda además una pausa corta.
+ */
+const settle = async (title) => {
+  await page.waitForFunction(
+    (src) => {
+      const t = document.querySelector('#page-title');
+      if (!t || (src && !new RegExp(src).test(t.textContent ?? ''))) return false;
+      return !/Cargando…/.test(document.body.innerText);
+    },
+    title ? title.source : null,
+    { timeout: 30_000 },
+  );
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  await sleep(700);
+};
 const go = async (hash) => {
   await page.evaluate((h) => (location.hash = h), hash);
-  await page.waitForSelector('#page-title');
-  await sleep(700);
+  await page.waitForFunction((h) => location.hash === h, hash);
+  await settle();
 };
 const noOverflow = async (where) => {
   const o = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -72,11 +90,11 @@ if (phase === 'phase1') {
   await go('#/presupuestos');
   await page.getByRole('link', { name: /Estudio Norte/ }).dispatchEvent('click');
   await page.waitForSelector('[data-testid="quote-total"]');
-  await sleep(500);
+  await settle(/^Presupuesto /);
   shot('11-presupuesto');
   await page.getByRole('button', { name: 'PDF y WhatsApp' }).dispatchEvent('click');
   await page.getByRole('article').waitFor();
-  await sleep(500);
+  await settle(/^Documento /);
   shot('12-documento');
   // PDF real generado en el dispositivo y entregado al Sharesheet nativo de Android
   await page.getByRole('button', { name: 'Compartir PDF' }).dispatchEvent('click');

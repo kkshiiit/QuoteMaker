@@ -8,6 +8,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Etiqueta a publicar en Releases (ej. v1.0.0-rc.1). Vacío = sólo correr CI.'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -177,7 +182,7 @@ jobs:
 
   release:
     name: Publicar APK en GitHub Releases
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
     needs: [web, android, android-emulator]
     runs-on: ubuntu-latest
     permissions:
@@ -190,13 +195,27 @@ jobs:
       - name: Crear release con el APK
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.release_tag || github.ref_name }}
+          # La etiqueta apunta siempre al commit exacto que se compiló y probó.
+          TARGET: ${{ github.sha }}
         run: |
+          # Validaciones del disparo manual: formato de etiqueta, rama main y etiqueta coherente con el commit probado.
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::Etiqueta inválida «$TAG». Formato esperado: v1.2.3 o v1.2.3-rc.1"; exit 1
+          fi
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Las versiones se publican desde main (se disparó desde $GITHUB_REF)."; exit 1
+          fi
+          if EXISTING=$(gh api "repos/$GITHUB_REPOSITORY/commits/refs/tags/$TAG" --jq .sha 2>/dev/null) && [ "$EXISTING" != "$TARGET" ]; then
+            echo "::error::La etiqueta $TAG ya existe en $EXISTING, distinto del commit compilado ($TARGET)."; exit 1
+          fi
           FILE=$(ls apk/release/*.apk 2>/dev/null | head -1 || true)
           [ -n "$FILE" ] || FILE=apk/debug/app-debug.apk
-          cp "$FILE" "QuoteMaker-${GITHUB_REF_NAME}.apk"
+          cp "$FILE" "QuoteMaker-${TAG}.apk"
           PRE=""
-          case "$GITHUB_REF_NAME" in *-*) PRE="--prerelease";; esac
+          case "$TAG" in *-*) PRE="--prerelease";; esac
           KIND=$(basename "$(dirname "$FILE")")
-          gh release create "$GITHUB_REF_NAME" "QuoteMaker-${GITHUB_REF_NAME}.apk" --repo "$GITHUB_REPOSITORY" $PRE \
-            --title "QuoteMaker ${GITHUB_REF_NAME}" \
+          # Si la etiqueta no existe, GitHub la crea apuntando a TARGET (disparo manual).
+          gh release create "$TAG" "QuoteMaker-${TAG}.apk" --repo "$GITHUB_REPOSITORY" --target "$TARGET" $PRE \
+            --title "QuoteMaker ${TAG}" \
             --notes "APK Android ($KIND) compilado y probado en CI (build, lint, pruebas JVM y prueba en emulador). Instalación y cambios: ver docs/INSTALLATION.md y CHANGELOG.md."
