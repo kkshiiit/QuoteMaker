@@ -45,9 +45,11 @@ jobs:
         env:
           QM_PG_URL: postgres://postgres:postgres@localhost:5432/postgres
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
-      - name: Pruebas e2e (Playwright + axe)
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - name: Pruebas e2e (Playwright + axe; Chromium, Firefox, WebKit)
         run: npm run test:e2e
+        env:
+          QM_ALL_BROWSERS: '1'
       - name: Tamaño del bundle
         run: |
           echo "## Bundle web" >> $GITHUB_STEP_SUMMARY

@@ -30,14 +30,14 @@ export function DocumentPreview({ doc, accent }: { doc: PublicQuoteDocument; acc
               </p>
             ))}
         </div>
-        <div>
+        <div className="doc-meta">
           <p className="doc-title">{doc.isDraft ? 'PRESUPUESTO (BORRADOR)' : 'PRESUPUESTO'}</p>
-          <p style={{ textAlign: 'right' }}>N.º {doc.number}</p>
-          <p className="doc-muted" style={{ textAlign: 'right' }}>
+          <p>N.º {doc.number}</p>
+          <p className="doc-muted">
             Fecha: {formatDate(doc.issueDate, doc.locale)}
           </p>
           {doc.validUntil && (
-            <p className="doc-muted" style={{ textAlign: 'right' }}>
+            <p className="doc-muted">
               Válido hasta: {formatDate(doc.validUntil, doc.locale)}
             </p>
           )}

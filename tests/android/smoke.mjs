@@ -69,6 +69,7 @@ if (phase === 'phase1') {
     top = (acts.match(/(topResumedActivity|mResumedActivity|ResumedActivity)[^\n]*/g) ?? []).join(' | ');
   }
   console.log(`Actividad en primer plano: ${top}`);
+  await sleep(2500); // dejar que el selector termine de dibujarse
   shot('13-sharesheet-pdf');
   assert(chooser.test(top), 'se abrió el selector nativo de Android para compartir el PDF');
   execFileSync('adb', ['shell', 'input', 'keyevent', 'KEYCODE_BACK']);

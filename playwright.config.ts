@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // Pruebas e2e sobre el build de producción (npm run build) servido con `vite preview`.
-// Sólo Chromium está disponible en este entorno; Firefox/WebKit se documentan como pendientes.
+// Localmente: Chromium (escritorio y móvil). En CI además Firefox, WebKit (Safari) y iPhone emulado.
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 60_000,
@@ -14,5 +14,13 @@ export default defineConfig({
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1366, height: 860 } } },
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
+    // Otros motores (Firefox y WebKit/Safari): flujo funcional completo. Se activan en CI (QM_ALL_BROWSERS=1).
+    ...(process.env.QM_ALL_BROWSERS
+      ? [
+          { name: 'firefox', testMatch: /main-flow\.spec\.ts/, use: { ...devices['Desktop Firefox'], viewport: { width: 1366, height: 860 } } },
+          { name: 'webkit', testMatch: /main-flow\.spec\.ts/, use: { ...devices['Desktop Safari'], viewport: { width: 1366, height: 860 } } },
+          { name: 'iphone', testMatch: /main-flow\.spec\.ts/, use: { ...devices['iPhone 14'] } },
+        ]
+      : []),
   ],
 });

@@ -23,3 +23,5 @@ Todas son **capturas reales** de la app en ejecución (build de producción) con
 | 13-personalizacion-vista-previa / 14-inicio-oscuro-terracota | Editor de tema y resultado |
 
 GIFs: `01-navegacion`, `02-crear-producto`, `03-cargar-gasto`, `04-calcular-precio`, `05-crear-presupuesto`, `06-personalizar-tema`.
+
+Android (`android/`): inicio, productos, compras, gastos, calculadora, presupuestos, clientes, estadísticas, menú Más, editor y documento de presupuesto, selector nativo para compartir el PDF, tema oscuro y presupuestos tras reiniciar la app. `android-presupuesto.pdf` es el PDF generado en el dispositivo.

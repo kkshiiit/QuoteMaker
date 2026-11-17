@@ -1092,7 +1092,11 @@ dialog::backdrop {
   color: var(--doc-accent, #1f6f43);
   font-weight: 800;
   font-size: 1.3rem;
-  text-align: right;
+}
+@media (min-width: 560px) {
+  .doc-preview .doc-meta {
+    text-align: right;
+  }
 }
 .doc-preview .doc-muted {
   color: #5f6068;

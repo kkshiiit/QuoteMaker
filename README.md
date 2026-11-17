@@ -25,6 +25,12 @@ QuoteMaker es una herramienta **privada** para emprendedores que venden producto
 
 ![Crear un presupuesto (GIF real de la app)](docs/media/gifs/05-crear-presupuesto.gif)
 
+**Android** (capturas reales del emulador API 34 en CI):
+
+| Productos | Presupuesto | Documento | Tema oscuro |
+|---|---|---|---|
+| ![Productos en Android](docs/media/android/android-03-productos.png) | ![Presupuesto en Android](docs/media/android/android-11-presupuesto.png) | ![Documento en Android](docs/media/android/android-12-documento.png) | ![Personalización oscura en Android](docs/media/android/android-14-personalizacion-oscuro.png) |
+
 ## Qué hace
 
 - **Productos y proveedores**: catálogo con SKU, categorías, unidad, imagen optimizada, proveedor habitual, estado activo/archivado, historial de costos.

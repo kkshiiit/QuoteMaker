@@ -21,7 +21,7 @@ Leyenda: ✅ implementado y probado · 🟡 implementado, verificación parcial 
 | Personalización con vista previa y contraste | ✅ | e2e |
 | Estadísticas | ✅ | e2e (accesibilidad/render); cálculos vía funciones probadas |
 | APK Android (compila, lint, pruebas JVM) | ✅ | GitHub Actions |
-| App Android en emulador (abre, datos de ejemplo, navegación, persistencia tras reinicio) | ✅ / 🟡 | CI «Android · prueba en emulador»; ver la última ejecución |
+| App Android en emulador API 34: abre en el WebView con Capacitor nativo, carga datos, 8 pantallas sin scroll horizontal, PDF generado en el dispositivo sin filtraciones y entregado al Sharesheet nativo, estado y datos persisten tras `force-stop` y reapertura | ✅ | CI «Android · prueba en emulador» + capturas en `docs/media/android/` |
 | Migración Supabase + RLS + motor de sync | 🟡 | Probado contra **PostgreSQL 16 real** (2 usuarios, anónimo, idempotencia, conflictos, 2 dispositivos). **No probado contra un proyecto Supabase real.** |
 | Login Supabase (Auth) | ⏳ | Implementado con supabase-js; sin proyecto no se pudo probar |
 | Compatibilidad Firefox / Safari / Edge | ⏳ | Sólo Chromium disponible en el entorno (Edge usa el mismo motor, pero no se probó) |
