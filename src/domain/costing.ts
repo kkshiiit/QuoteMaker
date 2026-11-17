@@ -48,8 +48,15 @@ export function purchaseTotals(p: Purchase) {
   return { itemsNet, total };
 }
 
-export function validatePurchase(p: Pick<Purchase, 'items' | 'discount' | 'extraCharges' | 'date'>): string[] {
+export function validatePurchase(p: Pick<Purchase, 'items' | 'discount' | 'extraCharges' | 'date'> & Partial<Pick<Purchase, 'currency' | 'exchangeRate'>>, baseCurrency?: string): string[] {
   const errors: string[] = [];
+  const foreign = !!baseCurrency && !!p.currency && p.currency !== baseCurrency;
+  if (foreign && (!p.exchangeRate || D(p.exchangeRate).lte(0) || D(p.exchangeRate).eq(1))) {
+    // Un tipo de cambio 1 entre monedas distintas casi siempre es un olvido: se exige cargarlo.
+    errors.push(`La compra está en ${p.currency}: indicá cuántos ${baseCurrency} vale 1 ${p.currency} (tipo de cambio).`);
+  } else if (p.exchangeRate && D(p.exchangeRate).lte(0)) {
+    errors.push('El tipo de cambio debe ser mayor que cero.');
+  }
   if (!p.date) errors.push('Indicá la fecha de la compra.');
   if (p.items.length === 0) errors.push('Agregá al menos un artículo.');
   p.items.forEach((it, i) => {
@@ -84,9 +91,16 @@ function distributeInvoiceAdjustments(p: Purchase): Map<string, Big> {
   return res;
 }
 
+/** Tipo de cambio de la compra a la moneda del negocio (1 si es la misma moneda). */
+export function purchaseRate(p: Pick<Purchase, 'exchangeRate'>): Big {
+  const r = D(p.exchangeRate || '1');
+  return r.gt(0) ? r : new Big(1);
+}
+
 export function lotsOfPurchase(p: Purchase): Lot[] {
   if (p.voided) return [];
   const adj = distributeInvoiceAdjustments(p);
+  const rate = purchaseRate(p); // todo el costeo se expresa en la moneda del negocio
   return p.items.map((it) => {
     const qty = D(it.quantity);
     return {
@@ -97,11 +111,11 @@ export function lotsOfPurchase(p: Purchase): Lot[] {
       date: p.date,
       createdAt: p.createdAt,
       quantity: qty,
-      net: itemNet(it),
-      value: itemNet(it),
+      net: itemNet(it).times(rate),
+      value: itemNet(it).times(rate),
       weight: D(it.unitWeight || '0').times(qty),
       volume: D(it.unitVolume || '0').times(qty),
-      invoiceAdjustment: adj.get(it.id) ?? new Big(0),
+      invoiceAdjustment: (adj.get(it.id) ?? new Big(0)).times(rate),
     };
   });
 }
@@ -247,13 +261,20 @@ export function overheadMonthlyEquivalent(o: Pick<Overhead, 'amount' | 'frequenc
   return D(o.amount).times(MONTHLY_FACTOR[o.frequency]);
 }
 
-function addInterval(date: Date, f: OverheadFrequency): Date {
-  const d = new Date(date.getTime());
-  if (f === 'weekly') d.setUTCDate(d.getUTCDate() + 7);
-  else if (f === 'monthly') d.setUTCMonth(d.getUTCMonth() + 1);
-  else if (f === 'quarterly') d.setUTCMonth(d.getUTCMonth() + 3);
-  else if (f === 'yearly') d.setUTCFullYear(d.getUTCFullYear() + 1);
-  return d;
+const MONTH_STEP: Partial<Record<OverheadFrequency, number>> = { monthly: 1, quarterly: 3, yearly: 12 };
+
+/**
+ * k-ésima ocurrencia contada desde el inicio, con el día limitado al último del mes
+ * (un gasto del 31/01 vence el 28 o 29/02, el 31/03, el 30/04…).
+ */
+export function nthOccurrence(start: Date, f: OverheadFrequency, k: number): Date {
+  if (f === 'weekly') return new Date(start.getTime() + k * 7 * 86400000);
+  const step = MONTH_STEP[f] ?? 1;
+  const totalMonths = start.getUTCMonth() + k * step;
+  const y = start.getUTCFullYear() + Math.floor(totalMonths / 12);
+  const m = ((totalMonths % 12) + 12) % 12;
+  const lastDay = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(y, m, Math.min(start.getUTCDate(), lastDay)));
 }
 
 /** Cantidad de ocurrencias de un gasto general dentro de [from, to] (fechas YYYY-MM-DD inclusive). */
@@ -264,10 +285,10 @@ export function overheadOccurrences(o: Pick<Overhead, 'frequency' | 'startDate' 
   const fromD = new Date(`${from}T00:00:00Z`);
   if (o.frequency === 'once') return start >= fromD && start <= end ? 1 : 0;
   let count = 0;
-  let cur = start;
-  for (let guard = 0; cur <= end && guard < 5000; guard++) {
+  for (let k = 0; k < 5000; k++) {
+    const cur = nthOccurrence(start, o.frequency, k);
+    if (cur > end) break;
     if (cur >= fromD) count++;
-    cur = addInterval(cur, o.frequency);
   }
   return count;
 }

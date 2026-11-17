@@ -42,7 +42,7 @@ export function defaultSettings(): BusinessSettings {
     defaultTaxPct: '0',
     taxLabel: 'IVA',
     defaultValidityDays: 15,
-    defaultConditions: 'Precios expresados en pesos. Sujeto a disponibilidad de stock.',
+    defaultConditions: 'Sujeto a disponibilidad de stock.',
     quotePrefix: 'P-',
     nextQuoteNumber: 1,
     defaultTargetMarginPct: '35',

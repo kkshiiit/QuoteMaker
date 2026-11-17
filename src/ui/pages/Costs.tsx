@@ -5,7 +5,8 @@ import { db } from '../../data/db';
 import { orphanExpenses, purchaseTotals } from '../../domain/costing';
 import { Icon } from '../components/Icon';
 import { EmptyState, InternalLabel, PageHeader } from '../components/ui';
-import { useMoney } from '../hooks';
+import { useMoney, useSettings } from '../hooks';
+import { toDec } from '../../domain/money';
 import Calculator from './Calculator';
 
 const TARGET_LABEL = { unassigned: 'Sin asignar', purchase: 'A una compra', products: 'A productos' } as const;
@@ -44,6 +45,7 @@ export default function Costs() {
 
 function PurchasesList() {
   const money = useMoney();
+  const settings = useSettings();
   const purchases = useLiveQuery(() => db.purchases.orderBy('date').reverse().toArray(), []);
   const suppliers = useLiveQuery(() => db.suppliers.toArray(), []);
   const names = useMemo(() => new Map((suppliers ?? []).map((s) => [s.id, s.name])), [suppliers]);
@@ -68,7 +70,7 @@ function PurchasesList() {
               </div>
             </div>
             <div className="end">
-              <div className="num">{money(purchaseTotals(p).total)}</div>
+              <div className="num">{p.currency && p.currency !== settings.currency ? `${p.currency} ${toDec(purchaseTotals(p).total)}` : money(purchaseTotals(p).total)}</div>
               {p.voided && <span className="badge">Anulada</span>}
             </div>
           </Link>

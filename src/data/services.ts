@@ -157,7 +157,7 @@ export function customerSnapshot(c: Customer | null | undefined): CustomerCommer
 // ---------------- Compras y gastos ----------------
 
 export function emptyPurchase(currency = 'ARS'): Purchase {
-  return { ...createBase(), supplierId: null, date: todayIso(), reference: '', currency, items: [], discount: '0', extraCharges: '0', notes: '', attachment: null, voided: false };
+  return { ...createBase(), supplierId: null, date: todayIso(), reference: '', currency, exchangeRate: '1', items: [], discount: '0', extraCharges: '0', notes: '', attachment: null, voided: false };
 }
 
 export async function savePurchase(p: Purchase) {

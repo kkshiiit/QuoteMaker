@@ -106,6 +106,8 @@ export interface Purchase extends BaseRecord {
   date: string; // YYYY-MM-DD
   reference: string;
   currency: string;
+  /** Unidades de la moneda del negocio por 1 unidad de `currency` (1 si es la misma). Registros viejos sin campo = 1. */
+  exchangeRate?: Dec;
   items: PurchaseItem[];
   discount: Dec; // descuento general (importe)
   extraCharges: Dec; // cargos adicionales de la factura (importe)

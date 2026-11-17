@@ -186,4 +186,9 @@ jobs:
           FILE=$(ls apk/release/*.apk 2>/dev/null | head -1 || true)
           [ -n "$FILE" ] || FILE=apk/debug/app-debug.apk
           cp "$FILE" "QuoteMaker-${GITHUB_REF_NAME}.apk"
-          gh release create "$GITHUB_REF_NAME" "QuoteMaker-${GITHUB_REF_NAME}.apk" --repo "$GITHUB_REPOSITORY" --title "QuoteMaker ${GITHUB_REF_NAME}" --notes "Ver CHANGELOG.md"
+          PRE=""
+          case "$GITHUB_REF_NAME" in *-*) PRE="--prerelease";; esac
+          KIND=$(basename "$(dirname "$FILE")")
+          gh release create "$GITHUB_REF_NAME" "QuoteMaker-${GITHUB_REF_NAME}.apk" --repo "$GITHUB_REPOSITORY" $PRE \
+            --title "QuoteMaker ${GITHUB_REF_NAME}" \
+            --notes "APK Android ($KIND) compilado y probado en CI (build, lint, pruebas JVM y prueba en emulador). Instalación y cambios: ver docs/INSTALLATION.md y CHANGELOG.md."

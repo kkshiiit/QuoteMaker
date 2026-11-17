@@ -8,7 +8,8 @@ import { purchaseTotals } from '../../domain/costing';
 import type { Supplier } from '../../domain/types';
 import { Icon } from '../components/Icon';
 import { EmptyState, ErrorSummary, InternalLabel, PageHeader, TextField, useToast } from '../components/ui';
-import { useMoney } from '../hooks';
+import { useMoney, useSettings } from '../hooks';
+import { toDec } from '../../domain/money';
 
 export default function Suppliers() {
   const { id } = useParams();
@@ -63,6 +64,7 @@ function SupplierDetail({ id }: { id: string }) {
   const navigate = useNavigate();
   const toast = useToast();
   const money = useMoney();
+  const settings = useSettings();
   const stored = useLiveQuery(async () => (isNew ? null : ((await db.suppliers.get(id)) ?? null)), [id]);
   const purchases = useLiveQuery(() => (isNew ? [] : db.purchases.where('supplierId').equals(id).reverse().sortBy('date')), [id]);
   const [form, setForm] = useState<Supplier | null>(null);
@@ -137,7 +139,7 @@ function SupplierDetail({ id }: { id: string }) {
                   <li key={p.id}>
                     <Link className="list-item" to={`/costos/compras/${p.id}`}>
                       <span className="grow">{new Date(`${p.date}T12:00:00`).toLocaleDateString('es-AR')}</span>
-                      <span className="num">{money(purchaseTotals(p).total)}</span>
+                      <span className="num">{p.currency && p.currency !== settings.currency ? `${p.currency} ${toDec(purchaseTotals(p).total)}` : money(purchaseTotals(p).total)}</span>
                     </Link>
                   </li>
                 ))}

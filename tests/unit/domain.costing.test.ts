@@ -5,6 +5,7 @@ import {
   computeExpenseAllocations,
   expenseLedger,
   lotCosts,
+  nthOccurrence,
   orphanExpenses,
   overheadMonthlyEquivalent,
   overheadOccurrences,
@@ -232,5 +233,36 @@ describe('gastos generales y doble contabilización', () => {
     expect(ledger.unassigned.toFixed(2)).toBe('50.00');
     expect(ledger.overhead.toFixed(2)).toBe('1000.00');
     expect(ledger.total.toFixed(2)).toBe('1150.00');
+  });
+});
+
+describe('revisión: moneda de compra y fechas de fin de mes', () => {
+  it('convierte el costo de una compra en otra moneda con su tipo de cambio', () => {
+    const usd = purchase('u1', '2026-01-05', [['i1', 'A', '2', '100']], { currency: 'USD', exchangeRate: '1000', extraCharges: '10' });
+    // (2 × 100 + 10) USD × 1000 = 210.000 ARS → 105.000 c/u
+    expect(lotCosts([usd], []).get('u1:i1')!.unitCost.toFixed(2)).toBe('105000.00');
+    // Gastos (en moneda del negocio) se suman sin convertir
+    const r = computeExpenseAllocations(expense({ target: 'purchase', purchaseId: 'u1', amount: '2000' }), [usd]);
+    const costs = lotCosts([usd], [expense({ status: 'allocated', allocations: r.ok ? r.allocations : [] })]);
+    expect(costs.get('u1:i1')!.unitCost.toFixed(2)).toBe('106000.00');
+  });
+  it('compras sin tipo de cambio (registros viejos) se toman 1:1', () => {
+    const old = purchase('o1', '2026-01-05', [['i1', 'A', '1', '50']]);
+    expect(lotCosts([old], []).get('o1:i1')!.unitCost.toFixed(2)).toBe('50.00');
+  });
+  it('exige tipo de cambio cuando la moneda difiere de la del negocio', () => {
+    const base = purchase('x', '2026-01-05', [['i1', 'A', '1', '50']], { currency: 'USD', exchangeRate: '1' });
+    expect(validatePurchase(base, 'ARS').join(' ')).toContain('tipo de cambio');
+    expect(validatePurchase({ ...base, exchangeRate: '1050' }, 'ARS')).toEqual([]);
+    expect(validatePurchase({ ...base, currency: 'ARS', exchangeRate: '1' }, 'ARS')).toEqual([]);
+  });
+  it('un gasto mensual que empieza el 31 vence el último día de los meses cortos', () => {
+    const o = { frequency: 'monthly' as const, startDate: '2026-01-31', endDate: null, active: true };
+    expect(overheadOccurrences(o, '2026-02-01', '2026-02-28')).toBe(1);
+    expect(overheadOccurrences(o, '2026-01-01', '2026-12-31')).toBe(12);
+    expect(nthOccurrence(new Date('2026-01-31T00:00:00Z'), 'monthly', 1).toISOString().slice(0, 10)).toBe('2026-02-28');
+    expect(nthOccurrence(new Date('2026-01-31T00:00:00Z'), 'monthly', 2).toISOString().slice(0, 10)).toBe('2026-03-31');
+    expect(nthOccurrence(new Date('2024-02-29T00:00:00Z'), 'yearly', 1).toISOString().slice(0, 10)).toBe('2025-02-28');
+    expect(nthOccurrence(new Date('2025-11-30T00:00:00Z'), 'quarterly', 1).toISOString().slice(0, 10)).toBe('2026-02-28');
   });
 });

@@ -4,7 +4,8 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { db } from '../../data/db';
 import { newId } from '../../data/defaults';
 import { emptyPurchase, savePurchase, setPurchaseVoided } from '../../data/services';
-import { itemNet, lotCosts, purchaseTotals, validatePurchase } from '../../domain/costing';
+import { itemNet, lotCosts, purchaseRate, purchaseTotals, validatePurchase } from '../../domain/costing';
+import { toDec } from '../../domain/money';
 import type { Purchase, PurchaseItem } from '../../domain/types';
 import { readFileAsDataUrl } from '../../platform/image';
 import { Icon } from '../components/Icon';
@@ -67,7 +68,7 @@ export default function PurchaseEdit() {
   const productName = (pid: string) => products.find((p) => p.id === pid)?.name ?? '';
 
   const onSave = async () => {
-    const errs = validatePurchase(form);
+    const errs = validatePurchase(form, settings.currency);
     setErrors(errs);
     if (errs.length) return;
     await savePurchase(form);
@@ -124,7 +125,24 @@ export default function PurchaseEdit() {
             />
             <TextField label="Fecha" type="date" required value={form.date} onChange={(v) => set('date', v)} />
             <TextField label="N.º o referencia" value={form.reference} onChange={(v) => set('reference', v)} hint="Factura, remito…" />
-            <TextField label="Moneda" value={form.currency} onChange={(v) => set('currency', v.toUpperCase().slice(0, 3))} hint="Código ISO (ARS, USD…)" />
+            <TextField
+              label="Moneda"
+              value={form.currency}
+              onChange={(v) => {
+                const c = v.toUpperCase().slice(0, 3);
+                setForm({ ...form, currency: c, exchangeRate: c === settings.currency ? '1' : form.exchangeRate === '1' ? '' : form.exchangeRate });
+              }}
+              hint="Código ISO (ARS, USD…)"
+            />
+            {form.currency !== settings.currency && (
+              <DecimalField
+                label={`Tipo de cambio (${settings.currency} por 1 ${form.currency || '?'})`}
+                required
+                value={form.exchangeRate ?? ''}
+                onChange={(v) => set('exchangeRate', v)}
+                hint={`Los costos se calculan en ${settings.currency}.`}
+              />
+            )}
           </div>
         </section>
 
@@ -186,8 +204,14 @@ export default function PurchaseEdit() {
             <dl className="dl" style={{ marginTop: 14 }}>
               <dt>Artículos</dt>
               <dd>{money(totals.itemsNet)}</dd>
-              <dt className="total">Total de la compra</dt>
-              <dd className="total">{money(totals.total)}</dd>
+              <dt className="total">Total de la compra{form.currency !== settings.currency ? ` (${form.currency})` : ''}</dt>
+              <dd className="total">{form.currency !== settings.currency ? `${form.currency} ${toDec(totals.total)}` : money(totals.total)}</dd>
+              {form.currency !== settings.currency && form.exchangeRate && Number.isFinite(Number(form.exchangeRate)) && (
+                <>
+                  <dt>Equivalente en {settings.currency}</dt>
+                  <dd>{money(totals.total.times(purchaseRate(form)))}</dd>
+                </>
+              )}
             </dl>
           )}
         </section>
