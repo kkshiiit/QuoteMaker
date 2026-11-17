@@ -99,3 +99,4 @@ npm run build && npm run test:e2e   # Playwright (escritorio + móvil) con axe
 1. Actualizar `version` en `package.json`, `versionName`/`versionCode` en `android/app/build.gradle` y `CHANGELOG.md`.
 2. PR `releases → main`, revisar y fusionar (decisión del titular).
 3. `git tag v1.0.0 && git push origin v1.0.0` → CI compila, prueba y publica el APK en Releases.
+   Alternativa sin empujar etiquetas: Actions → CI → *Run workflow* con `release_tag` (p. ej. `v1.0.0`) y `release_target` = `main`; GitHub crea la etiqueta y la release al terminar las pruebas. Las etiquetas con sufijo (`-rc.1`) se publican como pre-release.
