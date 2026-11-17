@@ -280,7 +280,7 @@ export default function QuoteEdit() {
           )}
 
           {!locked && (
-            <div className="sticky-actions actions">
+            <div className="sticky-actions actions only-mobile">
               <button className="btn btn-primary" onClick={() => save()}>
                 <Icon name="check" />
                 Guardar borrador
@@ -318,6 +318,14 @@ export default function QuoteEdit() {
                 {money(calc.totals.total)}
               </dd>
             </dl>
+            {!locked && (
+              <div className="only-desktop" style={{ marginTop: 14 }}>
+                <button className="btn btn-primary btn-block" onClick={() => save()}>
+                  <Icon name="check" />
+                  Guardar borrador
+                </button>
+              </div>
+            )}
           </section>
           {!hideInternal && (
             <section className="card" aria-labelledby="rent">

@@ -1,6 +1,6 @@
-// Conecta Playwright al WebView real de la app Android (CDP) y verifica los flujos principales.
+// Conecta Playwright (API _android, vía adb) al WebView real de la app Android y verifica los flujos principales.
 // Las capturas se toman con `adb screencap` (pantalla real del emulador, incluida la UI nativa).
-import { chromium } from 'playwright';
+import { _android as android } from 'playwright';
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 
@@ -12,8 +12,10 @@ const assert = (c, m) => {
   console.log(`✓ ${m}`);
 };
 
-const browser = await chromium.connectOverCDP('http://localhost:9222');
-const page = browser.contexts()[0].pages().find((p) => p.url().includes('localhost')) ?? browser.contexts()[0].pages()[0];
+const [device] = await android.devices();
+if (!device) throw new Error('No hay dispositivo Android conectado por adb');
+const webview = await device.webView({ pkg: 'app.quotemaker.mobile' }, { timeout: 60_000 });
+const page = await webview.page();
 await page.waitForSelector('#page-title', { timeout: 30_000 });
 const go = async (hash) => {
   await page.evaluate((h) => (location.hash = h), hash);
@@ -95,4 +97,4 @@ if (phase === 'phase2') {
   assert(/Aceptado/.test(accepted), 'el estado manual "Aceptado" persiste');
   shot('15-presupuestos-tras-reinicio');
 }
-await browser.close();
+await device.close();
