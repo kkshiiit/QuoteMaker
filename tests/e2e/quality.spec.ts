@@ -132,6 +132,7 @@ test.describe('con datos de ejemplo', () => {
 
 test('teclado: enlace para saltar al contenido y foco visible', async ({ page }) => {
   await page.goto('/');
+  await expect(page.locator('#page-title')).toBeVisible(); // la pantalla terminó de montarse
   await page.keyboard.press('Tab');
   const skip = page.getByRole('link', { name: 'Saltar al contenido' });
   await expect(skip).toBeFocused();

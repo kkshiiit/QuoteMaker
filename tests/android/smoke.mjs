@@ -14,9 +14,26 @@ const assert = (c, m) => {
 
 const [device] = await android.devices();
 if (!device) throw new Error('No hay dispositivo Android conectado por adb');
-const webview = await device.webView({ pkg: 'app.quotemaker.mobile' }, { timeout: 60_000 });
-const page = await webview.page();
-await page.waitForSelector('#page-title', { timeout: 30_000 });
+// Tras un arranque en frío el sistema puede recrear el WebView: siempre se toma el actual.
+async function attach() {
+  const webview = await device.webView({ pkg: 'app.quotemaker.mobile' }, { timeout: 60_000 });
+  const p = await webview.page();
+  await p.waitForSelector('#page-title', { timeout: 30_000 });
+  return p;
+}
+let page = await attach();
+/** Ejecuta fn; si el WebView fue recreado («has been closed»), se reconecta y reintenta una vez. */
+async function withPage(fn) {
+  try {
+    return await fn();
+  } catch (e) {
+    if (!/has been closed/.test(String(e))) throw e;
+    console.log('El WebView fue recreado por el sistema: reconectando…');
+    await sleep(1500);
+    page = await attach();
+    return fn();
+  }
+}
 const go = async (hash) => {
   await page.evaluate((h) => (location.hash = h), hash);
   await page.waitForSelector('#page-title');
@@ -103,12 +120,15 @@ if (phase === 'phase1') {
 }
 
 if (phase === 'phase2') {
-  await page.getByRole('heading', { name: 'Hola, Taller Aurora' }).waitFor({ timeout: 30_000 });
+  await withPage(() => page.getByRole('heading', { name: 'Hola, Taller Aurora' }).waitFor({ timeout: 30_000 }));
   console.log('✓ los datos persisten tras cerrar y reabrir la app (IndexedDB en el dispositivo)');
-  await go('#/presupuestos');
-  const n = await page.locator('ul.list > li').count();
+  const n = await withPage(async () => {
+    await go('#/presupuestos');
+    await page.locator('ul.list > li').first().waitFor();
+    return page.locator('ul.list > li').count();
+  });
   assert(n === 4, `4 presupuestos persistidos (${n})`);
-  const accepted = await page.getByRole('link', { name: /Estudio Norte/ }).innerText();
+  const accepted = await withPage(() => page.getByRole('link', { name: /Estudio Norte/ }).innerText());
   assert(/Aceptado/.test(accepted), 'el estado manual "Aceptado" persiste');
   shot('15-presupuestos-tras-reinicio');
 }
