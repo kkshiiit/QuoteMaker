@@ -223,3 +223,15 @@ test('recorrido completo sólo con teclado: crear presupuesto y abrir el documen
   await expect(page.getByRole('article')).toContainText('Lámpara de pie');
 });
 
+
+test('escribir apenas se abre una pantalla: el foco no se roba al primer campo', async ({ page }) => {
+  await page.goto('/#/productos');
+  await expect(page.locator('#page-title')).toHaveText('Productos');
+  await page.getByRole('link', { name: 'Nuevo producto' }).first().click();
+  const name = page.getByLabel('Nombre *');
+  await name.waitFor();
+  await name.focus();
+  await page.keyboard.type('Producto tipeado rápido', { delay: 15 }); // ~350 ms escribiendo
+  await expect(name).toHaveValue('Producto tipeado rápido');
+  await expect(name).toBeFocused();
+});

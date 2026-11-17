@@ -37,10 +37,25 @@ export const useToast = () => useContext(ToastCtx);
 
 // ---------------- Layout helpers ----------------
 
+let routeFocusPending = false;
+/** Marca que la próxima pantalla debe anunciar su título (lectores de pantalla). */
+export function requestRouteFocus() {
+  routeFocusPending = true;
+}
+function isEditingControl(el: Element | null): boolean {
+  return !!el && (el.matches('input, textarea, select, [contenteditable="true"]') || !!el.closest('dialog'));
+}
+
 export function PageHeader({ title, subtitle, back, actions }: { title: string; subtitle?: ReactNode; back?: { to: string; label: string }; actions?: ReactNode }) {
+  const h1 = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     document.title = `${title} · QuoteMaker`;
   }, [title]);
+  useEffect(() => {
+    if (!routeFocusPending) return;
+    routeFocusPending = false;
+    if (!isEditingControl(document.activeElement)) h1.current?.focus({ preventScroll: true });
+  }, []);
   return (
     <>
       {back && (
@@ -51,7 +66,7 @@ export function PageHeader({ title, subtitle, back, actions }: { title: string; 
       )}
       <header className="page-header">
         <div>
-          <h1 tabIndex={-1} id="page-title">
+          <h1 tabIndex={-1} id="page-title" ref={h1}>
             {title}
           </h1>
           {subtitle && <p>{subtitle}</p>}

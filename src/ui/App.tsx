@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { HashRouter, Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { SyncProvider, useSync } from '../sync/controller';
 import { Icon, LogoMark, type IconName } from './components/Icon';
-import { ToastProvider } from './components/ui';
+import { requestRouteFocus, ToastProvider } from './components/ui';
 import { usePrefs } from './hooks';
 import { applyTheme, resolveTheme } from './theme/theme';
 
@@ -104,8 +104,9 @@ function RouteFocus() {
       return;
     }
     window.scrollTo(0, 0);
-    const t = window.setTimeout(() => document.getElementById('page-title')?.focus({ preventScroll: true }), 60);
-    return () => window.clearTimeout(t);
+    // El h1 de la nueva pantalla toma el foco al montarse (ver PageHeader), nunca después de que
+    // la persona ya empezó a escribir en un campo.
+    requestRouteFocus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loc.pathname]);
   return null;

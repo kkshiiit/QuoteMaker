@@ -27,5 +27,6 @@ Primera versión.
 - Desborde horizontal en móvil en grillas con títulos largos.
 - Barras de acción fijas que tapaban formularios en escritorio.
 - Etiquetas duplicadas («Teléfono») en Configuración.
+- El foco automático al cambiar de pantalla podía robar el foco del primer campo si se empezaba a escribir enseguida (se perdía texto). Ahora el título se enfoca al montarse la pantalla y nunca si ya hay un campo en uso.
 - Búsquedas sensibles a acentos (ahora «martin» encuentra «Martín»).
 - jsPDF actualizado a 4.2.1 por avisos de seguridad críticos en 3.x.
