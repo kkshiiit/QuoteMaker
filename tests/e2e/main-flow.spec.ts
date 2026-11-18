@@ -22,6 +22,9 @@ async function pdfText(path: string) {
 }
 
 test('flujo completo: costos reales → presupuesto → PDF y WhatsApp sin filtraciones', async ({ page, context }, testInfo) => {
+  // Recorre todo el negocio (productos, compra, gasto, presupuesto, PDF real, WhatsApp, recarga):
+  // en WebKit sin GPU de CI el render de los efectos de vidrio lo acerca a 60 s.
+  test.setTimeout(120_000);
   await fresh(page);
 
   // 1. Datos del negocio
