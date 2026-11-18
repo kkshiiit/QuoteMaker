@@ -6,9 +6,12 @@ import { todayIso } from '../../data/defaults';
 import { expenseLedger } from '../../domain/costing';
 import { D, sum, toDec } from '../../domain/money';
 import { elapsedDays, periodOf, shiftPeriod, type PeriodKind } from '../../domain/periods';
-import { Icon } from '../components/Icon';
+import { Icon, type IconName } from '../components/Icon';
 import { EmptyState, InternalLabel, PageHeader, Segmented } from '../components/ui';
 import { useMoney } from '../hooks';
+
+const expenseIcon = (c: string): IconName =>
+  /flete|env[ií]o|via|nafta|combust|peaje/i.test(c) ? 'truck' : /luz|electric|gas|agua|internet|servicio/i.test(c) ? 'sparkle' : /embal|etiqu/i.test(c) ? 'tag' : /mercad|compra|insumo|madera|pintura/i.test(c) ? 'box' : 'receipt';
 
 /** Panel de gastos por día, quincena o mes. Cada gasto se cuenta una sola vez (igual que Estadísticas). */
 export default function ExpensesPanel() {
@@ -77,7 +80,7 @@ export default function ExpensesPanel() {
           <section className="kpis" aria-label="Resumen de gastos" style={{ marginBottom: 16 }}>
             <div className="card kpi">
               <div className="label">
-                Total del período <InternalLabel text="Interno" />
+                <Icon name="wallet" /> Gasto del período <InternalLabel text="Interno" />
               </div>
               <div className="value num" data-testid="exp-total">
                 {money(view.total)}
@@ -85,14 +88,18 @@ export default function ExpensesPanel() {
               <div className="context">Gastos cargados {money(view.recorded)} + generales {money(toDec(view.ledger.overhead))}</div>
             </div>
             <div className="card kpi">
-              <div className="label">Promedio diario</div>
+              <div className="label">
+                <Icon name="chart" /> Promedio diario
+              </div>
               <div className="value num" data-testid="exp-daily">
                 {money(view.daily)}
               </div>
               <div className="context">Sobre {view.days} día(s)</div>
             </div>
             <div className="card kpi">
-              <div className="label">Categoría principal</div>
+              <div className="label">
+                <Icon name="tag" /> Categoría principal
+              </div>
               <div className="value">{view.cats[0]?.[0] ?? '—'}</div>
               <div className="context">{view.cats[0] && D(view.recorded).gt(0) ? `${D(view.cats[0][1]).div(D(view.recorded)).times(100).round(0).toString()} % de lo cargado` : 'Sin gastos cargados'}</div>
             </div>
@@ -121,6 +128,9 @@ export default function ExpensesPanel() {
                 {view.list.map((e) => (
                   <li key={e.id}>
                     <Link className="list-item" to={`/costos/gastos/${e.id}`}>
+                      <span className="thumb" aria-hidden="true">
+                        <Icon name={expenseIcon(e.category)} />
+                      </span>
                       <div className="grow">
                         <div className="title">{e.description || e.category}</div>
                         <div className="sub">

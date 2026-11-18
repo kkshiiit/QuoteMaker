@@ -4,7 +4,7 @@
  */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { loadDemo, noHorizontalScroll } from './helpers';
+import { loadDemo, noHorizontalScroll, skipWelcome } from './helpers';
 
 const ROUTES = [
   '/',
@@ -164,6 +164,7 @@ test.describe('con datos de ejemplo', () => {
 
 test('teclado: enlace para saltar al contenido y foco visible', async ({ page }) => {
   await page.goto('/');
+  await skipWelcome(page);
   await expect(page.locator('#page-title')).toBeVisible(); // la pantalla terminó de montarse
   await page.keyboard.press('Tab');
   const skip = page.getByRole('link', { name: 'Saltar al contenido' });
@@ -187,6 +188,7 @@ test('respeta prefers-reduced-motion', async ({ browser }) => {
 test('offline: la app (PWA) abre sin conexión, guarda y conserva datos', async ({ page, context }, info) => {
   test.skip(info.project.name !== 'desktop', 'Se verifica una vez');
   await page.goto('/');
+  await skipWelcome(page);
   await page.evaluate(async () => {
     await navigator.serviceWorker.register('./sw.js');
     await navigator.serviceWorker.ready;

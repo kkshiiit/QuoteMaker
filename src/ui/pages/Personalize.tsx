@@ -161,7 +161,7 @@ export default function Personalize() {
             <button className="btn" disabled={!changed} onClick={() => setDraft({ themeMode: prefs.themeMode, paletteId: prefs.paletteId, customAccent: prefs.customAccent })}>
               Descartar
             </button>
-            <button className="btn btn-ghost" onClick={() => setDraft({ themeMode: 'system', paletteId: 'bosque', customAccent: null })}>
+            <button className="btn btn-ghost" onClick={() => setDraft({ themeMode: 'system', paletteId: 'chediek', customAccent: null })}>
               Restablecer
             </button>
           </div>

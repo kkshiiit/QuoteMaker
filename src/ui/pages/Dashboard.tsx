@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { isDatabaseEmpty, loadDemoData } from '../../data/demo';
 import { db } from '../../data/db';
@@ -9,7 +9,9 @@ import { D, sum } from '../../domain/money';
 import { isPastValidity, quoteTotals } from '../../domain/quote';
 import { saleStatus, summarizeSales } from '../../domain/sales';
 import { productStock, stockBalances } from '../../domain/stock';
-import { APP_NAME, Icon, LogoMark } from '../components/Icon';
+import { APP_NAME, Icon, Wordmark } from '../components/Icon';
+import { CategoryTiles } from '../components/CategoryTiles';
+import { Swatch } from '../components/StockPanel';
 import { InternalLabel, PageHeader, StatusBadge } from '../components/ui';
 import { useMoney, usePrefs, useSettings, pct } from '../hooks';
 import { marginPct } from '../../domain/pricing';
@@ -19,6 +21,8 @@ export default function Dashboard() {
   const money = useMoney();
   const [prefs, setPrefs] = usePrefs();
   const [loadingDemo, setLoadingDemo] = useState(false);
+  const [search, setSearch] = useState('');
+  const navigate = useNavigate();
   const data = useLiveQuery(async () => {
     const [products, quotes, purchases, expenses, customers, sales] = await Promise.all([
       db.products.toArray(),
@@ -28,8 +32,9 @@ export default function Dashboard() {
       db.customers.count(),
       db.sales.toArray(),
     ]);
+    const categories = await db.categories.toArray();
     const balances = stockBalances(await db.stockMoves.toArray());
-    return { products, quotes, purchases, expenses, customers, sales, balances };
+    return { products, quotes, purchases, expenses, customers, sales, balances, categories };
   }, []);
 
   const view = useMemo(() => {
@@ -56,7 +61,8 @@ export default function Dashboard() {
     const salesMonth = summarizeSales(data.sales.filter((x) => x.date >= monthStart));
     const toDeliver = data.sales.filter((x) => saleStatus(x) === 'confirmado');
     const lowStock = activeProducts.filter((p) => p.trackStock && productStock(p, data.balances).low);
-    const favorites = activeProducts.filter((p) => p.favorite).slice(0, 8);
+    const favs = activeProducts.filter((p) => p.favorite);
+    const favorites = (favs.length ? favs : [...activeProducts].sort((a, b) => Number(!!b.image) - Number(!!a.image) || b.updatedAt.localeCompare(a.updatedAt))).slice(0, 6);
     return { toDeliver, lowStock, favorites, salesMonth, noCost, stale, sent, sentTotal, pastValidity, acceptedMonth, accRevenue, accProfit, unassigned, monthPurchases, activity, activeProducts };
   }, [data, settings.costStaleDays]);
 
@@ -88,7 +94,7 @@ export default function Dashboard() {
       {data.products.length === 0 && data.quotes.length === 0 && data.sales.length === 0 && (
         <section className="card glass intro-hero" aria-labelledby="intro-h" style={{ marginBottom: 16 }}>
           <div className="intro-hero-head">
-            <LogoMark size={72} title={`Logo de ${APP_NAME}`} />
+            <Wordmark size={72} />
             <div>
               <h2 id="intro-h" className="intro-title">
                 Bienvenido a {APP_NAME}
@@ -173,21 +179,43 @@ export default function Dashboard() {
         </section>
       )}
 
-      {view.favorites.length > 0 && (
-        <section aria-labelledby="fav-h" style={{ marginTop: 16 }}>
-          <div className="row-between">
-            <h2 id="fav-h">Destacados</h2>
-            <Link to="/productos?filtro=favoritos" className="small">
-              Ver todos
+      {data.products.length > 0 && (
+        <section aria-label="Catálogo" style={{ marginTop: 4 }}>
+          <form
+            className="home-search"
+            role="search"
+            onSubmit={(e) => {
+              e.preventDefault();
+              navigate(`/productos?q=${encodeURIComponent(search.trim())}`);
+            }}
+          >
+            <label htmlFor="home-q" className="sr-only">
+              Buscar productos
+            </label>
+            <input id="home-q" className="input" type="search" placeholder="Buscar productos, código o categoría…" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </form>
+          <CategoryTiles categories={data.categories} value="" all={false} onChange={(id) => navigate(`/productos?categoria=${id}`)} />
+          <div className="row-between" style={{ marginTop: 8 }}>
+            <h2 id="fav-h">Productos destacados</h2>
+            <Link to={view.favorites.some((p) => p.favorite) ? '/productos?filtro=favoritos' : '/productos'} className="small">
+              Ver todo →
             </Link>
           </div>
-          <ul className="catalog-grid">
+          <ul className="catalog-grid" aria-labelledby="fav-h">
             {view.favorites.map((p) => (
               <li key={p.id} className="catalog-card">
                 <Link to={`/productos/${p.id}`} className="catalog-link">
                   <span className="catalog-img">{p.image ? <img src={p.image} alt="" loading="lazy" /> : <span aria-hidden="true">{p.name.slice(0, 1).toUpperCase()}</span>}</span>
                   <span className="catalog-body">
                     <span className="title">{p.name}</span>
+                    <span className="catalog-meta">
+                      {(p.variants ?? [])
+                        .filter((v, i, a) => v.colorHex && a.findIndex((x) => x.colorHex === v.colorHex) === i)
+                        .slice(0, 5)
+                        .map((v) => (
+                          <Swatch key={v.id} hex={v.colorHex} size={12} />
+                        ))}
+                    </span>
                     <span className="num catalog-price">{money(p.manualPrice ?? suggestedPrice(p, settings) ?? '0')}</span>
                   </span>
                 </Link>

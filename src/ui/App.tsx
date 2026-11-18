@@ -1,8 +1,13 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { HashRouter, Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { SyncProvider, useSync } from '../sync/controller';
-import { APP_NAME, Icon, LogoMark, type IconName } from './components/Icon';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../data/db';
+import { saleStatus } from '../domain/sales';
+import { productStock, stockBalances } from '../domain/stock';
+import { APP_NAME, Icon, Wordmark, type IconName } from './components/Icon';
 import { requestRouteFocus, ToastProvider } from './components/ui';
+import { Welcome } from './components/Welcome';
 import { usePrefs } from './hooks';
 import { applyTheme, resolveTheme } from './theme/theme';
 
@@ -50,8 +55,15 @@ function ThemeApplier() {
 const PRIMARY: Array<{ to: string; label: string; icon: IconName; end?: boolean }> = [
   { to: '/', label: 'Inicio', icon: 'home', end: true },
   { to: '/productos', label: 'Productos', icon: 'box' },
-  { to: '/ventas', label: 'Ventas', icon: 'cart' },
+  { to: '/ventas', label: 'Pedidos', icon: 'receipt' },
   { to: '/clientes', label: 'Clientes', icon: 'users' },
+];
+
+/** Barra inferior (móvil), como en el diseño de referencia. */
+const BOTTOM: Array<{ to: string; label: string; icon: IconName; end?: boolean }> = [
+  ...PRIMARY,
+  { to: '/gastos', label: 'Gastos', icon: 'wallet' },
+  { to: '/costos/calculadora', label: 'Calc.', icon: 'calculator' },
 ];
 
 /** Herramientas del día a día (menú lateral). */
@@ -106,8 +118,7 @@ function Drawer({ open, onClose }: { open: boolean; onClose: () => void }) {
         <div className="drawer-body">
           <div className="row-between">
             <span className="brand">
-              <LogoMark size={28} />
-              {APP_NAME}
+              <Wordmark size={28} />
             </span>
             <button className="btn btn-icon btn-ghost" aria-label="Cerrar menú" onClick={onClose}>
               <Icon name="x" />
@@ -196,9 +207,36 @@ function UpdateBanner() {
   );
 }
 
+/** Punto de estado de sincronización sobre el botón de menú (sólo si la nube está configurada). */
+function SyncDot() {
+  const s = useSync();
+  if (!s.configured || !s.userEmail) return null;
+  const cls = s.counts.conflict ? 'dot-danger' : s.counts.error || !s.online || s.syncing || s.counts.pending ? 'dot-warn' : 'dot-ok';
+  return <span className={`dot sync-dot ${cls}`} aria-hidden="true" />;
+}
+
+/** Avisos (stock bajo) y pedidos por entregar, con contador. */
+function TopActions() {
+  const counts = useLiveQuery(async () => {
+    const [products, moves, sales] = await Promise.all([db.products.filter((p) => !p.archived && !!p.trackStock).toArray(), db.stockMoves.toArray(), db.sales.toArray()]);
+    const b = stockBalances(moves);
+    return { low: products.filter((p) => productStock(p, b).low).length, orders: sales.filter((x) => saleStatus(x) === 'confirmado').length };
+  }, []);
+  return (
+    <div className="topbar-actions">
+      <Link to="/stock?filtro=bajo" className="btn btn-icon btn-ghost icon-badge" aria-label={`Avisos de stock bajo: ${counts?.low ?? 0}`}>
+        <Icon name="bell" />
+        {!!counts?.low && <span className="count">{counts.low}</span>}
+      </Link>
+      <Link to="/ventas?estado=pendientes" className="btn btn-icon btn-ghost icon-badge" aria-label={`Pedidos por entregar: ${counts?.orders ?? 0}`}>
+        <Icon name="cart" />
+        {!!counts?.orders && <span className="count">{counts.orders}</span>}
+      </Link>
+    </div>
+  );
+}
+
 function Shell({ children }: { children: ReactNode }) {
-  const loc = useLocation();
-  const moreActive = MORE_LINKS.some((l) => loc.pathname.startsWith(l.to)) || loc.pathname === '/mas';
   const [menu, setMenu] = useState(false);
   return (
     <div className="app">
@@ -206,9 +244,8 @@ function Shell({ children }: { children: ReactNode }) {
         Saltar al contenido
       </a>
       <nav className="sidebar" aria-label="Navegación principal">
-        <Link to="/" className="brand" aria-label={`${APP_NAME}, inicio`}>
-          <LogoMark />
-          {APP_NAME}
+        <Link to="/" className="brand sidebar-brand" aria-label={`${APP_NAME}, inicio`}>
+          <Wordmark size={40} />
         </Link>
         {PRIMARY.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.end}>
@@ -246,18 +283,21 @@ function Shell({ children }: { children: ReactNode }) {
         </div>
       </nav>
       <header className="topbar">
-        <Link to="/" className="brand" aria-label={`${APP_NAME}, inicio`}>
-          <LogoMark size={28} />
-          {APP_NAME}
+        <button type="button" className="btn btn-icon btn-ghost topbar-menu" aria-label="Menú" aria-haspopup="dialog" onClick={() => setMenu(true)}>
+          <Icon name="menu" />
+          <SyncDot />
+        </button>
+        <Link to="/" className="topbar-brand" aria-label={`${APP_NAME}, inicio`}>
+          <Wordmark size={30} />
         </Link>
-        <SyncChip />
+        <TopActions />
       </header>
       <main id="main" className="main" tabIndex={-1}>
         <UpdateBanner />
         {children}
       </main>
       <nav className="bottom-nav" aria-label="Navegación principal">
-        {PRIMARY.map((l) => (
+        {BOTTOM.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.end}>
             <span className="nav-pill">
               <Icon name={l.icon} />
@@ -265,12 +305,6 @@ function Shell({ children }: { children: ReactNode }) {
             {l.label}
           </NavLink>
         ))}
-        <button type="button" className={moreActive ? 'active' : undefined} aria-current={moreActive ? 'page' : undefined} aria-haspopup="dialog" onClick={() => setMenu(true)}>
-          <span className="nav-pill">
-            <Icon name="menu" />
-          </span>
-          Menú
-        </button>
       </nav>
       <Drawer open={menu} onClose={() => setMenu(false)} />
     </div>
@@ -292,6 +326,7 @@ export function App() {
         <ThemeApplier />
         <HashRouter>
           <RouteFocus />
+          <Welcome />
           <Shell>
             <Suspense fallback={<Loading />}>
               <Routes>

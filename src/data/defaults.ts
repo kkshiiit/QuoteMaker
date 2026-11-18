@@ -64,5 +64,5 @@ export function defaultSettings(): BusinessSettings {
 }
 
 export function defaultPreferences(): Preferences {
-  return { id: 'prefs', themeMode: 'system', paletteId: 'bosque', customAccent: null, hideInternalByDefault: false, onboardingDone: false };
+  return { id: 'prefs', themeMode: 'system', paletteId: 'chediek', customAccent: null, hideInternalByDefault: false, onboardingDone: false };
 }

@@ -11,9 +11,10 @@ import { MAX_PHOTOS, resizePhoto, thumbFromDataUrl, validateVideo } from '../../
 import { newId, nowIso } from '../../data/defaults';
 import { ShareProductDialog, productPhotos } from '../components/ShareProduct';
 import { StockPanel } from '../components/StockPanel';
+import { ProductHero } from '../components/ProductHero';
 import { Icon } from '../components/Icon';
 import { Check, DecimalField, ErrorSummary, InternalLabel, Menu, PageHeader, SelectField, TextField, useConfirm, useToast } from '../components/ui';
-import { pct, useMoney, useSettings } from '../hooks';
+import { pct, useMoney, usePrefs, useSettings } from '../hooks';
 
 const SOURCE_LABEL = { purchase: 'Compra', expense: 'Gasto asignado', manual: 'Carga manual', recalc: 'Recalculado' } as const;
 
@@ -30,6 +31,7 @@ function ProductDetailForm() {
   const toast = useToast();
   const money = useMoney();
   const settings = useSettings();
+  const [prefs] = usePrefs();
   const [confirm, confirmNode] = useConfirm();
   const stored = useLiveQuery(async () => (isNew ? null : ((await db.products.get(id)) ?? null)), [id]);
   const categories = useLiveQuery(() => db.categories.filter((c) => !c.archived).toArray(), []);
@@ -133,6 +135,7 @@ function ProductDetailForm() {
         }
       />
       <ErrorSummary errors={errors} />
+      {!isNew && stored && <ProductHero product={stored} price={stored.manualPrice || suggestedPrice(stored, settings)} suggested={suggestedPrice(stored, settings)} hideInternal={prefs.hideInternalByDefault} />}
       <div className="grid grid-main-aside">
         <form
           className="stack"

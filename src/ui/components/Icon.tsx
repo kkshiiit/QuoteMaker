@@ -54,6 +54,17 @@ const P: Record<string, string> = {
   menu: 'M3 6h18M3 12h18M3 18h18',
   route: 'M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM6 15V9a4 4 0 0 1 4-4h6M18 9v6a4 4 0 0 1-4 4H8',
   stack: 'M4 7h16M4 12h16M4 17h10',
+  bell: 'M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0',
+  bed: 'M3 18V7M3 13h18v5M21 13a3 3 0 0 0-3-3h-7v3M7 11.5a1.5 1.5 0 1 0 0-.01',
+  shirt: 'M8 3 4 6l2 4 2-1v12h8V9l2 1 2-4-4-3c-.5 1.5-2 2.5-4 2.5S8.5 4.5 8 3z',
+  baby: 'M9 3h6l1 4-2 2v4l3 8H7l3-8V9L8 7zM10 3a2 2 0 0 0 4 0',
+  candle: 'M8 10h8v11H8zM12 10V7M12 2.5c1.5 1.5 1.5 3 0 4.5-1.5-1.5-1.5-3 0-4.5z',
+  incense: 'M5 21h14M12 21V9M9 21l1-6M15 21l-1-6M12 6c-1-1-1-2 0-3M15 7c-1-1-1-2 0-3M9 7c-1-1-1-2 0-3',
+  flame: 'M12 22a6 6 0 0 0 6-6c0-4-3-6-4-10-2 2-3 4-3 6-1-1-2-2-2-3-2 2-3 4-3 7a6 6 0 0 0 6 6z',
+  chair: 'M7 3h10v9H7zM5 12h14v3H5zM7 15v6M17 15v6',
+  lamp: 'M8 3h8l3 8H5zM12 11v8M8 21h8',
+  bath: 'M4 12h16v3a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM6 12V5a2 2 0 0 1 4 0M7 20l-1 2M17 20l1 2',
+  sock: 'M9 2h6v9l3 4a3.5 3.5 0 0 1-5 5l-4-4V2zM9 6h6',
 };
 
 export type IconName = keyof typeof P;
@@ -84,6 +95,23 @@ export const APP_NAME = 'Chediek Home';
  * Marca Chediek Home: una casa de líneas suaves con puerta en arco, sobre una insignia
  * redondeada. Toma el color de acento del tema (funciona en claro, oscuro y pasteles).
  */
+/**
+ * Logotipo tipográfico «CH · CHEDIEK HOME» (monograma serif con el nombre en versalitas
+ * cruzando las letras), como en el diseño de referencia. Hereda el color del texto.
+ */
+export function Wordmark({ size = 34, className = '' }: { size?: number; className?: string }) {
+  return (
+    <span className={`wordmark ${className}`} style={{ fontSize: size }} role="img" aria-label={APP_NAME}>
+      <span className="wm-ch" aria-hidden="true">
+        CH
+      </span>
+      <span className="wm-name" aria-hidden="true">
+        CHEDIEK HOME
+      </span>
+    </span>
+  );
+}
+
 export function LogoMark({ size = 32, title }: { size?: number; title?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" role={title ? 'img' : undefined} aria-hidden={title ? undefined : true} aria-label={title}>

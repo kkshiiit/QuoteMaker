@@ -14,6 +14,14 @@ export interface Palette {
   group: PaletteGroup;
   /** Segundo tono para los brillos de fondo (estilo Spatial). */
   glow: string;
+  /**
+   * Paleta de firma (Rosé Chediek): fondos y superficies propios y botones principales de
+   * otro tono (marrón cacao en claro, rosa empolvado en oscuro), como en el diseño de referencia.
+   */
+  signature?: {
+    light: { bg: string; surface: string; surface2: string; ink: string; muted: string; line: string; fill: string; soft: string; glow2: string };
+    dark: { bg: string; surface: string; surface2: string; ink: string; muted: string; line: string; fill: string; soft: string; glow2: string };
+  };
 }
 
 /**
@@ -22,6 +30,17 @@ export interface Palette {
  * el acento usado para texto e íconos se ajusta para cumplir contraste AA.
  */
 export const PALETTES: Palette[] = [
+  {
+    id: 'chediek',
+    name: 'Rosé Chediek',
+    accent: '#9a5b55',
+    glow: '#e7b9b1',
+    group: 'clasicos',
+    signature: {
+      light: { bg: '#efe1db', surface: '#fbf6f3', surface2: '#f3e7e2', ink: '#2e2624', muted: '#6b5b56', line: '#e2d0c9', fill: '#3a2f2c', soft: '#efd3cc', glow2: '#f6e3dc' },
+      dark: { bg: '#1b1615', surface: '#251f1e', surface2: '#2f2726', ink: '#f4ebe7', muted: '#bfaca6', line: '#3d3331', fill: '#e6c1b9', soft: '#4a3532', glow2: '#5a3d39' },
+    },
+  },
   { id: 'bosque', name: 'Bosque', accent: '#1f6f43', glow: '#7cc6a0', group: 'clasicos' },
   { id: 'oceano', name: 'Océano', accent: '#1d5fa8', glow: '#79b4f0', group: 'clasicos' },
   { id: 'terracota', name: 'Terracota', accent: '#b4532a', glow: '#f2a57b', group: 'clasicos' },
@@ -122,6 +141,34 @@ export function resolveTheme(prefs: Pick<Preferences, 'themeMode' | 'paletteId' 
   const pastel = custom ? luminance(baseRgb) > 0.55 : palette.group === 'pasteles';
   const glow = custom ? rgbToHex(mix(baseRgb, [255, 255, 255], 0.45)) : palette.glow;
 
+  const sig = !custom ? palette.signature?.[mode] : undefined;
+  if (sig) {
+    const accentSig = ensureContrast(mode === 'light' ? base : palette.glow, sig.surface, 4.5);
+    const onFill = contrastRatio('#111111', sig.fill) >= contrastRatio('#ffffff', sig.fill) ? '#1e1716' : '#ffffff';
+    return {
+      mode,
+      pastel: false,
+      vars: {
+        '--bg': sig.bg,
+        '--surface': sig.surface,
+        '--surface-2': sig.surface2,
+        '--ink': sig.ink,
+        '--muted': sig.muted,
+        '--line': sig.line,
+        '--accent': accentSig,
+        '--on-accent': contrastRatio('#ffffff', accentSig) >= 4.5 ? '#ffffff' : '#1e1716',
+        '--accent-fill': sig.fill,
+        '--on-accent-fill': onFill,
+        '--accent-soft': sig.soft,
+        '--accent-ink': ensureContrast(sig.ink, sig.soft, 4.5),
+        '--glass': rgba(sig.surface, mode === 'light' ? 0.74 : 0.72),
+        '--glass-strong': rgba(sig.surface, mode === 'light' ? 0.9 : 0.88),
+        '--glass-border': mode === 'light' ? 'rgb(255 255 255 / 0.8)' : 'rgb(255 255 255 / 0.08)',
+        '--glow-1': rgba(palette.glow, mode === 'light' ? 0.55 : 0.16),
+        '--glow-2': rgba(sig.glow2, mode === 'light' ? 0.6 : 0.3),
+      },
+    };
+  }
   const s0 = SURFACES[mode];
   const tint = (hex: string, t: number) => rgbToHex(mix(baseRgb, hexToRgb(hex)!, t));
   // Pasteles: fondo y superficies apenas teñidos del color elegido.

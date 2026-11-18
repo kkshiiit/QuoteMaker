@@ -158,25 +158,6 @@ function SaleEditForm() {
             void onSave();
           }}
         >
-          <section className="card stack" aria-labelledby="sv-where">
-            <h2 id="sv-where">¿Dónde se vendió?</h2>
-            <Segmented<Sale['channel']>
-              legend="Canal de venta"
-              value={form.channel}
-              onChange={(v) => update({ channel: v, platform: v === 'online' ? form.platform || 'WhatsApp' : '' })}
-              options={[
-                { value: 'presencial', label: 'Presencial en el local' },
-                { value: 'online', label: 'Online' },
-              ]}
-            />
-            <div className="form-grid cols-2">
-              {form.channel === 'online' && (
-                <SelectField<string> label="Plataforma" value={form.platform} onChange={(v) => update({ platform: v })} options={ONLINE_PLATFORMS.map((p) => ({ value: p, label: p }))} />
-              )}
-              <TextField label="Fecha" type="date" value={form.date} onChange={(v) => update({ date: v })} />
-            </div>
-          </section>
-
           <section className="card" aria-labelledby="sv-cli">
             <div className="card-header">
               <h2 id="sv-cli">Cliente</h2>
@@ -215,7 +196,10 @@ function SaleEditForm() {
               {form.items.map((it, i) => (
                 <fieldset key={it.id} className="item-row">
                   <legend className="sr-only">Renglón {i + 1}</legend>
-                  <TextField label="Descripción" value={it.description} onChange={(v) => setItem(i, { description: v })} />
+                  <div className="item-head">
+                    {it.productId && products?.get(it.productId)?.image && <img className="item-thumb" src={products.get(it.productId)!.image!} alt="" width={48} height={48} />}
+                    <TextField label="Descripción" value={it.description} onChange={(v) => setItem(i, { description: v })} />
+                  </div>
                   {it.productId && (products?.get(it.productId)?.variants?.length ?? 0) > 0 && (
                     <SelectField<string>
                       label="Color / talle"
@@ -228,12 +212,20 @@ function SaleEditForm() {
                       options={[{ value: '', label: 'Elegí…' }, ...products!.get(it.productId)!.variants!.map((v) => ({ value: v.id, label: variantLabel(v) || 'Variante' }))]}
                     />
                   )}
+                  <div className="qty-step">
+                    <button type="button" className="btn btn-icon btn-sm" aria-label={`Restar una unidad, renglón ${i + 1}`} onClick={() => setItem(i, { quantity: D(it.quantity || '0').gt(1) ? D(it.quantity).minus(1).toString() : '1' })}>
+                      <Icon name="minus" />
+                    </button>
                   <DecimalField
                     label="Cant."
                     value={it.quantity}
                     onChange={(v) => setItem(i, { quantity: v })}
                     error={it.productId && short.has(`${it.productId}|${it.variantId ?? ''}`) ? `Stock insuficiente (hay ${D(balances?.get(`${it.productId}|${it.variantId ?? ''}`) ?? '0').minus(D(taken?.get(`${it.productId}|${it.variantId ?? ''}`) ?? '0')).toFixed(0)})` : null}
                   />
+                    <button type="button" className="btn btn-icon btn-sm" aria-label={`Sumar una unidad, renglón ${i + 1}`} onClick={() => setItem(i, { quantity: D(it.quantity || '0').plus(1).toString() })}>
+                      <Icon name="plus" />
+                    </button>
+                  </div>
                   <DecimalField label="Precio unit." prefix="$" value={it.unitPrice} onChange={(v) => setItem(i, { unitPrice: v })} />
                   <DecimalField label="Desc." suffix="%" value={it.discountPct === '0' ? '' : it.discountPct} onChange={(v) => setItem(i, { discountPct: v || '0' })} />
                   <div className="field">
@@ -339,6 +331,25 @@ function SaleEditForm() {
                 </div>
               </div>
             )}
+          </section>
+
+          <section className="card stack" aria-labelledby="sv-where">
+            <h2 id="sv-where">¿Dónde se vendió?</h2>
+            <Segmented<Sale['channel']>
+              legend="Canal de venta"
+              value={form.channel}
+              onChange={(v) => update({ channel: v, platform: v === 'online' ? form.platform || 'WhatsApp' : '' })}
+              options={[
+                { value: 'presencial', label: 'Presencial en el local' },
+                { value: 'online', label: 'Online' },
+              ]}
+            />
+            <div className="form-grid cols-2">
+              {form.channel === 'online' && (
+                <SelectField<string> label="Plataforma" value={form.platform} onChange={(v) => update({ platform: v })} options={ONLINE_PLATFORMS.map((p) => ({ value: p, label: p }))} />
+              )}
+              <TextField label="Fecha" type="date" value={form.date} onChange={(v) => update({ date: v })} />
+            </div>
           </section>
 
           {!hideInternal && (

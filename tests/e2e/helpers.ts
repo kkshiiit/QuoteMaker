@@ -7,8 +7,17 @@ import { expect, type Page } from '@playwright/test';
  */
 export async function fresh(page: Page) {
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
   expect(await page.evaluate(() => localStorage.length)).toBe(0);
+  await skipWelcome(page);
+}
+
+/** Primera apertura: pasa la presentación de bienvenida («Comenzar»). */
+export async function skipWelcome(page: Page) {
+  const start = page.getByRole('button', { name: 'Comenzar' });
+  await expect(start).toBeVisible();
+  await start.click();
+  await expect(start).toHaveCount(0);
 }
 
 export async function loadDemo(page: Page) {

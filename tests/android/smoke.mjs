@@ -113,6 +113,10 @@ const noOverflow = async (where) => {
 if (phase === 'phase1') {
   assert((await page.evaluate(() => navigator.userAgent)).includes('Android'), 'se ejecuta dentro del WebView de Android');
   assert(await page.evaluate(() => !!window.Capacitor?.isNativePlatform?.()), 'Capacitor reporta plataforma nativa');
+  await page.getByRole('button', { name: 'Comenzar' }).waitFor({ timeout: 30_000 });
+  shot('00-bienvenida');
+  await page.getByRole('button', { name: 'Comenzar' }).dispatchEvent('click');
+  await page.getByRole('button', { name: 'Probar con datos de ejemplo' }).waitFor({ timeout: 30_000 });
   shot('01-inicio-vacio');
   await page.getByRole('button', { name: 'Probar con datos de ejemplo' }).dispatchEvent('click');
   await page.getByRole('heading', { name: 'Hola, Taller Aurora' }).waitFor({ timeout: 30_000 });
