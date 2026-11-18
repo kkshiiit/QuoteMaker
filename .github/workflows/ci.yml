@@ -51,7 +51,7 @@ jobs:
           QM_PG_URL: postgres://postgres:postgres@localhost:5432/postgres
       - name: Configuración de la nube (presencia, nunca el valor)
         env:
-          QM_CLOUD_URL: ${{ secrets.VITE_SUPABASE_URL || vars.VITE_SUPABASE_URL }}
+          QM_CLOUD_URL: ${{ secrets.VITE_SUPABASE_URL || vars.VITE_SUPABASE_URL || 'https://axqciidtmxuqzihhqgbj.supabase.co' }}
           QM_CLOUD_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || vars.VITE_SUPABASE_ANON_KEY }}
           QM_CLOUD_COMBINED: ${{ secrets.NOMBRESECRETOQUOTEMAKER }}
         run: bash scripts/cloud-env.sh
@@ -102,7 +102,7 @@ jobs:
       - run: npm ci
       - name: Configuración de la nube (presencia, nunca el valor)
         env:
-          QM_CLOUD_URL: ${{ secrets.VITE_SUPABASE_URL || vars.VITE_SUPABASE_URL }}
+          QM_CLOUD_URL: ${{ secrets.VITE_SUPABASE_URL || vars.VITE_SUPABASE_URL || 'https://axqciidtmxuqzihhqgbj.supabase.co' }}
           QM_CLOUD_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || vars.VITE_SUPABASE_ANON_KEY }}
           QM_CLOUD_COMBINED: ${{ secrets.NOMBRESECRETOQUOTEMAKER }}
         run: bash scripts/cloud-env.sh
