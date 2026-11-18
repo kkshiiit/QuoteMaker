@@ -6,7 +6,8 @@ import { db } from '../../data/db';
 import { todayIso } from '../../data/defaults';
 import { D, sum } from '../../domain/money';
 import { isPastValidity, quoteTotals } from '../../domain/quote';
-import { Icon } from '../components/Icon';
+import { summarizeSales } from '../../domain/sales';
+import { APP_NAME, Icon, LogoMark } from '../components/Icon';
 import { InternalLabel, PageHeader, StatusBadge } from '../components/ui';
 import { useMoney, usePrefs, useSettings, pct } from '../hooks';
 import { marginPct } from '../../domain/pricing';
@@ -17,14 +18,15 @@ export default function Dashboard() {
   const [prefs, setPrefs] = usePrefs();
   const [loadingDemo, setLoadingDemo] = useState(false);
   const data = useLiveQuery(async () => {
-    const [products, quotes, purchases, expenses, customers] = await Promise.all([
+    const [products, quotes, purchases, expenses, customers, sales] = await Promise.all([
       db.products.toArray(),
       db.quotes.orderBy('updatedAt').reverse().toArray(),
       db.purchases.toArray(),
       db.expenses.toArray(),
       db.customers.count(),
+      db.sales.toArray(),
     ]);
-    return { products, quotes, purchases, expenses, customers };
+    return { products, quotes, purchases, expenses, customers, sales };
   }, []);
 
   const view = useMemo(() => {
@@ -48,7 +50,8 @@ export default function Dashboard() {
       .flatMap((q) => q.events.map((e) => ({ ...e, quote: q })))
       .sort((a, b) => b.at.localeCompare(a.at))
       .slice(0, 6);
-    return { noCost, stale, sent, sentTotal, pastValidity, acceptedMonth, accRevenue, accProfit, unassigned, monthPurchases, activity, activeProducts };
+    const salesMonth = summarizeSales(data.sales.filter((x) => x.date >= monthStart));
+    return { salesMonth, noCost, stale, sent, sentTotal, pastValidity, acceptedMonth, accRevenue, accProfit, unassigned, monthPurchases, activity, activeProducts };
   }, [data, settings.costStaleDays]);
 
   if (!data || !view) return <p role="status">Cargando…</p>;
@@ -75,6 +78,56 @@ export default function Dashboard() {
           </Link>
         }
       />
+
+      {data.products.length === 0 && data.quotes.length === 0 && data.sales.length === 0 && (
+        <section className="card glass intro-hero" aria-labelledby="intro-h" style={{ marginBottom: 16 }}>
+          <div className="intro-hero-head">
+            <LogoMark size={72} title={`Logo de ${APP_NAME}`} />
+            <div>
+              <h2 id="intro-h" className="intro-title">
+                Bienvenido a {APP_NAME}
+              </h2>
+              <p className="muted">Costos reales, precios, ventas y presupuestos de tu negocio, siempre a mano y privados.</p>
+            </div>
+          </div>
+          <ul className="intro-points">
+            <li>
+              <Icon name="cart" />
+              <span>
+                <strong>Ventas</strong> en el local y online (WhatsApp, Instagram, Facebook, TikTok), con historial por cliente.
+              </span>
+            </li>
+            <li>
+              <Icon name="share" />
+              <span>
+                <strong>Compartí productos</strong> con fotos, videos, descripción y links directos a tus redes.
+              </span>
+            </li>
+            <li>
+              <Icon name="file" />
+              <span>
+                <strong>Presupuestos</strong> en PDF o WhatsApp sin mostrar nunca tus costos ni márgenes.
+              </span>
+            </li>
+            <li>
+              <Icon name="palette" />
+              <span>
+                <strong>A tu gusto:</strong> tema claro u oscuro, paletas clásicas, (+) Pasteles o tu propio color.
+              </span>
+            </li>
+          </ul>
+          <div className="actions">
+            <Link className="btn btn-primary" to="/configuracion">
+              <Icon name="settings" />
+              Configurar mi negocio
+            </Link>
+            <Link className="btn" to="/personalizacion">
+              <Icon name="palette" />
+              Elegir colores
+            </Link>
+          </div>
+        </section>
+      )}
 
       {pendingSteps.length > 0 && (
         <section className="card" aria-labelledby="onb">
@@ -119,6 +172,13 @@ export default function Dashboard() {
           Resumen
         </h2>
         <div className="kpis">
+          <Link className="kpi" to="/ventas?periodo=mes">
+            <div className="label">Ventas del mes</div>
+            <div className="value">{money(view.salesMonth.total)}</div>
+            <div className="context">
+              {view.salesMonth.count} venta(s) · local {view.salesMonth.byChannel.presencial.count} · online {view.salesMonth.byChannel.online.count}
+            </div>
+          </Link>
           <Link className="kpi" to="/presupuestos?estado=sent">
             <div className="label">Presupuestos enviados</div>
             <div className="value">{view.sent.length}</div>

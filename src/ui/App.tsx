@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { HashRouter, Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { SyncProvider, useSync } from '../sync/controller';
-import { Icon, LogoMark, type IconName } from './components/Icon';
+import { APP_NAME, Icon, LogoMark, type IconName } from './components/Icon';
 import { requestRouteFocus, ToastProvider } from './components/ui';
 import { usePrefs } from './hooks';
 import { applyTheme, resolveTheme } from './theme/theme';
@@ -15,6 +15,8 @@ const ExpenseEdit = lazy(() => import('./pages/ExpenseEdit'));
 const Quotes = lazy(() => import('./pages/Quotes'));
 const QuoteEdit = lazy(() => import('./pages/QuoteEdit'));
 const QuoteDocument = lazy(() => import('./pages/QuoteDocument'));
+const Sales = lazy(() => import('./pages/Sales'));
+const SaleEdit = lazy(() => import('./pages/SaleEdit'));
 const More = lazy(() => import('./pages/More'));
 const Customers = lazy(() => import('./pages/Customers'));
 const Suppliers = lazy(() => import('./pages/Suppliers'));
@@ -45,11 +47,12 @@ function ThemeApplier() {
 const PRIMARY: Array<{ to: string; label: string; icon: IconName; end?: boolean }> = [
   { to: '/', label: 'Inicio', icon: 'home', end: true },
   { to: '/productos', label: 'Productos', icon: 'box' },
-  { to: '/costos', label: 'Costos', icon: 'calculator' },
+  { to: '/ventas', label: 'Ventas', icon: 'cart' },
   { to: '/presupuestos', label: 'Presupuestos', icon: 'file' },
 ];
 
 const SECONDARY: Array<{ to: string; label: string; icon: IconName }> = [
+  { to: '/costos', label: 'Costos', icon: 'calculator' },
   { to: '/clientes', label: 'Clientes', icon: 'users' },
   { to: '/proveedores', label: 'Proveedores', icon: 'truck' },
   { to: '/gastos-generales', label: 'Gastos generales', icon: 'wallet' },
@@ -122,7 +125,7 @@ function UpdateBanner() {
   if (!apply) return null;
   return (
     <div className="card row-between" role="status" style={{ marginBottom: 16 }}>
-      <span>Hay una versión nueva de QuoteMaker.</span>
+      <span>Hay una versión nueva de {APP_NAME}.</span>
       <button className="btn btn-primary btn-sm" onClick={apply}>
         Actualizar
       </button>
@@ -139,9 +142,9 @@ function Shell({ children }: { children: ReactNode }) {
         Saltar al contenido
       </a>
       <nav className="sidebar" aria-label="Navegación principal">
-        <Link to="/" className="brand" aria-label="QuoteMaker, inicio">
+        <Link to="/" className="brand" aria-label={`${APP_NAME}, inicio`}>
           <LogoMark />
-          QuoteMaker
+          {APP_NAME}
         </Link>
         {PRIMARY.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.end}>
@@ -168,9 +171,9 @@ function Shell({ children }: { children: ReactNode }) {
         </div>
       </nav>
       <header className="topbar">
-        <Link to="/" className="brand" aria-label="QuoteMaker, inicio">
+        <Link to="/" className="brand" aria-label={`${APP_NAME}, inicio`}>
           <LogoMark size={28} />
-          QuoteMaker
+          {APP_NAME}
         </Link>
         <SyncChip />
       </header>
@@ -226,6 +229,8 @@ export function App() {
                 <Route path="/presupuestos" element={<Quotes />} />
                 <Route path="/presupuestos/:id" element={<QuoteEdit />} />
                 <Route path="/presupuestos/:id/documento" element={<QuoteDocument />} />
+                <Route path="/ventas" element={<Sales />} />
+                <Route path="/ventas/:id" element={<SaleEdit />} />
                 <Route path="/mas" element={<More />} />
                 <Route path="/clientes" element={<Customers />} />
                 <Route path="/clientes/:id" element={<Customers />} />

@@ -41,6 +41,12 @@ export interface BusinessSettings extends BaseRecord {
   showBusinessContactEmail: boolean;
   showBusinessAddress: boolean;
   showBusinessTaxId: boolean;
+  /** Perfiles públicos del negocio (URL o @usuario). Se ofrecen como links al compartir. */
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
+  salePrefix?: string;
+  nextSaleNumber?: number;
 }
 
 export interface Category extends BaseRecord {
@@ -69,7 +75,9 @@ export interface Product extends BaseRecord {
   supplierId: string | null;
   active: boolean;
   archived: boolean;
-  image: string | null; // data URL WebP/JPEG reducida
+  image: string | null; // miniatura: data URL WebP/JPEG reducida (480 px)
+  /** Fotos para compartir (data URL WebP, hasta 1280 px). Se sincronizan. Registros viejos: sin campo. */
+  photos?: string[];
   unitWeight: Dec; // kg
   unitVolume: Dec; // litros / dm³
   currentCost: Dec | null; // costo unitario real (escala 4)
@@ -290,6 +298,62 @@ export interface QuoteDocumentRecord extends BaseRecord {
   sha256: string;
 }
 
+export type SaleChannel = 'presencial' | 'online';
+
+export const SALE_CHANNEL_LABELS: Record<SaleChannel, string> = {
+  presencial: 'Presencial en el local',
+  online: 'Online',
+};
+
+export const ONLINE_PLATFORMS = ['WhatsApp', 'Instagram', 'Facebook', 'TikTok', 'Mercado Libre', 'Tienda web', 'Otro'] as const;
+export const PAYMENT_METHODS = ['Efectivo', 'Transferencia', 'Débito', 'Crédito', 'Mercado Pago', 'Otro'] as const;
+
+export interface SaleItem {
+  id: string;
+  productId: string | null;
+  description: string;
+  unit: string;
+  quantity: Dec;
+  unitPrice: Dec;
+  discountPct: Dec;
+  /** INTERNO: costo unitario congelado al registrar la venta. */
+  unitCost: Dec;
+}
+
+export interface Sale extends BaseRecord {
+  number: string;
+  date: string; // YYYY-MM-DD
+  channel: SaleChannel;
+  /** Sólo para ventas online: dónde se concretó (WhatsApp, Instagram…). */
+  platform: string;
+  customerId: string | null;
+  /** Nombre del cliente al momento de la venta ('' = consumidor final). */
+  customerName: string;
+  items: SaleItem[];
+  globalDiscountPct: Dec;
+  /** Impuesto discriminado (0 = precio final). Registros viejos: sin campo = 0. */
+  taxPct?: Dec;
+  shippingCharged: Dec;
+  paymentMethod: string;
+  quoteId: string | null;
+  notes: string; // internas
+  cancelled: boolean;
+}
+
+/**
+ * Video de un producto. Se guarda SOLO en este dispositivo (tabla local, no se sincroniza:
+ * los videos superan el tamaño razonable para la nube gratuita).
+ */
+export interface ProductVideo {
+  id: string;
+  productId: string;
+  name: string;
+  mime: string;
+  size: number;
+  blob: Blob;
+  createdAt: string;
+}
+
 export interface Preferences {
   id: 'prefs';
   themeMode: 'light' | 'dark' | 'system';
@@ -310,7 +374,8 @@ export type CollectionName =
   | 'overheads'
   | 'customers'
   | 'quotes'
-  | 'quoteDocuments';
+  | 'quoteDocuments'
+  | 'sales';
 
 export const SYNCED_COLLECTIONS: CollectionName[] = [
   'settings',
@@ -324,4 +389,5 @@ export const SYNCED_COLLECTIONS: CollectionName[] = [
   'customers',
   'quotes',
   'quoteDocuments',
+  'sales',
 ];

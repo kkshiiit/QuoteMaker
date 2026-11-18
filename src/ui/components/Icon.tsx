@@ -38,6 +38,17 @@ const P: Record<string, string> = {
   external: 'M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3',
   database: 'M12 8c4.4 0 8-1.3 8-3s-3.6-3-8-3-8 1.3-8 3 3.6 3 8 3zM4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3',
   layers: 'M12 2 2 7l10 5 10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
+  cart: 'M3 3h2l2.4 12.1a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L22 7H6M9 21h.01M18 21h.01',
+  store: 'M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6',
+  globe: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20',
+  image: 'M3 5h18v14H3zM8.5 10.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M21 15l-5-5L5 19',
+  video: 'M3 6h12v12H3zM15 10l6-3v10l-6-3',
+  instagram: 'M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8M17.5 6.5h.01',
+  facebook: 'M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z',
+  tiktok: 'M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5M14 3a5 5 0 0 0 5 5',
+  sparkle: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 17l.8 2.2L22 20l-2.2.8L19 23l-.8-2.2L16 20l2.2-.8z',
+  sun: 'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',
+  moon: 'M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z',
 };
 
 export type IconName = keyof typeof P;
@@ -62,14 +73,19 @@ export function Icon({ name, label, className }: { name: IconName; label?: strin
   );
 }
 
-/** Marca QuoteMaker: insignia con una "Q" cuya cola es una flecha de envío (el presupuesto que sale hacia el cliente). */
+export const APP_NAME = 'Chediek Home';
+
+/**
+ * Marca Chediek Home: una casa de líneas suaves con puerta en arco, sobre una insignia
+ * redondeada. Toma el color de acento del tema (funciona en claro, oscuro y pasteles).
+ */
 export function LogoMark({ size = 32, title }: { size?: number; title?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" role={title ? 'img' : undefined} aria-hidden={title ? undefined : true} aria-label={title}>
-      <rect width="64" height="64" rx="16" fill="var(--accent, #1f6f43)" />
-      <circle cx="29" cy="29" r="13" fill="none" stroke="var(--on-accent, #fff)" strokeWidth="6" />
-      <path d="M35 35 L47 47" stroke="var(--on-accent, #fff)" strokeWidth="6" strokeLinecap="round" />
-      <path d="M40.5 47 H47.5 V40" fill="none" stroke="var(--on-accent, #fff)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+      <rect width="64" height="64" rx="18" fill="var(--accent, #1f6f43)" />
+      <path d="M50 27.2 32 13 14 27.2V48a3 3 0 0 0 3 3h30a3 3 0 0 0 3-3z" fill="none" stroke="var(--on-accent, #fff)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M26 51V40a6 6 0 0 1 12 0v11" fill="none" stroke="var(--on-accent, #fff)" strokeWidth="5" strokeLinecap="round" />
+      
     </svg>
   );
 }

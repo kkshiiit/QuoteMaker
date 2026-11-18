@@ -76,7 +76,7 @@ export default function BackupPage() {
         <section className="card">
           <h2>Importar</h2>
           <p className="muted" style={{ marginBottom: 12 }}>
-            Restaurá un respaldo de QuoteMaker (versión 1 o anterior).
+            Restaurá un respaldo de Chediek Home (también acepta respaldos de QuoteMaker).
           </p>
           <label className="btn">
             <Icon name="upload" />

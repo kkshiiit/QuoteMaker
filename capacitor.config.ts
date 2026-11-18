@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.quotemaker.mobile',
-  appName: 'QuoteMaker',
+  appName: 'Chediek Home',
   webDir: 'dist',
   android: {
     allowMixedContent: false,

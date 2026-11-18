@@ -1,4 +1,4 @@
-# Guía de usuario
+# Guía de usuario · Chediek Home
 
 QuoteMaker es tuya: la usás sólo vos (el titular del negocio). Tus clientes nunca entran a la app.
 
@@ -96,13 +96,39 @@ Cada PDF o mensaje queda registrado en el historial del presupuesto.
 
 ![Vista previa PDF](media/screenshots/15-pdf-generado-1.png)
 
+## 8 bis. Ventas
+
+En **Ventas** anotás lo que efectivamente vendiste:
+
+- **Presencial en el local** u **Online** (WhatsApp, Instagram, Facebook, TikTok, Mercado Libre, tienda web u otro).
+- Con un **cliente** registrado (queda en su ficha, en «Ventas a este cliente») o como consumidor final / nombre libre.
+- Productos del catálogo o conceptos libres, con descuentos, impuesto (vacío si el precio ya es final), envío y forma de pago.
+
+Arriba ves el **total vendido**, cuánto fue **en el local** y cuánto **online** (por plataforma), y la **ganancia** (interna, con el costo de cada producto congelado al vender). Podés filtrar por canal y período, buscar por cliente o producto y ver el ranking «Ventas por cliente». Una venta se puede **anular** (queda en el historial pero no suma) y restaurar.
+
+Desde un presupuesto **aceptado**, el botón **Registrar venta** la carga con los mismos ítems, cliente, descuentos e impuesto.
+
+## 8 ter. Compartir productos (fotos, videos y redes)
+
+En la ficha de un producto, sección **Fotos y videos**: hasta 6 fotos (la primera es la **portada**; se optimizan en tu dispositivo) y videos. Los videos quedan **sólo en ese dispositivo** (no se suben a la nube).
+
+El botón **Compartir** muestra una vista previa (portada, nombre, descripción, precio y tus redes) y por defecto incluye **todo**; podés destildar fotos, videos, precio o links. El texto se puede editar. Al tocar **Compartir** se abre el menú del sistema para elegir Instagram, Facebook, TikTok, WhatsApp u otra app (en computadoras sin esa función, se descargan los archivos y el texto queda copiado). Nunca se comparten costos, márgenes, proveedores ni notas internas.
+
+Para que salgan los links directos a tus perfiles, cargalos en **Configuración → Redes sociales** (@usuario o link; Facebook recomendado). Los presupuestos (PDF y WhatsApp) también pueden incluirlos: en la pantalla del documento, «Incluir links a mis redes».
+
 ## 9. Estadísticas
 
 Período (este mes, mes anterior, 90 días, año, personalizado): presupuestos emitidos, tasa de aceptación, ventas aceptadas, ganancia bruta, margen, gastos generales y sin asignar, resultado estimado, productos más vendidos, presupuestos por estado y gastos del período sin duplicar.
 
 ## 10. Personalización
 
-Tema automático/claro/oscuro, paletas y color propio. Ves una **vista previa** antes de aplicar. Si un color no es legible, QuoteMaker ajusta el tono para cumplir contraste AA.
+Tema **claro, oscuro o automático**, con tarjetas de vista previa de cada uno. Colores en tres grupos:
+
+- **Clásicos:** Bosque, Océano, Terracota, Ciruela, Grafito, Arena, Índigo, Petróleo y Vino.
+- **(+) Pasteles:** Menta, Lavanda, Durazno, Celeste, Rosa y Limón; tiñen suavemente el fondo y los botones.
+- **Personalizado:** tu propio color (si es muy claro se trata como pastel).
+
+Cada paleta muestra una miniatura de la app con esos colores, y a la derecha hay una **vista previa** grande; nada cambia hasta que tocás **Aplicar**. Si un color no se lee bien, Chediek Home ajusta el tono para cumplir contraste AA (verificado con pruebas para todas las paletas en claro y oscuro).
 
 ![Personalizar tema](media/gifs/06-personalizar-tema.gif)
 

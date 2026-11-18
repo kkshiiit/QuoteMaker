@@ -28,6 +28,14 @@
 | XSS | React escapa todo; no se usa `dangerouslySetInnerHTML`; imágenes como data URL generadas localmente | Revisión |
 | Dependencias vulnerables | `npm audit` = 0 vulnerabilidades (jsPDF actualizado a 4.2.1 por avisos críticos de 3.x) | `npm audit` |
 
+## Compartir productos y redes sociales
+
+- Lo que se comparte de un producto sale de `buildPublicProduct` (`src/privacy/publicProduct.ts`), una **allowlist**: nombre, descripción, unidad, precio de venta (opcional), nombre del negocio y links a redes (opcional). `assertPublicProduct` rechaza cualquier clave extra. Pruebas en `tests/unit/sales-share.test.ts` y e2e verifican que costo, margen, proveedor, SKU y notas no aparecen.
+- Los links a Instagram, Facebook y TikTok se normalizan y **sólo** se aceptan dominios de cada red (`src/privacy/social.ts`).
+- Las fotos se re-codifican en el dispositivo (WebP, máx. 1280 px), lo que descarta metadatos EXIF (ubicación, cámara). Los videos se comparten tal cual: si tienen metadatos de ubicación, los conserva el archivo original.
+- Videos: tabla local `productVideos`, no se sincronizan ni se incluyen en el respaldo.
+- Chediek Home nunca publica por su cuenta: abre el menú del sistema y la persona elige la app y confirma.
+
 ## Datos sensibles en el dispositivo
 
 - IndexedDB no está cifrado por la app (depende del cifrado del dispositivo/navegador). En Android, los datos viven en el almacenamiento privado de la app.
@@ -40,8 +48,7 @@ La app no envía logs. No se imprimen datos de negocio en consola.
 
 ## Pendiente / límites
 
-- RLS probada sobre PostgreSQL 16 con un stub de `auth.uid()` idéntico al de Supabase, **no sobre un proyecto Supabase real** (sin credenciales en este entorno).
-- Supabase Auth (registro e inicio de sesión) no se probó contra un servidor real.
+- RLS y sincronización probadas sobre PostgreSQL 16 (stub de `auth.uid()`) **y en vivo contra el proyecto Supabase real** desde la CI (`npm run test:live`: rol anónimo bloqueado, dos dispositivos, conflicto, borrado, aislamiento entre cuentas, idempotencia y, con la migración 0002 aplicada, ventas).
 - Sin cifrado adicional de IndexedDB ni bloqueo con PIN (ver [ROADMAP](ROADMAP.md)).
 
 ## Reportar vulnerabilidades

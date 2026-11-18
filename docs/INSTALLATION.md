@@ -63,7 +63,11 @@ En GitHub → Settings → Secrets and variables → Actions, crear:
 Sin estos pasos la app funciona completa en modo local y muestra «Solo en este dispositivo».
 
 1. Crear un proyecto en **supabase.com con el plan Free** (no requiere tarjeta). Límites del plan Free (consultá supabase.com/pricing, pueden cambiar): base de datos de 500 MB, 2 proyectos activos, y **pausa del proyecto tras ~1 semana sin actividad** (se reactiva desde el panel). QuoteMaker sigue funcionando offline mientras tanto.
-2. SQL Editor → pegar `supabase/migrations/20261117000001_quotemaker_sync.sql` → Run.
+2. SQL Editor → pegar y ejecutar (Run), **en orden**, los archivos de `supabase/migrations/`:
+   1. `20261117000001_quotemaker_sync.sql` (tablas, RLS y función de sincronización)
+   2. `20261118000002_sales.sql` (habilita sincronizar el **historial de ventas**; versión 1.1.0)
+
+   Son idempotentes: ejecutarlos de nuevo no rompe nada.
 3. Authentication → Providers → Email habilitado. Si dejás «Confirm email», cada cuenta debe confirmar su email antes de iniciar sesión.
 4. Project Settings → API: copiar **Project URL** y la clave **anon public** (nunca `service_role`).
 5. Crear `.env.local`:

@@ -55,6 +55,11 @@ export function defaultSettings(): BusinessSettings {
     showBusinessContactEmail: true,
     showBusinessAddress: true,
     showBusinessTaxId: false,
+    instagram: '',
+    facebook: '',
+    tiktok: '',
+    salePrefix: 'V-',
+    nextSaleNumber: 1,
   };
 }
 

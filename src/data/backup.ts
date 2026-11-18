@@ -20,7 +20,7 @@ export interface BackupFile {
 export async function exportBackup(appVersion = '1.0.0'): Promise<BackupFile> {
   const data: Partial<Record<CollectionName, unknown[]>> = {};
   for (const c of SYNCED_COLLECTIONS) data[c] = await db.coll(c).toArray();
-  return { format: BACKUP_FORMAT, version: BACKUP_VERSION, exportedAt: new Date().toISOString(), app: `QuoteMaker ${appVersion}`, data };
+  return { format: BACKUP_FORMAT, version: BACKUP_VERSION, exportedAt: new Date().toISOString(), app: `Chediek Home ${appVersion}`, data };
 }
 
 export function backupFileName(date = new Date()): string {

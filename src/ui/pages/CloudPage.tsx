@@ -66,7 +66,7 @@ export default function CloudPage() {
               </span>
             </p>
             <p className="muted" style={{ marginTop: 10 }}>
-              QuoteMaker funciona completo sin conexión y guarda todo en este dispositivo. Para sincronizar entre dispositivos hace falta un proyecto Supabase (plan gratuito) y compilar la app con sus
+              Chediek Home funciona completo sin conexión y guarda todo en este dispositivo. Para sincronizar entre dispositivos hace falta un proyecto Supabase (plan gratuito) y compilar la app con sus
               credenciales públicas. Ver <code>docs/INSTALLATION.md</code> § Supabase.
             </p>
             <p className="small muted" style={{ marginTop: 8 }}>

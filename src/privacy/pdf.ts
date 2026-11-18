@@ -52,20 +52,28 @@ export async function generateQuotePdf(doc: PublicQuoteDocument, opts: PdfOption
     title: pdfSafe(`Presupuesto ${doc.number}`),
     subject: 'Presupuesto comercial',
     author: pdfSafe(doc.business.name),
-    creator: 'QuoteMaker',
+    creator: 'Chediek Home',
     keywords: '',
   });
 
   // --- Encabezado ---
   pdf.setFillColor(...accent);
   pdf.rect(0, 0, W, 4, 'F');
-  // Marca: cuadrado redondeado con la "Q" de QuoteMaker estilizada (sin imágenes externas)
+  // Marca: insignia con una casa de líneas simples (sin imágenes externas)
   pdf.setFillColor(...accent);
-  pdf.roundedRect(M, y + 2, 12, 12, 2.5, 2.5, 'F');
+  pdf.roundedRect(M, y + 2, 12, 12, 3, 3, 'F');
   pdf.setDrawColor(255, 255, 255);
-  pdf.setLineWidth(1.1);
-  pdf.circle(M + 6, y + 8, 3.2, 'S');
-  pdf.line(M + 7.6, y + 9.6, M + 9.6, y + 11.6);
+  pdf.setLineWidth(0.9);
+  pdf.setLineCap('round');
+  pdf.setLineJoin('round');
+  pdf.line(M + 2.8, y + 7.6, M + 6, y + 4.9); // techo izq.
+  pdf.line(M + 6, y + 4.9, M + 9.2, y + 7.6); // techo der.
+  pdf.line(M + 3.4, y + 7.2, M + 3.4, y + 11.6); // pared izq.
+  pdf.line(M + 8.6, y + 7.2, M + 8.6, y + 11.6); // pared der.
+  pdf.line(M + 3.4, y + 11.6, M + 8.6, y + 11.6); // piso
+  pdf.line(M + 5.1, y + 11.6, M + 5.1, y + 9.4); // puerta
+  pdf.line(M + 6.9, y + 11.6, M + 6.9, y + 9.4);
+  pdf.line(M + 5.1, y + 9.4, M + 6.9, y + 9.4);
 
   pdf.setTextColor(...ink);
   pdf.setFont('helvetica', 'bold');
@@ -80,6 +88,7 @@ export async function generateQuotePdf(doc: PublicQuoteDocument, opts: PdfOption
     [doc.business.phone, doc.business.email].filter(Boolean).join('  ·  '),
     doc.business.address,
     doc.business.website,
+    (doc.socials ?? []).map((l) => `${l.label}: ${l.url.replace(/^https:\/\//, '')}`).join('  ·  '),
   ].filter(Boolean);
   bizLines.forEach((l, i) => pdf.text(pdfSafe(l), M + 16, y + 12 + i * 3.8));
 

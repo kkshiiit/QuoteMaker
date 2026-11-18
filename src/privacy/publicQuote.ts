@@ -10,6 +10,7 @@
 import { computeCommercialTotals, effectiveQuote } from '../domain/quote';
 import type { BusinessSettings, Quote } from '../domain/types';
 import type { Dec } from '../domain/money';
+import { socialLinks, type SocialLink } from './social';
 
 export interface PublicBusiness {
   name: string;
@@ -64,11 +65,14 @@ export interface PublicQuoteDocument {
   totals: PublicTotals;
   conditions: string;
   notes: string;
+  /** Links a los perfiles del negocio (Instagram, Facebook, TikTok). Vacío si se eligió no incluirlos. */
+  socials: SocialLink[];
 }
 
 /** Allowlist declarativa: cualquier clave no listada hace fallar `assertPublicDocument`. */
 export const PUBLIC_DOCUMENT_ALLOWLIST = {
-  root: ['schema', 'isDraft', 'number', 'issueDate', 'validUntil', 'currency', 'locale', 'business', 'customer', 'lines', 'totals', 'conditions', 'notes'],
+  root: ['schema', 'isDraft', 'number', 'issueDate', 'validUntil', 'currency', 'locale', 'business', 'customer', 'lines', 'totals', 'conditions', 'notes', 'socials'],
+  social: ['network', 'label', 'url'],
   business: ['name', 'legalName', 'taxId', 'phone', 'email', 'address', 'website'],
   customer: ['name', 'phone', 'email', 'address', 'taxId'],
   line: ['description', 'unit', 'quantity', 'unitPrice', 'discountPct', 'lineTotal'],
@@ -77,7 +81,7 @@ export const PUBLIC_DOCUMENT_ALLOWLIST = {
 
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
 
-export function buildPublicQuoteDocument(quote: Quote, settings: BusinessSettings): PublicQuoteDocument {
+export function buildPublicQuoteDocument(quote: Quote, settings: BusinessSettings, opts: { includeSocials?: boolean } = {}): PublicQuoteDocument {
   const e = effectiveQuote(quote);
   const totals = computeCommercialTotals(e);
   const biz = quote.frozen?.business;
@@ -129,6 +133,7 @@ export function buildPublicQuoteDocument(quote: Quote, settings: BusinessSetting
     },
     conditions: str(e.conditions),
     notes: str(e.commercialNotes),
+    socials: opts.includeSocials === false ? [] : socialLinks(settings).map((l) => ({ network: l.network, label: l.label, url: l.url })),
   };
   assertPublicDocument(doc);
   return doc;
@@ -149,6 +154,7 @@ export function assertPublicDocument(doc: PublicQuoteDocument): void {
   checkKeys(doc.customer, a.customer, 'customer');
   checkKeys(doc.totals, a.totals, 'totals');
   doc.lines.forEach((l, i) => checkKeys(l, a.line, `lines[${i}]`));
+  (doc.socials ?? []).forEach((l, i) => checkKeys(l, a.social, `socials[${i}]`));
 }
 
 /** Nombre de archivo sin datos sensibles: sólo el número de presupuesto. */

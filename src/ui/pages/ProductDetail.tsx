@@ -7,14 +7,22 @@ import { emptyProduct, saveProduct, suggestedPrice, validateProduct } from '../.
 import { lotCosts, productCost } from '../../domain/costing';
 import { analyzePrice } from '../../domain/pricing';
 import type { Product } from '../../domain/types';
-import { resizeImage } from '../../platform/image';
+import { MAX_PHOTOS, resizePhoto, thumbFromDataUrl, validateVideo } from '../../platform/image';
+import { newId, nowIso } from '../../data/defaults';
+import { ShareProductDialog, productPhotos } from '../components/ShareProduct';
 import { Icon } from '../components/Icon';
 import { Check, DecimalField, ErrorSummary, InternalLabel, Menu, PageHeader, SelectField, TextField, useConfirm, useToast } from '../components/ui';
 import { pct, useMoney, useSettings } from '../hooks';
 
 const SOURCE_LABEL = { purchase: 'Compra', expense: 'Gasto asignado', manual: 'Carga manual', recalc: 'Recalculado' } as const;
 
+/** Cada dirección (/…/nueva, /…/:id) monta un formulario nuevo: nunca arrastra datos de otra ficha. */
 export default function ProductDetail() {
+  const { id = '' } = useParams();
+  return <ProductDetailForm key={id} />;
+}
+
+function ProductDetailForm() {
   const { id = 'nuevo' } = useParams();
   const isNew = id === 'nuevo';
   const navigate = useNavigate();
@@ -36,6 +44,10 @@ export default function ProductDetail() {
   const [errors, setErrors] = useState<string[]>([]);
   const [newCat, setNewCat] = useState('');
   const [busyImage, setBusyImage] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const videos = useLiveQuery(() => (isNew ? [] : db.productVideos.where('productId').equals(id).toArray()), [id]);
+  const videoUrls = useMemo(() => (videos ?? []).map((v) => ({ v, url: URL.createObjectURL(v.blob) })), [videos]);
+  useEffect(() => () => videoUrls.forEach((x) => URL.revokeObjectURL(x.url)), [videoUrls]);
 
   useEffect(() => {
     if (isNew) setForm((f) => f ?? emptyProduct());
@@ -96,6 +108,11 @@ export default function ProductDetail() {
         subtitle={form.archived ? 'Archivado' : undefined}
         actions={
           !isNew && (
+            <>
+            <button className="btn btn-primary" onClick={() => setSharing(true)}>
+              <Icon name="share" />
+              Compartir
+            </button>
             <Menu label="Más acciones del producto">
               <Link to={`/costos/calculadora?producto=${form.id}`}>
                 <Icon name="calculator" />
@@ -110,6 +127,7 @@ export default function ProductDetail() {
                 {form.archived ? 'Restaurar' : 'Archivar'}
               </button>
             </Menu>
+            </>
           )
         }
       />
@@ -153,41 +171,120 @@ export default function ProductDetail() {
           </section>
 
           <section className="card" aria-labelledby="sec-img">
-            <h2 id="sec-img">Imagen</h2>
-            <div className="row">
-              {form.image ? <img src={form.image} alt={`Imagen de ${form.name}`} className="thumb" style={{ width: 96, height: 96 }} /> : <span className="thumb" style={{ width: 96, height: 96 }} aria-hidden="true" />}
-              <div className="actions">
+            <div className="card-header">
+              <h2 id="sec-img">Fotos y videos</h2>
+              <span className="small muted">Para compartir en redes</span>
+            </div>
+            <ul className="media-grid" aria-label="Fotos del producto">
+              {productPhotos(form).map((ph, i) => (
+                <li key={`${i}-${ph.length}`} className="media-tile">
+                  <img src={ph} alt={`Foto ${i + 1} de ${form.name || 'producto'}`} />
+                  {i === 0 && <span className="badge badge-accent media-badge">Portada</span>}
+                  <div className="media-actions">
+                    {i > 0 && (
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        onClick={async () => {
+                          const list = [...productPhotos(form)];
+                          const [x] = list.splice(i, 1);
+                          list.unshift(x!);
+                          set('photos', list);
+                          set('image', await thumbFromDataUrl(list[0]!));
+                        }}
+                      >
+                        Usar de portada
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-icon"
+                      aria-label={`Quitar foto ${i + 1}`}
+                      onClick={async () => {
+                        const list = productPhotos(form).filter((_, j) => j !== i);
+                        set('photos', list);
+                        set('image', list[0] ? await thumbFromDataUrl(list[0]) : null);
+                      }}
+                    >
+                      <Icon name="trash" />
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="actions" style={{ marginTop: 10 }}>
+              <label className={`btn ${productPhotos(form).length >= MAX_PHOTOS ? 'btn-disabled' : ''}`}>
+                <Icon name="image" />
+                {busyImage ? 'Procesando…' : 'Agregar fotos'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="sr-only"
+                  disabled={busyImage || productPhotos(form).length >= MAX_PHOTOS}
+                  onChange={async (e) => {
+                    const files = [...(e.target.files ?? [])];
+                    e.target.value = '';
+                    if (!files.length) return;
+                    setBusyImage(true);
+                    try {
+                      const current = productPhotos(form);
+                      const room = MAX_PHOTOS - current.length;
+                      if (files.length > room) toast(`Se agregan ${room} de ${files.length}: máximo ${MAX_PHOTOS} fotos por producto.`);
+                      const added: string[] = [];
+                      for (const f of files.slice(0, room)) added.push(await resizePhoto(f));
+                      const list = [...current, ...added];
+                      set('photos', list);
+                      if (!form.image || current.length === 0) set('image', await thumbFromDataUrl(list[0]!));
+                    } catch (err) {
+                      toast((err as Error).message, 'error');
+                    } finally {
+                      setBusyImage(false);
+                    }
+                  }}
+                />
+              </label>
+              {isNew ? (
+                <span className="small muted">Guardá el producto para agregar videos.</span>
+              ) : (
                 <label className="btn">
-                  <Icon name="upload" />
-                  {busyImage ? 'Procesando…' : form.image ? 'Cambiar' : 'Subir imagen'}
+                  <Icon name="video" />
+                  Agregar video
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="video/*"
                     className="sr-only"
                     onChange={async (e) => {
                       const f = e.target.files?.[0];
                       e.target.value = '';
                       if (!f) return;
-                      setBusyImage(true);
-                      try {
-                        set('image', await resizeImage(f));
-                      } catch (err) {
-                        toast((err as Error).message, 'error');
-                      } finally {
-                        setBusyImage(false);
-                      }
+                      const err = validateVideo(f);
+                      if (err) return toast(err, 'error');
+                      // Tabla local (no sincronizable): los videos quedan sólo en este dispositivo.
+                      await db.productVideos.add({ id: newId(), productId: form.id, name: f.name, mime: f.type || 'video/mp4', size: f.size, blob: f, createdAt: nowIso() });
+                      toast('Video agregado (queda guardado en este dispositivo)');
                     }}
                   />
                 </label>
-                {form.image && (
-                  <button type="button" className="btn btn-ghost" onClick={() => set('image', null)}>
-                    Quitar
-                  </button>
-                )}
-              </div>
+              )}
             </div>
+            {videoUrls.length > 0 && (
+              <ul className="media-grid" aria-label="Videos del producto" style={{ marginTop: 12 }}>
+                {videoUrls.map(({ v, url }, i) => (
+                  <li key={v.id} className="media-tile">
+                    <video src={url} controls preload="metadata" aria-label={`Video ${i + 1}: ${v.name}`} />
+                    <div className="media-actions">
+                      <span className="small muted">{(v.size / 1024 / 1024).toFixed(1)} MB</span>
+                      <button type="button" className="btn btn-sm btn-icon" aria-label={`Quitar video ${i + 1}`} onClick={() => db.productVideos.delete(v.id)}>
+                        <Icon name="trash" />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
             <p className="small muted" style={{ marginTop: 8 }}>
-              Se reduce a 480 px en tu dispositivo antes de guardarse.
+              Hasta {MAX_PHOTOS} fotos (se optimizan en tu dispositivo y se sincronizan). Los videos quedan sólo en este dispositivo.
             </p>
           </section>
 
@@ -323,6 +420,7 @@ export default function ProductDetail() {
           )}
         </aside>
       </div>
+      {!isNew && <ShareProductDialog open={sharing} onClose={() => setSharing(false)} product={form} settings={settings} price={effectivePrice ?? null} />}
       {confirmNode}
     </>
   );

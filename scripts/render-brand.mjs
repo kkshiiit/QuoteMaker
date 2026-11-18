@@ -36,6 +36,6 @@ await page.screenshot({ path: 'docs/brand/png/splash-dark-2732.png' });
 // Concepts board
 await page.setViewportSize({ width: 900, height: 320 });
 const card = (f, t) => `<figure style="margin:0;text-align:center;font:600 16px system-ui"><div style="width:180px;height:180px;margin:auto">${brand(f).replace('<svg ', '<svg width="180" height="180" ')}</div><figcaption style="margin-top:12px">${t}</figcaption></figure>`;
-await page.setContent(`<html><body style="margin:0;background:#fff;display:flex;justify-content:space-around;align-items:center;height:320px">${card('concept-a-q-flecha.svg', 'A · Q + flecha (elegido)')}${card('concept-b-etiqueta.svg', 'B · Etiqueta de precio')}${card('concept-c-monograma.svg', 'C · Monograma QM')}</body></html>`);
+await page.setContent(`<html><body style="margin:0;background:#fff;display:flex;justify-content:space-around;align-items:center;height:320px">${card('concept-a-casa.svg', 'A · Casa con puerta en arco (elegido)')}${card('concept-b-monograma.svg', 'B · Monograma CH')}${card('concept-c-sillon.svg', 'C · Sillón')}</body></html>`);
 await page.screenshot({ path: 'docs/brand/png/concepts.png' });
 await browser.close();

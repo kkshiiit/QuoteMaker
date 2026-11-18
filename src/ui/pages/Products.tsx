@@ -77,7 +77,7 @@ export default function Products() {
         <EmptyState
           icon="box"
           title="Todavía no hay productos"
-          text="Cargá lo que vendés. Después, registrando compras y gastos, QuoteMaker calcula el costo real y te sugiere un precio." />
+          text="Cargá lo que vendés. Después, registrando compras y gastos, Chediek Home calcula el costo real y te sugiere un precio." />
       ) : (
         <>
           <div className="toolbar" role="search">

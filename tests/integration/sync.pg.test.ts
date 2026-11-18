@@ -174,6 +174,11 @@ describe.runIf(process.env.QM_SKIP_PG !== '1')('Supabase: migración y RLS (Post
     expect(del.rowCount === 0 || del.rowCount === -1).toBe(true);
     await expect(asUser(USER_A, (c) => c.query(`select qm_push(gen_random_uuid(),'products','p9','upsert','{"id":"OTRO"}',0)`))).rejects.toThrow(/inconsistente/);
     await expect(asUser(USER_A, (c) => c.query(`select qm_push(gen_random_uuid(),'hackers','p9','upsert','{"id":"p9"}',0)`))).rejects.toThrow(/collection_chk/);
+    // Migración 0002: el historial de ventas se sincroniza (y sigue aislado por RLS)
+    const sold = await asUser(USER_A, (c) => c.query(`select qm_push(gen_random_uuid(),'sales','v1','upsert','{"id":"v1","number":"V-00001"}',0) r`));
+    expect(sold.rows[0].r.status).toBe('applied');
+    const seenByB = await asUser(USER_B, (c) => c.query(`select * from qm_records where collection = 'sales'`));
+    expect(seenByB.rowCount).toBe(0);
   });
 });
 

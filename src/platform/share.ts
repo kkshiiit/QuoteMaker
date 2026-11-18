@@ -68,6 +68,71 @@ export async function saveFile(bytes: Uint8Array | string, fileName: string, mim
   return 'downloaded';
 }
 
+export interface ShareableFile {
+  name: string;
+  mime: string;
+  data: Blob | Uint8Array;
+}
+
+async function blobToBase64(b: Blob): Promise<string> {
+  return toBase64(new Uint8Array(await b.arrayBuffer()));
+}
+
+/**
+ * Comparte varios archivos (fotos/videos) junto con un texto.
+ *  - Android: escribe en la caché privada y abre el Sharesheet (Instagram, Facebook, TikTok, WhatsApp…).
+ *  - Web: Web Share API con archivos si el navegador la soporta; si no, descarga los archivos
+ *    y copia el texto al portapapeles para pegarlo en la publicación.
+ * Sin archivos, comparte sólo el texto.
+ */
+export async function shareFiles(files: ShareableFile[], text: string, title: string): Promise<ShareOutcome> {
+  if (!files.length) {
+    const r = await shareText(text, title);
+    if (r !== 'cancelled' || isNative()) return r;
+    return (await copyText(text)) ? 'saved' : 'cancelled';
+  }
+  if (isNative()) {
+    const [{ Filesystem, Directory }, { Share }] = await Promise.all([import('@capacitor/filesystem'), import('@capacitor/share')]);
+    const uris: string[] = [];
+    for (const f of files) {
+      const data = f.data instanceof Blob ? await blobToBase64(f.data) : toBase64(f.data);
+      const w = await Filesystem.writeFile({ path: f.name, data, directory: Directory.Cache });
+      uris.push(w.uri);
+    }
+    try {
+      await Share.share({ title, text, files: uris, dialogTitle: title });
+      return 'shared';
+    } catch {
+      return 'cancelled';
+    }
+  }
+  const webFiles = files.map((f) => new File([f.data as BlobPart], f.name, { type: f.mime }));
+  const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+  if (nav.share && nav.canShare?.({ files: webFiles })) {
+    try {
+      await nav.share({ files: webFiles, text, title });
+      return 'shared';
+    } catch (e) {
+      if ((e as DOMException).name === 'AbortError') return 'cancelled';
+    }
+  }
+  for (const f of files) downloadBytes(f.data instanceof Blob ? new Uint8Array(await f.data.arrayBuffer()) : f.data, f.name, f.mime);
+  await copyText(text);
+  return 'downloaded';
+}
+
+/** Convierte un data URL (foto guardada) en bytes compartibles. */
+export function dataUrlToFile(dataUrl: string, baseName: string): ShareableFile {
+  const m = /^data:([^;,]+)(;base64)?,(.*)$/s.exec(dataUrl);
+  if (!m) throw new Error('Imagen inválida');
+  const mime = m[1]!;
+  const raw = m[2] ? atob(m[3]!) : decodeURIComponent(m[3]!);
+  const bytes = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+  const ext = mime.split('/')[1]?.replace('jpeg', 'jpg') ?? 'img';
+  return { name: `${baseName}.${ext}`, mime, data: bytes };
+}
+
 export async function shareText(text: string, title: string): Promise<ShareOutcome> {
   if (isNative()) {
     const { Share } = await import('@capacitor/share');

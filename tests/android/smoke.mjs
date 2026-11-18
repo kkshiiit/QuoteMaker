@@ -128,6 +128,7 @@ if (phase === 'phase1') {
     ['#/clientes', '08-clientes'],
     ['#/estadisticas', '09-estadisticas'],
     ['#/mas', '10-mas'],
+    ['#/ventas', '16-ventas'],
   ]) {
     await go(hash);
     await noOverflow(hash);
