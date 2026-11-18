@@ -137,15 +137,18 @@ if (phase === 'phase1') {
     });
     shot(name);
   }
-  await go('#/presupuestos');
-  await page.getByRole('link', { name: /Estudio Norte/ }).dispatchEvent('click');
-  await page.waitForSelector('[data-testid="quote-total"]');
-  await settle(/^Presupuesto /);
-  shot('11-presupuesto');
-  await page.getByRole('button', { name: 'PDF y WhatsApp' }).dispatchEvent('click');
-  await page.getByRole('article').waitFor();
-  await settle(/^Documento /);
-  shot('12-documento');
+  // Presupuesto → documento como una unidad: si Android recrea el WebView en el medio, se repite entero.
+  await withPage(async () => {
+    await goOnce('#/presupuestos');
+    await page.getByRole('link', { name: /Estudio Norte/ }).dispatchEvent('click');
+    await page.waitForSelector('[data-testid="quote-total"]');
+    await settle(/^Presupuesto /);
+    shot('11-presupuesto');
+    await page.getByRole('button', { name: 'PDF y WhatsApp' }).dispatchEvent('click');
+    await page.getByRole('article').waitFor();
+    await settle(/^Documento /);
+    shot('12-documento');
+  });
   // PDF real generado en el dispositivo y entregado al Sharesheet nativo de Android
   await page.getByRole('button', { name: 'Compartir PDF' }).dispatchEvent('click');
   let top = '';
