@@ -7,6 +7,7 @@
 import { formatMoney, formatNumber } from '../domain/money';
 import { formatDate } from './pdf';
 import { assertPublicDocument, type PublicQuoteDocument } from './publicQuote';
+import { socialBlock } from './social';
 
 export interface WhatsAppQuoteMessage {
   text: string;
@@ -42,6 +43,11 @@ export function buildWhatsAppMessage(doc: PublicQuoteDocument): WhatsAppQuoteMes
   }
   out.push('');
   out.push('Cualquier consulta, quedo a disposición.');
+  const social = socialBlock(doc.socials ?? []);
+  if (social) {
+    out.push('');
+    out.push(social);
+  }
   return { text: out.join('\n'), phone: normalizePhone(doc.customer.phone) };
 }
 

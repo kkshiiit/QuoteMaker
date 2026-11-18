@@ -3,7 +3,7 @@
  * Se cargan con las mismas funciones de negocio que usa la UI.
  */
 import { addDays } from '../domain/quote';
-import type { Customer, Product, Supplier } from '../domain/types';
+import type { Customer, Product, Sale, Supplier } from '../domain/types';
 import { db } from './db';
 import { newId, todayIso } from './defaults';
 import { createBase, putRecord } from './repo';
@@ -14,6 +14,7 @@ import {
   emptyExpense,
   emptyProduct,
   emptyPurchase,
+  emptySale,
   emptySupplier,
   getSettings,
   itemFromProduct,
@@ -21,6 +22,7 @@ import {
   savePurchase,
   saveProduct,
   saveQuote,
+  saveSale,
   saveSettings,
   suggestedPrice,
 } from './services';
@@ -42,6 +44,9 @@ export async function loadDemoData(): Promise<void> {
     email: 'hola@taller-aurora.example',
     address: 'Av. Ficticia 1234, Buenos Aires',
     website: 'taller-aurora.example',
+    instagram: '@taller.aurora.ejemplo',
+    facebook: 'facebook.com/taller.aurora.ejemplo',
+    tiktok: '@taller.aurora.ejemplo',
     defaultTaxPct: '21',
     defaultTargetMarginPct: '40',
     defaultPctCharges: '4',
@@ -108,4 +113,11 @@ export async function loadDemoData(): Promise<void> {
   await quote(lucia, [await item(mesa, '1'), await item(silla, '4')], { shippingCharged: '12000', shippingCost: '9000' }, ['sent'], 6);
   await quote(martin, [await item(lampara, '2'), await item(cojin, '4')], {}, ['sent', 'rejected'], 20);
   await quote(lucia, [await item(cojin, '6')], { globalDiscountPct: '10' }, [], 1);
+
+  // Ventas: en el local y online, con y sin cliente registrado
+  const sale = async (x: Partial<Sale>, items: Awaited<ReturnType<typeof item>>[]) => saveSale({ ...emptySale(), ...x, items: items.map((it) => ({ ...it, description: it.description.split(' — ')[0] ?? it.description })) });
+  await sale({ date: d(9), channel: 'presencial', customerId: martin.id, customerName: martin.name, paymentMethod: 'Efectivo' }, [await item(lampara, '1')]);
+  await sale({ date: d(4), channel: 'online', platform: 'Instagram', customerId: lucia.id, customerName: lucia.name, paymentMethod: 'Transferencia', shippingCharged: '6000' }, [await item(cojin, '4')]);
+  await sale({ date: d(2), channel: 'online', platform: 'WhatsApp', customerName: 'Sofía R.', paymentMethod: 'Mercado Pago' }, [await item(silla, '2')]);
+  await sale({ date: d(0), channel: 'presencial', paymentMethod: 'Débito' }, [await item(cojin, '2')]);
 }

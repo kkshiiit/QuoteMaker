@@ -1,16 +1,17 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { ensureContrast } from '../theme/theme';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { db } from '../../data/db';
 import { recordQuoteDocument } from '../../data/services';
 import { formatMoney, formatNumber } from '../../domain/money';
 import { buildPublicQuoteDocument, publicFileName, type PublicQuoteDocument } from '../../privacy/publicQuote';
 import { formatDate } from '../../privacy/pdf';
 import { buildWhatsAppMessage, whatsappUrl } from '../../privacy/whatsapp';
+import { socialLinks } from '../../privacy/social';
 import { copyText, isNative, openExternal, saveFile, shareFile, shareText } from '../../platform/share';
 import { Icon } from '../components/Icon';
-import { PageHeader, TextField, useToast } from '../components/ui';
+import { Check, PageHeader, TextField, useToast } from '../components/ui';
 import { useSettings } from '../hooks';
 
 /** Vista previa HTML del documento comercial. Recibe SOLO el documento público. */
@@ -22,7 +23,7 @@ export function DocumentPreview({ doc, accent }: { doc: PublicQuoteDocument; acc
       <header className="doc-head">
         <div>
           <p style={{ fontWeight: 800, fontSize: '1.2rem' }}>{doc.business.name || 'Tu negocio'}</p>
-          {[doc.business.legalName, doc.business.taxId && `ID fiscal: ${doc.business.taxId}`, [doc.business.phone, doc.business.email].filter(Boolean).join(' · '), doc.business.address, doc.business.website]
+          {[doc.business.legalName, doc.business.taxId && `ID fiscal: ${doc.business.taxId}`, [doc.business.phone, doc.business.email].filter(Boolean).join(' · '), doc.business.address, doc.business.website, ...(doc.socials ?? []).map((l) => `${l.label}: ${l.url.replace(/^https:\/\//, '')}`)]
             .filter(Boolean)
             .map((l) => (
               <p key={String(l)} className="doc-muted">
@@ -137,7 +138,9 @@ export default function QuoteDocument() {
   const toast = useToast();
   const settings = useSettings();
   const quote = useLiveQuery(() => db.quotes.get(id).then((q) => q ?? null), [id]);
-  const doc = useMemo(() => (quote ? buildPublicQuoteDocument(quote, settings) : null), [quote, settings]);
+  const [includeSocials, setIncludeSocials] = useState(true);
+  const doc = useMemo(() => (quote ? buildPublicQuoteDocument(quote, settings, { includeSocials }) : null), [quote, settings, includeSocials]);
+  const hasSocials = useMemo(() => socialLinks(settings).length > 0, [settings]);
   const generated = useMemo(() => (doc ? buildWhatsAppMessage(doc) : null), [doc]);
   const [text, setText] = useState('');
   const [phone, setPhone] = useState('');
@@ -183,6 +186,16 @@ export default function QuoteDocument() {
       <div className="grid grid-main-aside">
         <DocumentPreview doc={doc} accent={accent} />
         <aside className="stack">
+          <section className="card" aria-labelledby="socialh">
+            <h2 id="socialh">Redes sociales</h2>
+            {hasSocials ? (
+              <Check label="Incluir links a mis redes (Instagram, Facebook, TikTok)" checked={includeSocials} onChange={setIncludeSocials} hint="Se agregan al PDF y al mensaje de WhatsApp." />
+            ) : (
+              <p className="small muted">
+                Cargá tus perfiles en <Link to="/configuracion">Configuración</Link> para sumar links directos a Instagram, Facebook y TikTok.
+              </p>
+            )}
+          </section>
           <section className="card" aria-labelledby="pdfh">
             <h2 id="pdfh">PDF</h2>
             <p className="small muted" style={{ marginBottom: 10 }}>
@@ -245,7 +258,7 @@ export default function QuoteDocument() {
               </div>
             </div>
             <p className="small muted" style={{ marginTop: 8 }}>
-              QuoteMaker no envía nada por su cuenta: WhatsApp se abre con el texto cargado y vos decidís si enviarlo.
+              Chediek Home no envía nada por su cuenta: WhatsApp se abre con el texto cargado y vos decidís si enviarlo.
             </p>
           </section>
         </aside>

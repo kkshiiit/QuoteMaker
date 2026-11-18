@@ -12,7 +12,7 @@ import { useMoney } from '../hooks';
 
 const PAGE = 50;
 
-export function CustomerPicker({ open, onClose, onPick }: { open: boolean; onClose: () => void; onPick: (c: Customer | null) => void }) {
+export function CustomerPicker({ open, onClose, onPick, title = '¿Para quién es el presupuesto?', noneLabel = 'Sin cliente por ahora' }: { open: boolean; onClose: () => void; onPick: (c: Customer | null) => void; title?: string; noneLabel?: string }) {
   const customers = useLiveQuery(() => db.customers.filter((c) => !c.archived).toArray(), []);
   const [q, setQ] = useState('');
   const list = useMemo(() => {
@@ -22,11 +22,11 @@ export function CustomerPicker({ open, onClose, onPick }: { open: boolean; onClo
     <Dialog
       open={open}
       onClose={onClose}
-      title="¿Para quién es el presupuesto?"
+      title={title}
       actions={
         <>
           <button className="btn" onClick={() => onPick(null)}>
-            Sin cliente por ahora
+            {noneLabel}
           </button>
           <Link className="btn" to="/clientes/nuevo?volver=presupuesto">
             <Icon name="plus" />

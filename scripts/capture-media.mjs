@@ -85,14 +85,30 @@ for (const [suffix, opts] of [
   }
   await go(page, '/estadisticas');
   await shot('12-estadisticas');
+  await go(page, '/ventas');
+  await shot('15-ventas');
+  await go(page, '/productos');
+  await page.getByRole('link', { name: /Mesa de roble/ }).click();
+  await page.locator('#page-title').waitFor();
+  await page.getByRole('button', { name: 'Compartir' }).click();
+  await sleep(400);
+  await shot('16-compartir-producto');
+  await page.keyboard.press('Escape');
   await go(page, '/personalizacion');
-  await page.getByText('Terracota').click();
+  await page.getByRole('tab', { name: '(+) Pasteles' }).click();
+  await page.getByText('Lavanda', { exact: true }).click();
+  await sleep(300);
+  await shot('17-personalizacion-pasteles');
+  await page.getByRole('tab', { name: 'Clásicos' }).click();
+  await page.getByText('Terracota', { exact: true }).click();
   await page.getByText('Oscuro', { exact: true }).click();
   await sleep(300);
   await shot('13-personalizacion-vista-previa');
   await page.getByRole('button', { name: 'Aplicar' }).click();
   await go(page, '/');
   await shot('14-inicio-oscuro-terracota');
+  await go(page, '/ventas');
+  await shot('18-ventas-oscuro');
   await ctx.close();
 }
 
@@ -177,13 +193,36 @@ await record('05-crear-presupuesto', async (p) => {
 await record('06-personalizar-tema', async (p) => {
   await go(p, '/personalizacion');
   for (const t of ['Océano', 'Ciruela']) {
-    await p.getByText(t).click();
+    await p.getByText(t, { exact: true }).click();
+    await sleep(700);
+  }
+  await p.getByRole('tab', { name: '(+) Pasteles' }).click();
+  await sleep(500);
+  for (const t of ['Menta', 'Lavanda']) {
+    await p.getByText(t, { exact: true }).click();
     await sleep(700);
   }
   await p.getByText('Oscuro', { exact: true }).click();
   await sleep(800);
   await p.getByRole('button', { name: 'Aplicar' }).click();
   await sleep(1200);
+});
+await record('07-registrar-venta', async (p) => {
+  await go(p, '/ventas');
+  await sleep(600);
+  await p.getByRole('link', { name: 'Registrar venta' }).click();
+  await sleep(500);
+  await p.getByText('Online', { exact: true }).click();
+  await p.getByLabel('Plataforma').selectOption('Instagram');
+  await sleep(400);
+  await p.getByRole('button', { name: 'Agregar producto' }).click();
+  await type(p.getByRole('dialog').getByRole('searchbox'), 'Silla');
+  await p.getByRole('dialog').getByRole('button', { name: /Silla tapizada/ }).click();
+  await sleep(500);
+  await p.getByRole('button', { name: 'Registrar venta' }).click();
+  await sleep(900);
+  await go(p, '/ventas');
+  await sleep(900);
 });
 await browser.close();
 rmSync(TMP, { recursive: true, force: true });

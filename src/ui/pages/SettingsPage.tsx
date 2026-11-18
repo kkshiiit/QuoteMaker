@@ -4,6 +4,7 @@ import { D } from '../../domain/money';
 import { ROUNDING_LABELS, type RoundingRule } from '../../domain/pricing';
 import type { BusinessSettings } from '../../domain/types';
 import { Icon } from '../components/Icon';
+import { normalizeSocial, SOCIAL_LABELS, SOCIAL_ORDER } from '../../privacy/social';
 import { Check, DecimalField, ErrorSummary, InternalLabel, PageHeader, SelectField, TextField, useToast } from '../components/ui';
 
 const CURRENCIES = ['ARS', 'USD', 'EUR', 'UYU', 'CLP', 'MXN', 'COP', 'PEN', 'BRL', 'PYG', 'BOB'];
@@ -30,6 +31,8 @@ export default function SettingsPage() {
     if (!Number.isInteger(form.defaultValidityDays) || form.defaultValidityDays < 0 || form.defaultValidityDays > 365) e.push('La validez debe estar entre 0 y 365 días.');
     if (!Number.isInteger(form.nextQuoteNumber) || form.nextQuoteNumber < 1) e.push('El próximo número debe ser un entero positivo.');
     if (!/^[A-Za-z0-9_-]{0,8}$/.test(form.quotePrefix)) e.push('El prefijo admite hasta 8 letras, números, guion o guion bajo.');
+    if (!/^[A-Za-z0-9_-]{0,8}$/.test(form.salePrefix ?? '')) e.push('El prefijo de ventas admite hasta 8 letras, números, guion o guion bajo.');
+    for (const n of SOCIAL_ORDER) if (normalizeSocial(n, form[n]) === null) e.push(`${SOCIAL_LABELS[n]}: escribí el @usuario o el link a tu perfil de ${SOCIAL_LABELS[n]}.`);
     setErrors(e);
     if (e.length) return;
     // Conserva el próximo número más alto por si se creó un presupuesto mientras se editaba.
@@ -78,6 +81,28 @@ export default function SettingsPage() {
           </fieldset>
         </section>
 
+        <section className="card" aria-labelledby="set-social">
+          <h2 id="set-social">Redes sociales</h2>
+          <p className="small muted" style={{ marginTop: -6, marginBottom: 12 }}>
+            Al compartir un producto o un presupuesto podés sumar links directos a tus perfiles. Escribí el @usuario o pegá el link.
+          </p>
+          <div className="form-grid cols-3">
+            {SOCIAL_ORDER.map((n) => {
+              const url = normalizeSocial(n, form[n]);
+              return (
+                <TextField
+                  key={n}
+                  label={n === 'facebook' ? 'Facebook (recomendado)' : SOCIAL_LABELS[n]}
+                  value={form[n] ?? ''}
+                  onChange={(v) => set(n, v)}
+                  placeholder={n === 'facebook' ? 'facebook.com/tu.negocio' : '@tu.negocio'}
+                  hint={url ? `Link: ${url}` : url === null ? 'No parece un perfil válido.' : 'Opcional.'}
+                />
+              );
+            })}
+          </div>
+        </section>
+
         <section className="card">
           <h2>Presupuestos</h2>
           <div className="form-grid cols-3">
@@ -86,6 +111,7 @@ export default function SettingsPage() {
             <DecimalField label="Impuesto por defecto" suffix="%" value={form.defaultTaxPct} onChange={(v) => set('defaultTaxPct', v || '0')} hint="0 si no discriminás impuestos." />
             <TextField label="Prefijo de numeración" value={form.quotePrefix} onChange={(v) => set('quotePrefix', v)} />
             <TextField label="Próximo número" inputMode="numeric" value={String(form.nextQuoteNumber)} onChange={(v) => set('nextQuoteNumber', Number.parseInt(v.replace(/\D/g, '') || '0', 10))} />
+ <TextField label="Prefijo de ventas" value={form.salePrefix ?? 'V-'} onChange={(v) => set('salePrefix', v)} hint="Numeración de ventas (V-00001)." />
             <TextField label="Validez (días)" inputMode="numeric" value={String(form.defaultValidityDays)} onChange={(v) => set('defaultValidityDays', Number.parseInt(v.replace(/\D/g, '') || '0', 10))} />
             <TextField className="span-all" label="Condiciones por defecto" multiline value={form.defaultConditions} onChange={(v) => set('defaultConditions', v)} />
           </div>

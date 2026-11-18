@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/brand/png/logo-horizontal-light.png" alt="QuoteMaker" width="360">
+  <img src="docs/brand/png/logo-horizontal-light.png" alt="Chediek Home" width="360">
 </p>
 
-<p align="center"><strong>Costos reales, precios con margen sano y presupuestos profesionales — sin exponer jamás tus costos.</strong></p>
+<p align="center"><strong>Costos reales, precios con margen sano, ventas en el local y online, productos para compartir en redes y presupuestos profesionales — sin exponer jamás tus costos.</strong></p>
 
 <p align="center">
   <a href="https://github.com/kkshiiit/QuoteMaker/actions/workflows/ci.yml"><img src="https://github.com/kkshiiit/QuoteMaker/actions/workflows/ci.yml/badge.svg?branch=releases" alt="CI"></a>
@@ -11,9 +11,14 @@
 
 [English version](README.en.md)
 
-QuoteMaker es una herramienta **privada** para emprendedores que venden productos. Registrás compras y gastos (viajes, combustible, peajes, envíos, embalaje…), QuoteMaker calcula el **costo unitario real** de cada producto, te sugiere un **precio con el margen que buscás** y arma **presupuestos en PDF y mensajes de WhatsApp** que nunca incluyen información interna.
+**Chediek Home** (antes QuoteMaker) es una herramienta **privada** para tu negocio. Registrás compras y gastos (viajes, combustible, peajes, envíos, embalaje…), la app calcula el **costo unitario real** de cada producto, te sugiere un **precio con el margen que buscás** y arma **presupuestos en PDF y mensajes de WhatsApp** que nunca incluyen información interna.
 
 > Los clientes no tienen cuentas ni acceso: son contactos privados tuyos. Nada se envía ni cambia de estado sin tu intervención.
+
+**Novedades 1.1:** historial de **ventas** (en el local y online, por cliente), **compartir productos** con fotos, videos y links a Instagram, Facebook y TikTok, diseño **Spatial** con temas claro/oscuro, paletas clásicas y **(+) Pasteles** con vista previa. Ver [CHANGELOG](CHANGELOG.md).
+
+- **Web:** https://kkshiiit.github.io/QuoteMaker/ (instalable como app, funciona sin conexión)
+- **Android:** APK en [Releases](https://github.com/kkshiiit/QuoteMaker/releases)
 
 | Inicio | Presupuesto | Documento para el cliente |
 |---|---|---|
@@ -22,6 +27,12 @@ QuoteMaker es una herramienta **privada** para emprendedores que venden producto
 | Móvil | Distribución de gastos | Calculadora |
 |---|---|---|
 | ![Inicio en móvil](docs/media/screenshots/01-inicio-movil.png) | ![Desglose de un gasto por peso](docs/media/screenshots/06-distribucion-gastos-movil.png) | ![Calculadora de precios en móvil](docs/media/screenshots/07-calculadora-precios-movil.png) |
+
+| Ventas | Compartir producto | (+) Pasteles |
+|---|---|---|
+| ![Historial de ventas en el local y online](docs/media/screenshots/15-ventas-escritorio.png) | ![Compartir producto con fotos, precio y redes](docs/media/screenshots/16-compartir-producto-escritorio.png) | ![Elegir paleta pastel con vista previa](docs/media/screenshots/17-personalizacion-pasteles-escritorio.png) |
+
+![Registrar una venta online (GIF real de la app)](docs/media/gifs/07-registrar-venta.gif)
 
 ![Crear un presupuesto (GIF real de la app)](docs/media/gifs/05-crear-presupuesto.gif)
 

@@ -49,7 +49,7 @@ function isEditingControl(el: Element | null): boolean {
 export function PageHeader({ title, subtitle, back, actions }: { title: string; subtitle?: ReactNode; back?: { to: string; label: string }; actions?: ReactNode }) {
   const h1 = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    document.title = `${title} · QuoteMaker`;
+    document.title = `${title} · Chediek Home`;
   }, [title]);
   useEffect(() => {
     if (!routeFocusPending) return;

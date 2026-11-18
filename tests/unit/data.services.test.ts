@@ -22,6 +22,9 @@ import {
   customerSnapshot,
   findDuplicateCustomer,
   recordQuoteDocument,
+  emptySale,
+  saveSale,
+  setSaleCancelled,
 } from '../../src/data/services';
 import { putRecord } from '../../src/data/repo';
 import { exportBackup, importBackup, validateBackup } from '../../src/data/backup';
@@ -234,5 +237,32 @@ describe('backup', () => {
     expect(validateBackup({ format: 'quotemaker-backup', version: 99, data: {} }).ok).toBe(false);
     expect(validateBackup({ format: 'quotemaker-backup', version: 1, data: { hackers: [] } }).ok).toBe(false);
     expect(validateBackup({ format: 'quotemaker-backup', version: 1, data: { products: [{ name: 'sin id' }] } }).ok).toBe(false);
+  });
+});
+
+describe('ventas en la base local', () => {
+  it('numera correlativamente, encola para sincronizar y se incluye en el respaldo', async () => {
+    const it1 = { id: 'i1', productId: null, description: 'Silla', unit: 'u', quantity: '1', unitPrice: '1000', discountPct: '0', unitCost: '500' };
+    const a = await saveSale({ ...emptySale(), items: [it1] });
+    const b = await saveSale({ ...emptySale(), channel: 'online', platform: 'Instagram', items: [it1] });
+    expect(a.number).toBe('V-00001');
+    expect(b.number).toBe('V-00002');
+    expect((await getSettings()).nextSaleNumber).toBe(3);
+    // editar no cambia el número
+    const edited = await saveSale({ ...a, notes: 'cambio' });
+    expect(edited.number).toBe('V-00001');
+    expect(await db.outbox.where('collection').equals('sales').count()).toBeGreaterThan(0);
+    const anulada = await setSaleCancelled(b, true);
+    expect((await db.sales.get(anulada.id))!.cancelled).toBe(true);
+    const file = await exportBackup();
+    expect((file.data as Record<string, unknown[]>).sales).toHaveLength(2);
+  });
+
+  it('los videos de productos son locales: no se encolan ni van al respaldo', async () => {
+    const p = await product('Lámpara');
+    await db.productVideos.add({ id: 'v1', productId: p.id, name: 'v.mp4', mime: 'video/mp4', size: 3, blob: new Blob(['abc']), createdAt: '2026-01-01' });
+    expect(await db.outbox.where('collection').equals('productVideos' as never).count()).toBe(0);
+    const file = await exportBackup();
+    expect(Object.keys(file.data)).not.toContain('productVideos');
   });
 });

@@ -1,6 +1,6 @@
 # Rendimiento
 
-Todas las cifras son **mediciones reales**, no estimaciones. Se pueden reproducir con los comandos indicados.
+Todas las cifras son **mediciones reales**, no estimaciones (versión 1.1.0, con el diseño Spatial: el desenfoque de vidrio suma ~6 KB de CSS y no cambia los tiempos de forma apreciable). Se pueden reproducir con los comandos indicados.
 
 ## Web (build de producción, `vite preview`, Chromium)
 
@@ -8,15 +8,15 @@ Todas las cifras son **mediciones reales**, no estimaciones. Se pueden reproduci
 
 | Escenario | FCP | DOMContentLoaded | Inicio visible | Transferido |
 |---|---|---|---|---|
-| Escritorio, sin limitación | 108 ms | 63 ms | 204 ms | 156 KB |
-| Móvil (Pixel 7), CPU 4× más lenta + red 1,6 Mbps / 150 ms | 1.300 ms | 1.146 ms | 1.674 ms | 156 KB |
+| Escritorio, sin limitación | 140 ms | 61 ms | 218 ms | 162 KB |
+| Móvil (Pixel 7), CPU 4× más lenta + red 1,6 Mbps / 150 ms | 1.320 ms | 1.170 ms | 1.713 ms | 162 KB |
 
 | Carga de datos | Resultado |
 |---|---|
-| Abrir la lista con 2.000 productos | 109 ms |
-| Abrir la lista con 1.000 presupuestos (calcula totales de cada uno) | 123 ms |
-| Inicio con 1.000 presupuestos | 37 ms |
-| Heap JS usado con 2.000 productos + 1.000 presupuestos | 7,7 MB |
+| Abrir la lista con 2.000 productos | 81 ms |
+| Abrir la lista con 1.000 presupuestos (calcula totales de cada uno) | 118 ms |
+| Inicio con 1.000 presupuestos | 47 ms |
+| Heap JS usado con 2.000 productos + 1.000 presupuestos | 7,8 MB |
 
 Las listas muestran 50 ítems y «Mostrar más» (paginación incremental); la búsqueda usa `useDeferredValue` para no bloquear la escritura.
 

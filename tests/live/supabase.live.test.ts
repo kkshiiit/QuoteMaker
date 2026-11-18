@@ -121,6 +121,24 @@ describe.runIf(!!cfg)('Supabase EN VIVO: sync real con RLS', () => {
     expect(await db.products.get(p.id)).toBeUndefined();
   }, 120_000);
 
+  it('ventas: se sincronizan y quedan aisladas por cuenta (requiere la migración 0002)', async (ctx) => {
+    const id = `venta-${run}`;
+    const push = () =>
+      new SupabaseRemote(a1).push({ mutationId: randomUUID(), collection: 'sales', recordId: id, op: 'upsert', payload: { id, number: 'V-00001', channel: 'online', platform: 'Instagram' }, baseVersion: 0 });
+    try {
+      expect(await push()).toMatchObject({ status: 'applied' });
+    } catch (e) {
+      if (/collection_chk/.test(String(e))) {
+        console.warn('[supabase.live] Falta aplicar supabase/migrations/20261118000002_sales.sql en el proyecto: prueba de ventas SALTEADA.');
+        ctx.skip();
+        return;
+      }
+      throw e;
+    }
+    expect((await new SupabaseRemote(a1).pull(0, 1000)).some((r) => r.collection === 'sales' && r.recordId === id)).toBe(true);
+    expect((await new SupabaseRemote(b).pull(0, 1000)).some((r) => r.recordId === id)).toBe(false);
+  }, 60_000);
+
   it('RLS: la cuenta B no ve ni modifica los datos de la cuenta A', async () => {
     const id = `rls-${run}`;
     await new SupabaseRemote(a1).push({ mutationId: randomUUID(), collection: 'products', recordId: id, op: 'upsert', payload: { id, name: 'Secreto de A', updatedAt: new Date().toISOString() }, baseVersion: 0 });

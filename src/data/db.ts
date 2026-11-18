@@ -14,8 +14,10 @@ import type {
   Preferences,
   Product,
   Purchase,
+  ProductVideo,
   Quote,
   QuoteDocumentRecord,
+  Sale,
   Supplier,
 } from '../domain/types';
 
@@ -64,6 +66,9 @@ export class QuoteMakerDB extends Dexie {
   customers!: Table<Customer, string>;
   quotes!: Table<Quote, string>;
   quoteDocuments!: Table<QuoteDocumentRecord, string>;
+  sales!: Table<Sale, string>;
+  /** Videos de productos: SOLO locales (no se sincronizan ni se incluyen en el respaldo JSON). */
+  productVideos!: Table<ProductVideo, string>;
   prefs!: Table<Preferences, string>;
   outbox!: Table<OutboxEntry, string>;
   syncState!: Table<SyncStateEntry, string>;
@@ -87,6 +92,10 @@ export class QuoteMakerDB extends Dexie {
       outbox: 'mutationId, [collection+recordId], createdAt',
       syncState: 'key, status, collection',
       meta: 'key',
+    });
+    this.version(2).stores({
+      sales: 'id, number, date, channel, customerId, quoteId, updatedAt',
+      productVideos: 'id, productId, createdAt',
     });
   }
 

@@ -2,6 +2,25 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado semántico.
 
+## [1.1.0] — 2026-11-18 · Chediek Home
+
+### Agregado
+- **Nueva identidad: Chediek Home.** Nombre, ícono (casa con puerta en arco, 3 conceptos en `docs/brand`), splash de Android y presentación de bienvenida en el primer inicio.
+- **Diseño «Spatial»:** tarjetas de vidrio translúcido con desenfoque, brillos de fondo del color elegido, profundidad y controles en cápsula; barra lateral y barra inferior flotantes. Respeta «menos transparencia» y «menos movimiento».
+- **Temas y colores:** claro, oscuro y automático; 9 paletas clásicas y el grupo **(+) Pasteles** (Menta, Lavanda, Durazno, Celeste, Rosa, Limón) que tiñen el fondo; color propio. Cada opción muestra una vista previa en miniatura y hay una vista previa grande antes de aplicar. Contraste AA verificado por prueba para las 15 paletas en claro y oscuro.
+- **Historial de ventas:** ventas presenciales en el local y online (WhatsApp, Instagram, Facebook, TikTok, Mercado Libre, tienda web), con o sin cliente, forma de pago, descuentos, impuesto y envío. Totales por canal, por plataforma y por cliente; ganancia interna con costos congelados; anular/restaurar. Desde un presupuesto aceptado se registra la venta con un toque. La ficha de cada cliente muestra sus compras.
+- **Compartir productos** con fotos (hasta 6, optimizadas en el dispositivo), videos (guardados sólo en el dispositivo), descripción, precio y links directos a Instagram, Facebook y TikTok. Todo incluido por defecto; cada parte se puede quitar. Vista previa clara antes de compartir y texto editable.
+- **Redes sociales del negocio** en Configuración (@usuario o link). Los presupuestos (PDF y WhatsApp) pueden incluir los links.
+- Migración `20261118000002_sales.sql` para sincronizar ventas en Supabase.
+
+### Seguridad y privacidad
+- Nueva allowlist `PublicProduct` + pruebas anti-filtración: al compartir un producto nunca salen costo, margen, proveedor, SKU interno ni notas.
+- Los links a redes se validan por dominio (no se aceptan URLs de otros sitios).
+- CSP: se permite `media-src blob:` sólo para reproducir videos locales.
+
+### Corregido
+- Al pasar de una ficha guardada a «nueva» (venta o producto) el formulario podía conservar datos de la ficha anterior.
+
 ## [1.0.0] — 2026-11-17
 
 Primera versión.

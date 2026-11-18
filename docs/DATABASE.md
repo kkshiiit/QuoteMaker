@@ -7,7 +7,7 @@
 | `settings` | `id` (= `business`) | Identidad comercial, moneda, impuestos, numeración, márgenes y redondeos por defecto | Sí |
 | `categories` | `id`, name, archived | Categorías de productos | Sí |
 | `suppliers` | `id`, name, archived | Proveedores (notas privadas) | Sí |
-| `products` | `id`, name, sku, categoryId, supplierId, active, archived | Producto, costo actual calculado, precio manual, margen objetivo, notas internas | Sí |
+| `products` | `id`, name, sku, categoryId, supplierId, active, archived | Producto, costo actual calculado, precio manual, margen objetivo, notas internas, miniatura y hasta 6 fotos (`photos`) | Sí |
 | `costHistory` | `id`, productId, at | Historial inmutable de costos (origen y referencia) | Sí |
 | `purchases` | `id`, date, supplierId, voided | Compra con renglones (`items`), descuento y cargos de factura, comprobante | Sí |
 | `expenses` | `id`, date, status, purchaseId | Gasto, destino, método, valores manuales y **asignaciones calculadas** por lote | Sí |
@@ -15,6 +15,8 @@
 | `customers` | `id`, name, archived | Clientes privados (notas privadas) | Sí |
 | `quotes` | `id`, number, status, customerId, issueDate | Presupuesto editable + copia congelada + eventos | Sí |
 | `quoteDocuments` | `id`, quoteId | Registro de cada PDF/mensaje generado (nombre, canal, SHA-256) | Sí |
+| `sales` | `id`, number, date, channel, customerId, quoteId | Venta (presencial/online, plataforma, cliente, ítems con costo congelado, descuentos, impuesto, envío, forma de pago, anulada) | Sí (migración 0002) |
+| `productVideos` | `id`, productId | Videos de productos (Blob) | **No** (sólo este dispositivo; tampoco van al respaldo JSON) |
 | `prefs` | `id` | Tema y preferencias de este dispositivo | No |
 | `outbox` | `mutationId`, `[collection+recordId]` | Cola durable de mutaciones pendientes | No |
 | `syncState` | `key`, status | Estado de sync por registro, versión del servidor, copia remota en conflicto | No |
@@ -54,6 +56,7 @@ No se suben PDF a Storage: cada PDF se regenera de forma determinista desde la c
 
 ## Migraciones
 
+- `20261117000001_quotemaker_sync.sql`: tablas, RLS, `qm_push`. `20261118000002_sales.sql`: agrega `sales` a la lista cerrada de colecciones.
 - Versionadas en `supabase/migrations/` (prefijo de fecha). Idempotentes (`if not exists`, `drop policy if exists`, `create or replace`).
 - Probadas en CI y localmente sobre **PostgreSQL 16 real**, aplicándolas dos veces (`tests/integration/sync.pg.test.ts`). `tests/integration/supabase-local-stub.sql` reproduce sólo lo que Supabase ya trae (`auth.uid()` idéntica, roles `anon`/`authenticated`).
 

@@ -22,7 +22,7 @@ for (const [d, k] of Object.entries(densities)) {
   await render(`<svg width="${legacy}" height="${legacy}" viewBox="0 0 64 64">${markInner}</svg>`, legacy, legacy, `${dir}/ic_launcher.png`, true);
   await render(`<svg width="${legacy}" height="${legacy}" viewBox="0 0 64 64"><clipPath id="c"><circle cx="32" cy="32" r="32"/></clipPath><g clip-path="url(#c)"><rect width="64" height="64" fill="#1f6f43"/><g transform="translate(6.4 6.4) scale(0.8)">${markInner}</g></g></svg>`, legacy, legacy, `${dir}/ic_launcher_round.png`, true);
   // Foreground adaptativo: la marca ocupa la zona segura (66/108)
-  const inner = markInner.replace(/<rect[^>]*\/>/, '');
+  const inner = markInner.replace(/<defs>[\s\S]*?<\/defs>/, '').replace(/<rect[^>]*\/>/g, '');
   await render(`<svg width="${fg}" height="${fg}" viewBox="0 0 108 108"><g transform="translate(21 21) scale(1.03)">${inner}</g></svg>`, fg, fg, `${dir}/ic_launcher_foreground.png`, true);
 }
 // Splash: respeta tamaño de cada archivo existente
@@ -32,7 +32,14 @@ for (const dir of readdirSync(RES).filter((x) => x.startsWith('drawable'))) {
   const [w, h] = execFileSync('identify', ['-format', '%w %h', f]).toString().split(' ').map(Number);
   const s = Math.round(Math.min(w, h) * 0.28);
   await page.setViewportSize({ width: w, height: h });
-  await page.setContent(`<html><body style="margin:0;background:#f6f5f1;display:grid;place-items:center;width:${w}px;height:${h}px">${mark.replace('<svg ', `<svg width="${s}" height="${s}" `)}</body></html>`);
+  // Presentación: marca + nombre sobre fondo con brillos suaves (estilo Spatial)
+  const font = Math.round(s * 0.26);
+  await page.setContent(
+    `<html><body style="margin:0;width:${w}px;height:${h}px;background:#f3f6f2 radial-gradient(70% 55% at 15% 0%,rgb(124 198 160 / .55),transparent 60%),radial-gradient(60% 50% at 100% 100%,rgb(124 198 160 / .35),transparent 65%);display:grid;place-items:center;font-family:system-ui,Roboto,Arial,sans-serif">` +
+      `<div style="display:flex;flex-direction:column;align-items:center;gap:${Math.round(s * 0.18)}px">` +
+      `<div style="filter:drop-shadow(0 ${Math.round(s * 0.12)}px ${Math.round(s * 0.2)}px rgb(23 87 58 / .35))">${mark.replace('<svg ', `<svg width="${s}" height="${s}" `)}</div>` +
+      `<div style="font-size:${font}px;font-weight:700;letter-spacing:-0.02em;color:#1b1c1e">Chediek <span style="font-weight:400">Home</span></div></div></body></html>`,
+  );
   await page.screenshot({ path: f, clip: { x: 0, y: 0, width: w, height: h } });
 }
 await browser.close();

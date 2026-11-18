@@ -6,6 +6,8 @@ import { matches } from '../search';
 import { putRecord } from '../../data/repo';
 import { createQuote, emptyCustomer, findDuplicateCustomer, validateContact } from '../../data/services';
 import { quoteTotals } from '../../domain/quote';
+import { computeSaleTotals } from '../../domain/sales';
+import { sum, toDec } from '../../domain/money';
 import type { Customer } from '../../domain/types';
 import { Icon } from '../components/Icon';
 import { EmptyState, ErrorSummary, InternalLabel, Menu, PageHeader, StatusBadge, TextField, useConfirm, useToast } from '../components/ui';
@@ -86,6 +88,7 @@ function CustomerDetail({ id }: { id: string }) {
   const [confirm, confirmNode] = useConfirm();
   const stored = useLiveQuery(async () => (isNew ? null : ((await db.customers.get(id)) ?? null)), [id]);
   const quotes = useLiveQuery(() => (isNew ? [] : db.quotes.where('customerId').equals(id).reverse().sortBy('issueDate')), [id]);
+  const sales = useLiveQuery(() => (isNew ? [] : db.sales.where('customerId').equals(id).reverse().sortBy('date')), [id]);
   const [form, setForm] = useState<Customer | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [dupWarned, setDupWarned] = useState<string | null>(null);
@@ -191,7 +194,44 @@ function CustomerDetail({ id }: { id: string }) {
           </div>
         </form>
         {!isNew && (
-          <aside className="card">
+          <aside className="stack">
+          <section className="card" aria-labelledby="c-sales">
+            <div className="card-header">
+              <h2 id="c-sales">Ventas a este cliente</h2>
+              <Link className="btn btn-sm" to={`/ventas/nueva?cliente=${id}`}>
+                <Icon name="plus" />
+                Registrar venta
+              </Link>
+            </div>
+            {sales && sales.filter((x) => !x.cancelled).length > 0 ? (
+              <>
+                <p className="small muted" style={{ marginBottom: 8 }} data-testid="customer-sales-total">
+                  {sales.filter((x) => !x.cancelled).length} compra(s) · Total {money(toDec(sum(sales.filter((x) => !x.cancelled).map((x) => computeSaleTotals(x).total))))}
+                </p>
+                <ul className="list">
+                  {sales.map((x) => (
+                    <li key={x.id}>
+                      <Link className="list-item" to={`/ventas/${x.id}`}>
+                        <span className="grow">
+                          <span className="title" style={{ display: 'block' }}>
+                            {x.number} · {new Date(`${x.date}T12:00:00`).toLocaleDateString('es-AR')}
+                          </span>
+                          <span className="sub">
+                            {x.channel === 'online' ? `Online · ${x.platform}` : 'En el local'}
+                            {x.cancelled ? ' · Anulada' : ''}
+                          </span>
+                        </span>
+                        <span className="end num">{money(computeSaleTotals(x).total)}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="muted small">Todavía no le registraste ventas.</p>
+            )}
+          </section>
+          <section className="card">
             <h2>Presupuestos</h2>
             <p className="small muted" style={{ marginBottom: 8 }}>
               Cliente desde {new Date(form.createdAt).toLocaleDateString('es-AR')}
@@ -215,6 +255,7 @@ function CustomerDetail({ id }: { id: string }) {
             ) : (
               <p className="muted small">Todavía no tiene presupuestos.</p>
             )}
+          </section>
           </aside>
         )}
       </div>

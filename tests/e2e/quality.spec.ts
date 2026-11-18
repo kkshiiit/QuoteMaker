@@ -16,6 +16,8 @@ const ROUTES = [
   '/costos/gastos/nuevo',
   '/costos/calculadora',
   '/presupuestos',
+  '/ventas',
+  '/ventas/nueva',
   '/clientes',
   '/clientes/nuevo',
   '/proveedores',
@@ -65,6 +67,31 @@ test.describe('con datos de ejemplo', () => {
     await page.getByRole('link', { name: /Mesa de roble/ }).click();
     await axe(page, 'detalle de producto');
     await noHorizontalScroll(page);
+    await page.getByRole('button', { name: 'Compartir' }).click();
+    await expect(page.getByRole('dialog', { name: 'Compartir producto' })).toBeVisible();
+    await axe(page, 'compartir producto');
+    await page.goto('/#/ventas');
+    await page.getByRole('link', { name: /V-00002/ }).click();
+    await expect(page.locator('#page-title')).toContainText('Venta V-00002');
+    await axe(page, 'detalle de venta');
+    await noHorizontalScroll(page);
+  });
+
+  test('paletas pastel en claro y oscuro también cumplen contraste', async ({ page }) => {
+    for (const [mode, palette] of [['Claro', 'Durazno'], ['Oscuro', 'Lavanda'], ['Claro', 'Limón']] as const) {
+      await page.goto('/#/personalizacion');
+      await page.getByRole('tab', { name: '(+) Pasteles' }).click();
+      await page.getByText(palette, { exact: true }).click();
+      await page.getByText(mode, { exact: true }).click();
+      await page.getByRole('button', { name: 'Aplicar' }).click();
+      await expect(page.locator('html')).toHaveAttribute('data-pastel', 'true');
+      for (const r of ['/', '/ventas', '/personalizacion']) {
+        await page.goto(`/#${r}`);
+        await expect(page.locator('#page-title')).toBeVisible();
+        await page.waitForTimeout(150);
+        await axe(page, `${r} (${palette}, ${mode})`);
+      }
+    }
   });
 
   test('tema oscuro también cumple contraste', async ({ page }) => {
@@ -85,6 +112,7 @@ test.describe('con datos de ejemplo', () => {
   test('paleta personalizada con contraste ajustado y vista previa antes de aplicar', async ({ page }) => {
     await page.goto('/#/personalizacion');
     const before = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent'));
+    await page.getByRole('tab', { name: 'Personalizado' }).click();
     await page.getByLabel('Color personalizado').fill('#ffee00'); // amarillo: ilegible sin ajuste
     // aún no aplicado
     expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent'))).toBe(before);

@@ -22,6 +22,7 @@ export default function QuoteEdit() {
   const [prefs, setPrefs] = usePrefs();
   const [confirm, confirmNode] = useConfirm();
   const stored = useLiveQuery(() => db.quotes.get(id).then((q) => q ?? null), [id]);
+  const linkedSale = useLiveQuery(() => db.sales.where('quoteId').equals(id).first(), [id]);
   const [form, setForm] = useState<Quote | null>(null);
   const [dirty, setDirty] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -141,6 +142,18 @@ export default function QuoteEdit() {
               <Icon name="file" />
               PDF y WhatsApp
             </button>
+            {form.status === 'accepted' &&
+              (linkedSale ? (
+                <Link className="btn" to={`/ventas/${linkedSale.id}`}>
+                  <Icon name="cart" />
+                  Venta {linkedSale.number}
+                </Link>
+              ) : (
+                <Link className="btn" to={`/ventas/nueva?presupuesto=${form.id}`}>
+                  <Icon name="cart" />
+                  Registrar venta
+                </Link>
+              ))}
             {transitions.length > 0 && (
               <button className="btn" onClick={() => setStatusOpen(true)}>
                 Cambiar estado
@@ -403,7 +416,7 @@ export default function QuoteEdit() {
   );
 }
 
-function ProductPicker({ open, onClose, onPick, suggested }: { open: boolean; onClose: () => void; onPick: (i: QuoteItem) => void; suggested: (p: { currentCost: string | null; targetMarginPct: string | null }) => string | null }) {
+export function ProductPicker({ open, onClose, onPick, suggested }: { open: boolean; onClose: () => void; onPick: (i: QuoteItem) => void; suggested: (p: { currentCost: string | null; targetMarginPct: string | null }) => string | null }) {
   const products = useLiveQuery(() => db.products.filter((p) => !p.archived && p.active).toArray(), []);
   const money = useMoney();
   const [q, setQ] = useState('');

@@ -1,25 +1,24 @@
-# Identidad visual de QuoteMaker
+# Identidad visual de Chediek Home
 
 ![Tres conceptos de logo](png/concepts.png)
 
 ## Conceptos explorados
 
-| | A · Q + flecha (elegido) | B · Etiqueta de precio | C · Monograma QM |
+| | A · Casa con puerta en arco (elegido) | B · Monograma CH | C · Sillón |
 |---|---|---|---|
-| Idea | La «Q» de *Quote* cuya cola es una flecha de envío: el presupuesto que sale hacia el cliente | Etiqueta de precio con renglones de documento | Iniciales Q y M en un círculo |
-| Legibilidad a 16 px | Alta: dos trazos gruesos | Media: los renglones se pierden | Baja: las letras se empastan |
-| Memorabilidad | Alta: forma única, se reconoce como «Q» | Media: las etiquetas son un recurso muy común | Baja: los monogramas son genéricos |
-| Escalabilidad (favicon → splash) | Excelente: mismo dibujo, sin detalles finos | Buena | Regular |
-| Relación con el producto | Presupuesto + envío controlado por el usuario | Precios | Nombre |
-| Ícono adaptativo de Android | Encaja en la zona segura circular | Forma irregular, recorta mal | Bien |
+| Idea | Una casa de líneas suaves con puerta en arco: el hogar y la tienda | Iniciales C y H | Un sillón: muebles y deco |
+| Legibilidad a 16 px | Alta: contorno grueso y simple | Media | Media: detalles finos |
+| Memorabilidad | Alta: se asocia directo a «Home» | Baja: monogramas genéricos | Media |
+| Escalabilidad (favicon → splash) | Excelente | Buena | Regular |
+| Ícono adaptativo de Android | Encaja en la zona segura | Bien | Recorta las patas |
 
-**Elegido: A.** Es el más legible en tamaños chicos, tiene una forma propia y comunica la acción central de la app.
+**Elegido: A.** Es el más legible en tamaños chicos y comunica el nombre sin depender de letras. Insignia con degradé verde y brillo superior (estilo «Spatial»); en la app la insignia toma el color del tema elegido.
 
 ## Archivos
 
 | Archivo | Uso |
 |---|---|
-| `logo-mark.svg` | Marca principal (verde bosque #1F6F43, trazo blanco) |
+| `logo-mark.svg` | Marca principal (degradé verde #2A8A57→#17573A, casa en trazo blanco) |
 | `logo-mark-dark.svg` | Sobre fondos oscuros |
 | `logo-mark-mono.svg` | Monocromo (impresión, sellos) |
 | `logo-horizontal-light.svg` / `-dark.svg` / `-mono.svg` | Marca + logotipo horizontal |

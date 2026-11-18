@@ -4,7 +4,8 @@
 import { computeExpenseAllocations, lotCosts, productCost } from '../domain/costing';
 import { D, type Dec } from '../domain/money';
 import { applyRounding, solvePrice } from '../domain/pricing';
-import { ALLOWED_TRANSITIONS, addDays, formatQuoteNumber } from '../domain/quote';
+import { ALLOWED_TRANSITIONS, addDays, effectiveQuote, formatQuoteNumber } from '../domain/quote';
+import { formatSaleNumber } from '../domain/sales';
 import type {
   BusinessSettings,
   CostHistoryEntry,
@@ -18,6 +19,8 @@ import type {
   QuoteEvent,
   QuoteItem,
   QuoteStatus,
+  Sale,
+  SaleItem,
   Supplier,
 } from '../domain/types';
 import { QUOTE_STATUS_LABELS } from '../domain/types';
@@ -351,4 +354,60 @@ export function suggestedPrice(p: Pick<Product, 'currentCost' | 'targetMarginPct
     targetMarginPct: p.targetMarginPct ?? s.defaultTargetMarginPct,
   });
   return r.ok ? applyRounding(r.price, s.rounding).toFixed(2) : null;
+}
+
+// ---------------- Ventas ----------------
+
+export function emptySale(): Sale {
+  return {
+    ...createBase(),
+    number: '',
+    date: todayIso(),
+    channel: 'presencial',
+    platform: '',
+    customerId: null,
+    customerName: '',
+    items: [],
+    globalDiscountPct: '0',
+    taxPct: '0',
+    shippingCharged: '0',
+    paymentMethod: 'Efectivo',
+    quoteId: null,
+    notes: '',
+    cancelled: false,
+  };
+}
+
+export function saleItemFromProduct(p: Product, suggested: Dec | null): SaleItem {
+  return { ...itemFromProduct(p, suggested), description: p.name };
+}
+
+/** Guarda la venta. Si es nueva, le asigna el próximo número de venta en la misma transacción. */
+export async function saveSale(sale: Sale): Promise<Sale> {
+  return db.transaction('rw', [db.settings, db.sales, db.outbox, db.syncState], async () => {
+    if (sale.number) return putRecord('sales', sale);
+    const st = await getSettings();
+    const n = st.nextSaleNumber ?? 1;
+    await putRecord('settings', { ...st, nextSaleNumber: n + 1 });
+    return putRecord('sales', { ...sale, number: formatSaleNumber(st.salePrefix ?? 'V-', n) });
+  });
+}
+
+export async function setSaleCancelled(sale: Sale, cancelled: boolean) {
+  return putRecord('sales', { ...sale, cancelled });
+}
+
+/** Venta precargada desde un presupuesto (usa la copia congelada si existe). No se guarda sola. */
+export function saleFromQuote(q: Quote): Sale {
+  const e = effectiveQuote(q);
+  return {
+    ...emptySale(),
+    customerId: q.customerId,
+    customerName: e.customer.name,
+    items: e.items.map((it) => ({ ...it, id: newId() })),
+    globalDiscountPct: e.globalDiscountPct || '0',
+    taxPct: e.taxPct || '0',
+    shippingCharged: e.shippingCharged || '0',
+    quoteId: q.id,
+  };
 }

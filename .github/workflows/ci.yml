@@ -266,11 +266,11 @@ jobs:
         run: |
           for i in $(seq 1 20); do
             code=$(curl -s -o index.html -w '%{http_code}' "$URL") || true
-            [ "$code" = 200 ] && grep -q '<title>QuoteMaker' index.html && break
+            [ "$code" = 200 ] && grep -q '<title>Chediek Home' index.html && break
             sleep 6
           done
           echo "Página: $URL → HTTP $code"; test "$code" = 200
-          grep -q '<title>QuoteMaker' index.html
+          grep -q '<title>Chediek Home' index.html
           grep -q 'Content-Security-Policy' index.html
           JS=$(grep -oE 'assets/index-[^"]+\.js' index.html | head -1)
           for f in "$JS" manifest.webmanifest sw.js; do
