@@ -74,7 +74,11 @@ Sin estos pasos la app funciona completa en modo local y muestra «Solo en este 
    ```
 6. `npm run build` (y `npx cap sync android` para el APK). En la app: **Sincronización** → crear cuenta o iniciar sesión.
 
-Para CI, agregá esos dos valores como secretos y pasalos como variables de entorno al paso `npm run build` (no se configuró porque no hay proyecto).
+Para CI: GitHub → Settings → Secrets and variables → Actions → crear `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`. Con ambos secretos, CI:
+- ejecuta `npm run test:live` (prueba **en vivo** contra tu proyecto: rol anónimo bloqueado, dos dispositivos con conflicto y borrado, aislamiento RLS entre dos cuentas, idempotencia);
+- compila la web y el APK con la nube activada.
+
+La prueba en vivo crea cuentas `qm-live-…@example.com` (requiere «Confirm email» desactivado, o definir `QM_LIVE_EMAIL_A`, `QM_LIVE_EMAIL_B` y `QM_LIVE_PASSWORD` de cuentas confirmadas). Localmente: `QM_SUPABASE_URL=… QM_SUPABASE_ANON_KEY=… npm run test:live`.
 
 ## Variables de entorno
 
