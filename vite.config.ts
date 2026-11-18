@@ -2,12 +2,50 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { createHash } from 'node:crypto';
+import type { Plugin } from 'vite';
 import pkg from './package.json' with { type: 'json' };
+
+/**
+ * Content-Security-Policy sólo en el build de producción (el servidor de desarrollo inyecta
+ * scripts inline de HMR). Los scripts inline propios se permiten por hash, no con 'unsafe-inline'.
+ * connect-src limita la red a la propia app y a Supabase: un script inyectado no podría enviar
+ * datos a otro servidor.
+ */
+function contentSecurityPolicy(): Plugin {
+  return {
+    name: 'qm-csp',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        const hashes = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(
+          (m) => `'sha256-${createHash('sha256').update(m[1]!).digest('base64')}'`,
+        );
+        const csp = [
+          "default-src 'self'",
+          `script-src 'self' ${hashes.join(' ')}`.trim(),
+          "style-src 'self' 'unsafe-inline'",
+          "img-src 'self' data: blob:",
+          "font-src 'self' data:",
+          "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+          "worker-src 'self' blob:",
+          "manifest-src 'self'",
+          "object-src 'none'",
+          "base-uri 'self'",
+          "form-action 'self'",
+        ].join('; ');
+        return html.replace('<head>', `<head>\n    <meta http-equiv="Content-Security-Policy" content="${csp}" />`);
+      },
+    },
+  };
+}
 
 export default defineConfig({
   base: './',
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   plugins: [
+    contentSecurityPolicy(),
     react(),
     VitePWA({
       registerType: 'prompt',
