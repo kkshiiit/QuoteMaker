@@ -11,7 +11,12 @@ set -euo pipefail
 
 # Extrae del texto combinado la URL del proyecto y la clave pública, sin depender del formato
 # (nombres, "=", comillas, espacios, CRLF o caracteres invisibles copiados del navegador).
-combined_url() { printf '%s' "${QM_CLOUD_COMBINED:-}" | tr -d '\r' | grep -oE 'https://[a-z0-9-]+\.supabase\.co' | head -1 || true; }
+combined_url() {
+  # Acepta con o sin https://, mayúsculas o espacios alrededor; devuelve https://<ref>.supabase.co
+  local ref
+  ref="$(printf '%s' "${QM_CLOUD_COMBINED:-}" | tr -d '\r' | grep -oiE '[a-z0-9-]{10,}\.supabase\.(co|com|in)' | head -1 | cut -d. -f1 | tr 'A-Z' 'a-z' || true)"
+  [ -n "$ref" ] && printf 'https://%s.supabase.co' "$ref" || true
+}
 combined_key() { printf '%s' "${QM_CLOUD_COMBINED:-}" | tr -d '\r' | grep -oE 'sb_publishable_[A-Za-z0-9_-]+|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+' | head -1 || true; }
 combined_secret() { printf '%s' "${QM_CLOUD_COMBINED:-}" | grep -qE 'sb_secret_|service_role'; }
 
@@ -37,6 +42,11 @@ if [ -n "$URL" ] && ! printf '%s' "$URL" | grep -Eq '^https://[a-z0-9-]+\.supaba
 fi
 
 [ -n "$KEY" ] && echo "::add-mask::$KEY"
+if [ -z "$URL" ] && [ -n "${QM_CLOUD_COMBINED:-}" ]; then
+  # Diagnóstico sin revelar contenido: letras → a/A, dígitos → 9 (se ve sólo la forma de cada línea).
+  echo "Forma del secreto combinado (sin valores):"
+  printf '%s\n' "$QM_CLOUD_COMBINED" | tr -d '\r' | sed -E 's/[a-z]/a/g; s/[A-Z]/A/g; s/[0-9]/9/g; s/a+/a…/g; s/A+/A…/g; s/9+/9…/g' | sed 's/^/  │ /'
+fi
 echo "Nube · URL: ${URL:-AUSENTE}"
 if [ -n "$KEY" ]; then echo "Nube · clave: presente (${#KEY} caracteres)"; else echo "Nube · clave: AUSENTE"; fi
 
