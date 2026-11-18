@@ -26,8 +26,6 @@ jobs:
     name: Web · tipos, lint, pruebas y build
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    env:
-      HAS_SUPABASE: ${{ secrets.VITE_SUPABASE_URL != '' && secrets.VITE_SUPABASE_ANON_KEY != '' }}
     services:
       postgres:
         image: postgres:16
@@ -51,8 +49,16 @@ jobs:
         run: npm run test:integration
         env:
           QM_PG_URL: postgres://postgres:postgres@localhost:5432/postgres
+      - name: Secretos de Supabase (presencia, nunca el valor)
+        id: cloud
+        env:
+          URL: ${{ secrets.VITE_SUPABASE_URL }}
+          KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          for n in URL KEY; do v="${!n}"; if [ -n "$v" ]; then echo "$n: presente (${#v} caracteres)"; else echo "$n: AUSENTE"; fi; done
+          if [ -n "$URL" ] && [ -n "$KEY" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
       - name: Prueba en vivo contra Supabase real (sólo si hay secretos configurados)
-        if: env.HAS_SUPABASE == 'true'
+        if: steps.cloud.outputs.ok == 'true'
         run: npm run test:live
         env:
           QM_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
