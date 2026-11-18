@@ -1304,7 +1304,6 @@ body {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 a.kpi:hover {
-  transform: translateY(-2px);
   box-shadow: var(--depth-hover);
   border-color: var(--glass-border);
 }
@@ -1324,7 +1323,6 @@ a.list-item:hover {
 }
 .btn:hover {
   background: var(--surface);
-  transform: translateY(-1px);
   box-shadow: var(--depth);
 }
 .btn-primary,
@@ -1479,7 +1477,6 @@ dialog::backdrop {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .choice-card:hover {
-  transform: translateY(-2px);
   box-shadow: var(--depth);
 }
 .choice-card input {
