@@ -130,8 +130,11 @@ if (phase === 'phase1') {
     ['#/mas', '10-mas'],
     ['#/ventas', '16-ventas'],
   ]) {
-    await go(hash);
-    await noOverflow(hash);
+    // Navegar + medir como una unidad: si Android recrea el WebView en el medio, se reconecta y se repite.
+    await withPage(async () => {
+      await goOnce(hash);
+      await noOverflow(hash);
+    });
     shot(name);
   }
   await go('#/presupuestos');
