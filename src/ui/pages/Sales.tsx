@@ -79,19 +79,19 @@ export default function Sales() {
   return (
     <>
       <PageHeader
-        title="Ventas"
+        title="Pedidos y ventas"
         subtitle="Pedidos e historial de lo vendido, en el local y online."
         actions={
-          <>
-            <Link className="btn" to="/ventas/nueva?tipo=pedido">
+          <div className="fab-group">
+            <Link className="btn fab fab-secondary" to="/ventas/nueva?tipo=pedido">
               <Icon name="truck" />
-              Nuevo pedido
+              <span className="fab-text">Nuevo pedido</span>
             </Link>
-            <Link className="btn btn-primary" to="/ventas/nueva">
+            <Link className="btn btn-primary fab" to="/ventas/nueva">
               <Icon name="plus" />
-              Registrar venta
+              <span className="fab-text">Registrar venta</span>
             </Link>
-          </>
+          </div>
         }
       />
       {sales && sales.length === 0 ? (

@@ -19,7 +19,7 @@ async function addProductToSale(page: Page, name: string) {
 test('ventas: presencial y online, historial con totales por canal y por cliente', async ({ page }) => {
   await loadDemo(page);
   await page.goto('/#/ventas');
-  await expect(page.locator('#page-title')).toHaveText('Ventas');
+  await expect(page.locator('#page-title')).toHaveText('Pedidos y ventas');
   const before = await page.getByTestId('sales-total').innerText();
 
   // Venta presencial en el local, consumidor final
@@ -133,18 +133,14 @@ test('presupuesto: links a redes opcionales en WhatsApp y PDF', async ({ page })
   await expect(page.getByRole('article')).not.toContainText('Facebook:');
 });
 
-test('personalización: paleta pastel con vista previa antes de aplicar, en claro y oscuro', async ({ page }) => {
+test('personalización: tocar una paleta la aplica al instante a toda la app, en claro y oscuro, y se puede deshacer', async ({ page }) => {
   await page.goto('/#/personalizacion');
   await expect(page.locator('#page-title')).toHaveText('Personalización');
-  const beforeFill = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent-fill'));
+  const fill = () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent-fill').trim());
   await page.getByRole('tab', { name: '(+) Pasteles' }).click();
-  await expect(page.getByText('Lavanda', { exact: true })).toBeVisible();
   await page.getByText('Lavanda', { exact: true }).click();
-  // Vista previa cambia; la app todavía no
-  await expect(page.locator('.theme-preview')).toHaveAttribute('style', /--accent-fill: #c7b8f5/);
-  expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent-fill'))).toBe(beforeFill);
+  await expect.poll(fill).toBe('#c7b8f5');
   await page.getByText('Oscuro', { exact: true }).click();
-  await page.getByRole('button', { name: 'Aplicar' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('html')).toHaveAttribute('data-pastel', 'true');
   const ratio = await page.evaluate(() => {
@@ -159,5 +155,11 @@ test('personalización: paleta pastel con vista previa antes de aplicar, en clar
   });
   expect(ratio).toBeGreaterThanOrEqual(4.5);
   await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-pastel', 'true');
+  // Volver a la paleta de la casa y deshacer
+  await page.getByRole('tab', { name: 'Chediek' }).click();
+  await page.getByText('Rosé Chediek', { exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-pastel', 'false');
+  await page.getByRole('button', { name: 'Deshacer' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-pastel', 'true');
 });

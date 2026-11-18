@@ -112,9 +112,9 @@ function ProductDetailForm() {
         actions={
           !isNew && (
             <>
-            <button className="btn btn-primary" onClick={() => setSharing(true)}>
+            <button className="btn btn-icon-m" onClick={() => setSharing(true)}>
               <Icon name="share" />
-              Compartir
+              <span className="btn-label">Compartir</span>
             </button>
             <Menu label="Más acciones del producto">
               <Link to={`/costos/calculadora?producto=${form.id}`}>

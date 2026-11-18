@@ -26,9 +26,9 @@ function SupplierList() {
         title="Proveedores"
         subtitle={<InternalLabel text="Información interna" />}
         actions={
-          <Link className="btn btn-primary" to="/proveedores/nuevo">
+          <Link className="btn btn-primary fab" to="/proveedores/nuevo">
             <Icon name="plus" />
-            Nuevo proveedor
+            <span className="fab-text">Nuevo proveedor</span>
           </Link>
         }
       />

@@ -44,11 +44,11 @@ export default function ExpensesPanel() {
     <>
       <PageHeader
         title="Panel de gastos"
-        subtitle="Controlá cuánto gastás por día, quincena o mes."
+        subtitle={<>Controlá cuánto gastás por día, quincena o mes. <InternalLabel text="Interno" /></>}
         actions={
-          <Link className="btn btn-primary" to="/costos/gastos/nuevo">
+          <Link className="btn btn-primary fab" to="/costos/gastos/nuevo">
             <Icon name="plus" />
-            Agregar gasto
+            <span className="fab-text">Agregar gasto</span>
           </Link>
         }
       />
@@ -77,10 +77,10 @@ export default function ExpensesPanel() {
       </div>
       {view && (
         <>
-          <section className="kpis" aria-label="Resumen de gastos" style={{ marginBottom: 16 }}>
+          <section className="kpis kpis-3" aria-label="Resumen de gastos" style={{ marginBottom: 16 }}>
             <div className="card kpi">
               <div className="label">
-                <Icon name="wallet" /> Gasto del período <InternalLabel text="Interno" />
+                <Icon name="wallet" /> Gasto del período
               </div>
               <div className="value num" data-testid="exp-total">
                 {money(view.total)}
@@ -100,7 +100,7 @@ export default function ExpensesPanel() {
               <div className="label">
                 <Icon name="tag" /> Categoría principal
               </div>
-              <div className="value">{view.cats[0]?.[0] ?? '—'}</div>
+              <div className="value value-text">{view.cats[0]?.[0] ?? '—'}</div>
               <div className="context">{view.cats[0] && D(view.recorded).gt(0) ? `${D(view.cats[0][1]).div(D(view.recorded)).times(100).round(0).toString()} % de lo cargado` : 'Sin gastos cargados'}</div>
             </div>
           </section>

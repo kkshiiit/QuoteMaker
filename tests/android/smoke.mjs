@@ -192,11 +192,9 @@ if (phase === 'phase1') {
   await withPage(() => page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark')));
   await go('#/personalizacion');
   await page.getByText('Oscuro', { exact: true }).dispatchEvent('click');
-  await page.getByRole('button', { name: 'Aplicar' }).dispatchEvent('click');
   await sleep(600);
   shot('14-personalizacion-oscuro');
   await page.getByText('Claro', { exact: true }).dispatchEvent('click');
-  await page.getByRole('button', { name: 'Aplicar' }).dispatchEvent('click');
   await go('#/');
 }
 

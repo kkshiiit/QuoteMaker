@@ -90,9 +90,9 @@ export default function Products() {
         title="Productos"
         subtitle="Catálogo con fotos, colores, stock y precio."
         actions={
-          <Link className="btn btn-primary" to="/productos/nuevo">
+          <Link className="btn btn-primary fab" to="/productos/nuevo">
             <Icon name="plus" />
-            Nuevo producto
+            <span className="fab-text">Nuevo producto</span>
           </Link>
         }
       />

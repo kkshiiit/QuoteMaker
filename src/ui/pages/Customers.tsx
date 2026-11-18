@@ -35,9 +35,9 @@ function CustomerList() {
         title="Clientes"
         subtitle="Contactos privados. No tienen cuenta ni acceso a la app."
         actions={
-          <Link className="btn btn-primary" to="/clientes/nuevo">
+          <Link className="btn btn-primary fab" to="/clientes/nuevo">
             <Icon name="plus" />
-            Nuevo cliente
+            <span className="fab-text">Nuevo cliente</span>
           </Link>
         }
       />

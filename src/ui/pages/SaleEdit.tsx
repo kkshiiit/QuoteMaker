@@ -80,7 +80,7 @@ function SaleEditForm() {
     return computeSaleTotals({ items, globalDiscountPct: form.globalDiscountPct || '0', taxPct: form.taxPct || '0', shippingCharged: form.shippingCharged || '0' });
   }, [form]);
 
-  if (stored === null && !isNew) return <PageHeader title="Venta no encontrada" back={{ to: '/ventas', label: 'Ventas' }} />;
+  if (stored === null && !isNew) return <PageHeader title="Venta no encontrada" back={{ to: '/ventas', label: 'Pedidos y ventas' }} />;
   if (!form || !totals) return <p role="status">Cargando…</p>;
 
   const status = saleStatus(form);
@@ -115,7 +115,7 @@ function SaleEditForm() {
     <>
       <PageHeader
         title={isNew ? (isOrder ? 'Nuevo pedido' : 'Registrar venta') : `${isOrder ? 'Pedido' : 'Venta'} ${form.number}`}
-        back={{ to: '/ventas', label: 'Ventas' }}
+        back={{ to: '/ventas', label: 'Pedidos y ventas' }}
         subtitle={
           !isNew && (
             <span className="row">
@@ -128,10 +128,6 @@ function SaleEditForm() {
         actions={
           !isNew && (
             <>
-            <button className="btn btn-primary" onClick={() => setReceipt(true)} disabled={!stored}>
-              <Icon name="receipt" />
-              {status === 'entregado' ? 'Recibo' : 'Comprobante'}
-            </button>
             <Menu label="Más acciones de la venta">
               <button onClick={toggleCancel}>
                 <Icon name="archive" />
@@ -363,6 +359,12 @@ function SaleEditForm() {
           )}
 
           <div className="sticky-actions actions">
+            {!isNew && (
+              <button type="button" className="btn" onClick={() => setReceipt(true)} disabled={!stored}>
+                <Icon name="download" />
+                {status === 'entregado' ? 'Recibo' : 'Comprobante'}
+              </button>
+            )}
             <button className="btn btn-primary" type="submit">
               <Icon name="check" />
               {isNew ? (isOrder ? 'Guardar pedido' : 'Registrar venta') : 'Guardar'}

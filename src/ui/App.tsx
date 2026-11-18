@@ -8,6 +8,7 @@ import { productStock, stockBalances } from '../domain/stock';
 import { APP_NAME, Icon, Wordmark, type IconName } from './components/Icon';
 import { requestRouteFocus, ToastProvider } from './components/ui';
 import { Welcome } from './components/Welcome';
+import { ModeSwitch, PaletteSwatches } from './components/QuickTheme';
 import { usePrefs } from './hooks';
 import { applyTheme, resolveTheme } from './theme/theme';
 
@@ -124,6 +125,10 @@ function Drawer({ open, onClose }: { open: boolean; onClose: () => void }) {
               <Icon name="x" />
             </button>
           </div>
+          <section className="drawer-theme" aria-label="Tema rápido">
+            <ModeSwitch compact />
+            <PaletteSwatches size={36} />
+          </section>
           {MORE_GROUPS.map((g) => (
             <nav key={g.title} aria-label={g.title}>
               <h2>{g.title}</h2>
@@ -237,6 +242,7 @@ function TopActions() {
 }
 
 function Shell({ children }: { children: ReactNode }) {
+  const loc = useLocation();
   const [menu, setMenu] = useState(false);
   return (
     <div className="app">
@@ -288,13 +294,15 @@ function Shell({ children }: { children: ReactNode }) {
           <SyncDot />
         </button>
         <Link to="/" className="topbar-brand">
-          <Wordmark size={30} />
+          <Wordmark size={36} />
         </Link>
         <TopActions />
       </header>
       <main id="main" className="main" tabIndex={-1}>
         <UpdateBanner />
-        {children}
+        <div key={loc.pathname} className="page-enter">
+          {children}
+        </div>
       </main>
       <nav className="bottom-nav" aria-label="Navegación principal">
         {BOTTOM.map((l) => (

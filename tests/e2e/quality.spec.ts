@@ -87,7 +87,6 @@ test.describe('con datos de ejemplo', () => {
       await page.getByRole('tab', { name: '(+) Pasteles' }).click();
       await page.getByText(palette, { exact: true }).click();
       await page.getByText(mode, { exact: true }).click();
-      await page.getByRole('button', { name: 'Aplicar' }).click();
       await expect(page.locator('html')).toHaveAttribute('data-pastel', 'true');
       for (const r of ['/', '/ventas', '/personalizacion']) {
         await page.goto(`/#${r}`);
@@ -101,7 +100,6 @@ test.describe('con datos de ejemplo', () => {
   test('tema oscuro también cumple contraste', async ({ page }) => {
     await page.goto('/#/personalizacion');
     await page.getByText('Oscuro', { exact: true }).click();
-    await page.getByRole('button', { name: 'Aplicar' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     for (const r of ['/', '/productos', '/presupuestos', '/costos/calculadora']) {
       await page.goto(`/#${r}`);
@@ -113,15 +111,14 @@ test.describe('con datos de ejemplo', () => {
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   });
 
-  test('paleta personalizada con contraste ajustado y vista previa antes de aplicar', async ({ page }) => {
+  test('paleta personalizada: se aplica al instante con contraste ajustado y se puede deshacer', async ({ page }) => {
     await page.goto('/#/personalizacion');
     const before = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent'));
     await page.getByRole('tab', { name: 'Personalizado' }).click();
     await page.getByLabel('Color personalizado').fill('#ffee00'); // amarillo: ilegible sin ajuste
-    // aún no aplicado
-    expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent'))).toBe(before);
+    // aplicado al instante en toda la app
+    await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent'))).not.toBe(before);
     await expect(page.getByText(/Se ajustó el tono/)).toBeVisible();
-    await page.getByRole('button', { name: 'Aplicar' }).click();
     const ratio = await page.evaluate(() => {
       const hex = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
       const n = parseInt(hex.slice(1), 16);
