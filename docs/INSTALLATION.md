@@ -23,12 +23,11 @@ npm run preview      # sirve dist/ en http://localhost:4173
 
 `dist/` es estático (rutas con `#`), por lo que se puede publicar gratis en cualquier hosting estático: GitHub Pages, Cloudflare Pages o Netlify (planes gratuitos, sin dominio pago). Al abrirla, el navegador ofrece **Instalar app** (PWA) y queda disponible sin conexión.
 
-### Publicar en GitHub Pages (gratis)
+### Versión web publicada (GitHub Pages, gratis)
 
-1. Settings → Pages → Source: *GitHub Actions*.
-2. Agregar un workflow que suba `dist/` con `actions/upload-pages-artifact` y `actions/deploy-pages`.
+La CI publica la web automáticamente en **https://kkshiiit.github.io/QuoteMaker/** cada vez que `main` pasa todas las pruebas (job «Publicar la web en GitHub Pages»). Requisito único: Settings → Pages → Source: *GitHub Actions*.
 
-No está activado por defecto: publicarlo hace pública la app (no los datos, que viven en cada dispositivo). Decisión del titular.
+Se publica la app, no los datos: cada persona guarda los suyos en su dispositivo y, si inicia sesión, en su cuenta de Supabase protegida por RLS. Desde el navegador se puede **Instalar app** (PWA) y funciona sin conexión.
 
 ## Android
 
@@ -74,7 +73,11 @@ Sin estos pasos la app funciona completa en modo local y muestra «Solo en este 
    ```
 6. `npm run build` (y `npx cap sync android` para el APK). En la app: **Sincronización** → crear cuenta o iniciar sesión.
 
-Para CI, agregá esos dos valores como secretos y pasalos como variables de entorno al paso `npm run build` (no se configuró porque no hay proyecto).
+Para CI: GitHub → Settings → Secrets and variables → Actions → crear `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`. Con ambos secretos, CI:
+- ejecuta `npm run test:live` (prueba **en vivo** contra tu proyecto: rol anónimo bloqueado, dos dispositivos con conflicto y borrado, aislamiento RLS entre dos cuentas, idempotencia);
+- compila la web y el APK con la nube activada.
+
+La prueba en vivo crea cuentas `qm-live-…@example.com` (requiere «Confirm email» desactivado, o definir `QM_LIVE_EMAIL_A`, `QM_LIVE_EMAIL_B` y `QM_LIVE_PASSWORD` de cuentas confirmadas). Localmente: `QM_SUPABASE_URL=… QM_SUPABASE_ANON_KEY=… npm run test:live`.
 
 ## Variables de entorno
 

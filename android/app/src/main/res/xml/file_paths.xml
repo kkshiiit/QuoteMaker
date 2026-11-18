@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Sólo la caché: ahí se escribe el PDF temporal que se entrega al Sharesheet. -->
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-path name="my_images" path="." />
-    <cache-path name="my_cache_images" path="." />
+    <cache-path name="share_cache" path="." />
 </paths>

