@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { db } from '../../data/db';
 import { matches } from '../search';
 import { putRecord } from '../../data/repo';
-import { createQuote, emptyCustomer, findDuplicateCustomer, validateContact } from '../../data/services';
+import { createQuote, emptyCustomer, findDuplicateCustomer, validateContact, deleteCustomer } from '../../data/services';
 import { quoteTotals } from '../../domain/quote';
 import { computeSaleTotals, saleCounts } from '../../domain/sales';
 import { sum, toDec } from '../../domain/money';
@@ -150,6 +150,18 @@ function CustomerDetail({ id }: { id: string }) {
                 >
                   <Icon name="archive" />
                   {form.archived ? 'Restaurar' : 'Archivar'}
+                </button>
+                <button
+                  className="danger-item"
+                  onClick={async () => {
+                    if (!(await confirm('Eliminar cliente', `Se borra «${form.name}» en todos tus dispositivos. Sus presupuestos y ventas se conservan con el nombre guardado. Esta acción no se puede deshacer.`, 'Eliminar', true))) return;
+                    await deleteCustomer(form.id);
+                    toast('Cliente eliminado');
+                    navigate('/clientes', { replace: true });
+                  }}
+                >
+                  <Icon name="trash" />
+                  Eliminar
                 </button>
               </Menu>
             </>

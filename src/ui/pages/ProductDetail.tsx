@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../data/db';
 import { createBase, putRecord } from '../../data/repo';
-import { emptyProduct, saveProduct, suggestedPrice, validateProduct } from '../../data/services';
+import { emptyProduct, saveProduct, suggestedPrice, validateProduct, deleteProduct } from '../../data/services';
 import { lotCosts, productCost } from '../../domain/costing';
 import { analyzePrice } from '../../domain/pricing';
 import type { Product } from '../../domain/types';
@@ -128,6 +128,18 @@ function ProductDetailForm() {
               <button onClick={toggleArchive}>
                 <Icon name="archive" />
                 {form.archived ? 'Restaurar' : 'Archivar'}
+              </button>
+              <button
+                className="danger-item"
+                onClick={async () => {
+                  if (!(await confirm('Eliminar producto', `Se borra «${form.name}» con sus fotos y videos. Los presupuestos y ventas ya hechos conservan su descripción y precio. Si sólo querés ocultarlo, usá «Archivar». Esta acción no se puede deshacer.`, 'Eliminar', true))) return;
+                  await deleteProduct(form.id);
+                  toast('Producto eliminado');
+                  navigate('/productos', { replace: true });
+                }}
+              >
+                <Icon name="trash" />
+                Eliminar
               </button>
             </Menu>
             </>

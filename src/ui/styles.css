@@ -3446,3 +3446,22 @@ html {
   font-size: 0.92rem;
   line-height: 1.2;
 }
+
+/* Acciones destructivas */
+.btn-danger-fill,
+.btn-danger-fill:hover {
+  background: #b3261e;
+  border-color: transparent;
+  color: #fff;
+}
+:root[data-theme='dark'] .btn-danger-fill,
+:root[data-theme='dark'] .btn-danger-fill:hover {
+  background: #ffb4ab;
+  color: #3d0a07;
+}
+.menu-panel .danger-item {
+  color: var(--danger);
+}
+.menu-panel .danger-item svg {
+  color: currentColor;
+}

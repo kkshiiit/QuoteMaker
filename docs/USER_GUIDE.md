@@ -145,6 +145,16 @@ El botón **Compartir** muestra una vista previa (portada, nombre, descripción,
 
 Para que salgan los links directos a tus perfiles, cargalos en **Configuración → Redes sociales** (@usuario o link; Facebook recomendado). Los presupuestos (PDF y WhatsApp) también pueden incluirlos: en la pantalla del documento, «Incluir links a mis redes».
 
+## 8 septies. Eliminar
+
+En la ficha de cada cliente, producto, proveedor, gasto general, venta o pedido, menú **⋯ → Eliminar** (en Categorías, el ícono de papelera). Siempre aparece una **confirmación** que explica qué pasa; el foco empieza en **Cancelar** para que nunca se borre por accidente.
+
+- Los presupuestos y ventas ya hechos **conservan** nombres, precios y costos aunque borres el cliente o el producto.
+- Borrar una venta o pedido **devuelve el stock** que había descontado.
+- Proveedores y categorías: sus productos quedan «sin proveedor» / «sin categoría».
+- Presupuestos: sólo se borran los **borradores** (los enviados quedan como histórico). Compras y gastos: primero **anular**, después se pueden eliminar.
+- Si sólo querés ocultar algo, usá **Archivar** (se puede restaurar).
+
 ## 9. Estadísticas
 
 Período (este mes, mes anterior, 90 días, año, personalizado): presupuestos emitidos, tasa de aceptación, ventas aceptadas, ganancia bruta, margen, gastos generales y sin asignar, resultado estimado, productos más vendidos, presupuestos por estado y gastos del período sin duplicar.

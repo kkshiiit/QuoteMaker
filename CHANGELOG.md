@@ -16,6 +16,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). V
 - Migración `20261118000003_stock.sql` (colección `stockMoves`).
 - **Estilo de la referencia visual:** paleta de firma **Rosé Chediek** (predeterminada) en claro y oscuro (rosa empolvado y beige, botones cacao en claro y rosa en oscuro), títulos serif, monograma **CH · CHEDIEK HOME**, encabezado móvil con menú, logo, avisos de stock bajo y pedidos por entregar; barra inferior Inicio · Productos · Pedidos · Clientes · Gastos · Calc.; pantalla de bienvenida con «Comenzar»; Inicio con buscador, categorías con ícono y productos destacados; ficha de producto con foto grande, colores con nombre, talles en cápsulas, stock con − / + e «Ingresar stock» y precio sugerido; pedido con foto por renglón y − / +.
 
+- **Eliminar con confirmación** clientes, productos, proveedores, categorías, gastos generales, ventas y pedidos (devuelve el stock), presupuestos en borrador y compras/gastos anulados. El foco inicial queda en «Cancelar»; los históricos se conservan.
+- **Tema al instante:** tocar un modo o paleta cambia toda la app (con Deshacer); cambio rápido en el menú; paletas de firma Rosé, Arena y cacao, Salvia y Glicina en claro y oscuro.
+- **Skin del mockup:** compacto, vidrio translúcido, grilla de 3 columnas, botón flotante «+» único por pantalla, animaciones suaves (respetan «reducir movimiento»), el foco nunca queda tapado por barras fijas.
+
 ### Corregido
 - Los diálogos dentro de un formulario ya no envían el formulario de fondo.
 

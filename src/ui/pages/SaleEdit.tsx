@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { db } from '../../data/db';
 import { newId } from '../../data/defaults';
-import { emptySale, saleFromQuote, saveSale, setSaleCancelled, suggestedPrice } from '../../data/services';
+import { emptySale, saleFromQuote, saveSale, setSaleCancelled, suggestedPrice, deleteSale } from '../../data/services';
 import { D } from '../../domain/money';
 import { computeSaleTotals, salePayments, saleStatus, validateSale } from '../../domain/sales';
 import { stockBalances, stockShortages, variantLabel } from '../../domain/stock';
@@ -139,6 +139,18 @@ function SaleEditForm() {
                   Ver presupuesto de origen
                 </Link>
               )}
+              <button
+                className="danger-item"
+                onClick={async () => {
+                  if (!(await confirm(isOrder ? 'Eliminar pedido' : 'Eliminar venta', `Se borra ${form.number} del historial y el stock que había descontado vuelve. Si sólo querés que no cuente, usá «${isOrder ? 'Cancelar pedido' : 'Anular venta'}». Esta acción no se puede deshacer.`, 'Eliminar', true))) return;
+                  await deleteSale(form);
+                  toast(isOrder ? 'Pedido eliminado' : 'Venta eliminada');
+                  navigate('/ventas', { replace: true });
+                }}
+              >
+                <Icon name="trash" />
+                Eliminar
+              </button>
             </Menu>
             </>
           )

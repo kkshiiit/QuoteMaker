@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { db } from '../../data/db';
 import { newId } from '../../data/defaults';
-import { emptyPurchase, savePurchase, setPurchaseVoided } from '../../data/services';
+import { emptyPurchase, savePurchase, setPurchaseVoided, deletePurchase } from '../../data/services';
 import { itemNet, lotCosts, purchaseRate, purchaseTotals, validatePurchase } from '../../domain/costing';
 import { toDec } from '../../domain/money';
 import type { Purchase, PurchaseItem } from '../../domain/types';
@@ -100,6 +100,20 @@ export default function PurchaseEdit() {
                 <Icon name={form.voided ? 'refresh' : 'archive'} />
                 {form.voided ? 'Restaurar compra' : 'Anular compra'}
               </button>
+              {form.voided && (
+                <button
+                  className="danger-item"
+                  onClick={async () => {
+                    if (!(await confirm('Eliminar compra', 'La compra anulada se borra del historial. Los costos no cambian (ya no la usaban). Esta acción no se puede deshacer.', 'Eliminar', true))) return;
+                    await deletePurchase(form);
+                    toast('Compra eliminada');
+                    navigate('/costos/compras', { replace: true });
+                  }}
+                >
+                  <Icon name="trash" />
+                  Eliminar
+                </button>
+              )}
             </Menu>
           )
         }

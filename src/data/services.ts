@@ -30,7 +30,7 @@ import type {
 import { QUOTE_STATUS_LABELS } from '../domain/types';
 import { db } from './db';
 import { defaultSettings, newId, nowIso, SETTINGS_ID, todayIso } from './defaults';
-import { createBase, putRecord, putRecords } from './repo';
+import { createBase, deleteRecord, putRecord, putRecords } from './repo';
 
 export async function getSettings(): Promise<BusinessSettings> {
   const s = await db.settings.get(SETTINGS_ID);
@@ -466,4 +466,61 @@ export function saleFromQuote(q: Quote): Sale {
     shippingCharged: e.shippingCharged || '0',
     quoteId: q.id,
   };
+}
+
+// ---------------- Eliminar (siempre tras confirmación en la interfaz) ----------------
+// Los históricos se conservan: los presupuestos y ventas guardan su propia copia de nombres y
+// precios, y el historial de costos y los movimientos de stock no se borran.
+
+export async function deleteCustomer(id: string) {
+  await deleteRecord('customers', id);
+}
+
+/** Borra el producto (y sus videos locales). Ventas y presupuestos conservan su descripción y precio. */
+export async function deleteProduct(id: string) {
+  await db.productVideos.where('productId').equals(id).delete();
+  await deleteRecord('products', id);
+}
+
+/** Borra el proveedor; los productos que lo tenían quedan «sin proveedor». */
+export async function deleteSupplier(id: string) {
+  const products = await db.products.where('supplierId').equals(id).toArray();
+  await putRecords('products', products.map((p) => ({ ...p, supplierId: null })));
+  await deleteRecord('suppliers', id);
+}
+
+/** Borra la categoría; sus productos quedan «sin categoría». */
+export async function deleteCategory(id: string) {
+  const products = await db.products.where('categoryId').equals(id).toArray();
+  await putRecords('products', products.map((p) => ({ ...p, categoryId: null })));
+  await deleteRecord('categories', id);
+}
+
+export async function deleteOverhead(id: string) {
+  await deleteRecord('overheads', id);
+}
+
+/** Borra la venta o pedido. Antes devuelve al stock lo que había descontado (movimiento compensatorio). */
+export async function deleteSale(sale: Sale) {
+  if (!sale.cancelled) await setSaleStatus(sale, 'cancelado');
+  await deleteRecord('sales', sale.id);
+}
+
+/** Sólo se pueden borrar presupuestos en borrador: los enviados tienen copia congelada (histórico). */
+export function canDeleteQuote(q: Pick<Quote, 'status' | 'frozen'>) {
+  return q.status === 'draft' && !q.frozen;
+}
+export async function deleteQuote(q: Quote) {
+  if (!canDeleteQuote(q)) throw new Error('Sólo se pueden eliminar presupuestos en borrador.');
+  await deleteRecord('quotes', q.id);
+}
+
+/** Compras y gastos: sólo anulados (no influyen en costos). Para corregir costos, anulá primero. */
+export async function deletePurchase(p: Purchase) {
+  if (!p.voided) throw new Error('Anulá la compra antes de eliminarla.');
+  await deleteRecord('purchases', p.id);
+}
+export async function deleteExpense(e: Expense) {
+  if (e.status !== 'void') throw new Error('Anulá el gasto antes de eliminarlo.');
+  await deleteRecord('expenses', e.id);
 }

@@ -148,3 +148,46 @@ test('menú lateral, panel de gastos, envíos y catálogo en grilla con favorito
   await expect(page.getByRole('link', { name: /Banco largo/ })).toBeVisible();
   await noHorizontalScroll(page);
 });
+
+test('eliminar con confirmación: cancelar no borra, confirmar sí (cliente, producto, venta con stock)', async ({ page }) => {
+  await loadDemo(page);
+  // Cliente
+  await page.goto('/#/clientes');
+  await page.getByRole('link', { name: /Café Las Palmas/ }).click();
+  await page.getByLabel('Más acciones del cliente').click();
+  await page.getByRole('button', { name: 'Eliminar' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Eliminar cliente' });
+  await expect(dlg).toBeVisible();
+  await expect(dlg.getByRole('button', { name: 'Cancelar' })).toBeFocused(); // Enter no borra por accidente
+  await dlg.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(page.locator('#page-title')).toHaveText('Café Las Palmas');
+  await page.getByLabel('Más acciones del cliente').click();
+  await page.getByRole('button', { name: 'Eliminar' }).click();
+  await page.getByRole('dialog', { name: 'Eliminar cliente' }).getByRole('button', { name: 'Eliminar' }).click();
+  await expect(page.getByText('Cliente eliminado')).toBeVisible();
+  await expect(page.locator('#page-title')).toHaveText('Clientes');
+  await expect(page.getByRole('link', { name: /Café Las Palmas/ })).toHaveCount(0);
+
+  // Pedido confirmado: al eliminarlo vuelve el stock (terracota 1 → 3)
+  await page.goto('/#/ventas?estado=pendientes');
+  await page.getByRole('link', { name: /Estudio Norte/ }).click();
+  await page.getByLabel('Más acciones de la venta').click();
+  await page.getByRole('button', { name: 'Eliminar' }).click();
+  await page.getByRole('dialog', { name: 'Eliminar pedido' }).getByRole('button', { name: 'Eliminar' }).click();
+  await expect(page.getByText('Pedido eliminado')).toBeVisible();
+  await page.goto('/#/stock');
+  await expect(page.getByRole('link', { name: /Almohadón/ })).toContainText('Terracota: 3');
+
+  // Producto
+  await page.goto('/#/productos');
+  await page.getByRole('link', { name: /Banco largo/ }).click();
+  await page.getByLabel('Más acciones del producto').click();
+  await page.getByRole('button', { name: 'Eliminar' }).click();
+  await page.getByRole('dialog', { name: 'Eliminar producto' }).getByRole('button', { name: 'Eliminar' }).click();
+  await expect(page.locator('#page-title')).toHaveText('Productos');
+  await expect(page.getByRole('link', { name: /Banco largo/ })).toHaveCount(0);
+  // Persiste al recargar
+  await page.reload();
+  await expect(page.getByRole('link', { name: /Mesa de roble/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Banco largo/ })).toHaveCount(0);
+});

@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../data/db';
 import { putRecord } from '../../data/repo';
-import { emptySupplier, validateContact } from '../../data/services';
+import { emptySupplier, validateContact, deleteSupplier } from '../../data/services';
 import { purchaseTotals } from '../../domain/costing';
 import type { Supplier } from '../../domain/types';
 import { Icon } from '../components/Icon';
-import { EmptyState, ErrorSummary, InternalLabel, PageHeader, TextField, useToast } from '../components/ui';
+import { EmptyState, ErrorSummary, InternalLabel, PageHeader, TextField, useConfirm, useToast } from '../components/ui';
 import { useMoney, useSettings } from '../hooks';
 import { toDec } from '../../domain/money';
 
@@ -63,6 +63,7 @@ function SupplierDetail({ id }: { id: string }) {
   const isNew = id === 'nuevo';
   const navigate = useNavigate();
   const toast = useToast();
+  const [confirm, confirmNode] = useConfirm();
   const money = useMoney();
   const settings = useSettings();
   const stored = useLiveQuery(async () => (isNew ? null : ((await db.suppliers.get(id)) ?? null)), [id]);
@@ -128,6 +129,22 @@ function SupplierDetail({ id }: { id: string }) {
                 {form.archived ? 'Restaurar' : 'Archivar'}
               </button>
             )}
+            {!isNew && (
+              <button
+                type="button"
+                className="btn btn-danger btn-icon"
+                aria-label="Eliminar proveedor"
+                title="Eliminar proveedor"
+                onClick={async () => {
+                  if (!(await confirm('Eliminar proveedor', `Se borra «${form.name}». Sus productos quedan sin proveedor y las compras registradas se conservan. Esta acción no se puede deshacer.`, 'Eliminar', true))) return;
+                  await deleteSupplier(form.id);
+                  toast('Proveedor eliminado');
+                  navigate('/proveedores', { replace: true });
+                }}
+              >
+                <Icon name="trash" />
+              </button>
+            )}
           </div>
         </form>
         {!isNew && (
@@ -150,6 +167,7 @@ function SupplierDetail({ id }: { id: string }) {
           </aside>
         )}
       </div>
+      {confirmNode}
     </>
   );
 }

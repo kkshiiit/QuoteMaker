@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { db } from '../../data/db';
 import { matches } from '../search';
-import { emptyExpense, saveExpense, voidExpense } from '../../data/services';
+import { emptyExpense, saveExpense, voidExpense, deleteExpense } from '../../data/services';
 import { ALLOCATION_METHOD_HELP, ALLOCATION_METHOD_LABELS, type AllocationMethod } from '../../domain/allocation';
 import { allLots, computeExpenseAllocations, latestLotByProduct, lotsOfPurchase, type Lot } from '../../domain/costing';
 import { D } from '../../domain/money';
@@ -264,6 +264,21 @@ export default function ExpenseEdit() {
               }}
             >
               Anular
+            </button>
+          )}
+          {isVoid && stored && (
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={async () => {
+                if (!(await confirm('Eliminar gasto', 'El gasto anulado se borra del historial. Los costos no cambian (ya no lo usaban). Esta acción no se puede deshacer.', 'Eliminar', true))) return;
+                await deleteExpense(stored);
+                toast('Gasto eliminado');
+                navigate('/costos/gastos', { replace: true });
+              }}
+            >
+              <Icon name="trash" />
+              Eliminar
             </button>
           )}
           {isVoid && (

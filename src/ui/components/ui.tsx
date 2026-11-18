@@ -353,10 +353,12 @@ export function useConfirm() {
       title={state?.title ?? ''}
       actions={
         <>
-          <button className="btn" onClick={() => close(false)}>
+          {/* En acciones destructivas el foco inicial queda en «Cancelar»: Enter nunca borra por accidente. */}
+          <button type="button" className="btn" onClick={() => close(false)} autoFocus={!!state?.danger}>
             Cancelar
           </button>
-          <button className={`btn ${state?.danger ? 'btn-danger' : 'btn-primary'}`} onClick={() => close(true)} autoFocus>
+          <button type="button" className={`btn ${state?.danger ? 'btn-danger-fill' : 'btn-primary'}`} onClick={() => close(true)} autoFocus={!state?.danger}>
+            {state?.danger && <Icon name="trash" />}
             {state?.confirm}
           </button>
         </>
