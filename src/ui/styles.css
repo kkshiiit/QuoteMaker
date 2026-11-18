@@ -2788,3 +2788,12 @@ dialog.drawer::backdrop {
   line-height: 1.1;
   margin: 4px 0 6px;
 }
+@media (min-width: 900px) {
+  .topbar {
+    display: none;
+  }
+}
+.hero-suggest .internal-label,
+.price-card .internal-label {
+  color: inherit;
+}

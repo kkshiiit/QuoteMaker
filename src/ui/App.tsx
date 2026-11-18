@@ -244,7 +244,7 @@ function Shell({ children }: { children: ReactNode }) {
         Saltar al contenido
       </a>
       <nav className="sidebar" aria-label="Navegación principal">
-        <Link to="/" className="brand sidebar-brand" aria-label={`${APP_NAME}, inicio`}>
+        <Link to="/" className="brand sidebar-brand">
           <Wordmark size={40} />
         </Link>
         {PRIMARY.map((l) => (
@@ -287,7 +287,7 @@ function Shell({ children }: { children: ReactNode }) {
           <Icon name="menu" />
           <SyncDot />
         </button>
-        <Link to="/" className="topbar-brand" aria-label={`${APP_NAME}, inicio`}>
+        <Link to="/" className="topbar-brand">
           <Wordmark size={30} />
         </Link>
         <TopActions />

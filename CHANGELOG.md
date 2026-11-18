@@ -14,6 +14,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). V
 - **Panel de gastos** diario / quincenal / mensual con promedio diario y gráfico por categoría.
 - **Rediseño según las propuestas:** barra inferior Inicio / Productos / Ventas / Clientes + **menú lateral**; catálogo en **grilla** con chips de categorías, **favoritos** y «Destacados» en el Inicio; KPIs de pedidos por entregar y stock bajo.
 - Migración `20261118000003_stock.sql` (colección `stockMoves`).
+- **Estilo de la referencia visual:** paleta de firma **Rosé Chediek** (predeterminada) en claro y oscuro (rosa empolvado y beige, botones cacao en claro y rosa en oscuro), títulos serif, monograma **CH · CHEDIEK HOME**, encabezado móvil con menú, logo, avisos de stock bajo y pedidos por entregar; barra inferior Inicio · Productos · Pedidos · Clientes · Gastos · Calc.; pantalla de bienvenida con «Comenzar»; Inicio con buscador, categorías con ícono y productos destacados; ficha de producto con foto grande, colores con nombre, talles en cápsulas, stock con − / + e «Ingresar stock» y precio sugerido; pedido con foto por renglón y − / +.
 
 ### Corregido
 - Los diálogos dentro de un formulario ya no envían el formulario de fondo.
