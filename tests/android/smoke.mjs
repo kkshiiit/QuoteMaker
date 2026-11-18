@@ -55,12 +55,33 @@ const settle = async (title) => {
   await sleep(700);
 };
 const go = async (hash) => {
+  const prev = await page.evaluate(() => document.querySelector('#page-title')?.textContent ?? '');
   await page.evaluate((h) => (location.hash = h), hash);
   await page.waitForFunction((h) => location.hash === h, hash);
+  // Espera a que se monte la pantalla NUEVA (el título anterior sigue en el DOM durante la transición).
+  await page
+    .waitForFunction((p) => (document.querySelector('#page-title')?.textContent ?? '') !== p, prev, { timeout: 15_000 })
+    .catch(() => {}); // misma pantalla (mismo título): no hay cambio que esperar
   await settle();
 };
+/** Desborde horizontal persistente: se mide hasta 3 veces; uno transitorio (reflow) no cuenta, uno real sí. */
 const noOverflow = async (where) => {
-  const o = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  let o = 0;
+  for (let i = 0; i < 3; i++) {
+    o = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    if (o <= 1) break;
+    await sleep(700);
+  }
+  if (o > 1) {
+    const culprits = await page.evaluate(() => {
+      const vw = document.documentElement.clientWidth;
+      return [...document.querySelectorAll('body *')]
+        .filter((e) => e.getBoundingClientRect().right > vw + 1)
+        .slice(0, 5)
+        .map((e) => `${e.tagName.toLowerCase()}.${[...e.classList].join('.')} (${Math.round(e.getBoundingClientRect().right)}px)`);
+    });
+    console.log(`Elementos que desbordan en ${where}: ${culprits.join(' | ')}`);
+  }
   assert(o <= 1, `sin scroll horizontal en ${where} (${o}px)`);
 };
 
