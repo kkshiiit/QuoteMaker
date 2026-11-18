@@ -55,6 +55,17 @@ const settle = async (title) => {
   await sleep(700);
 };
 const go = (hash) => withPage(() => goOnce(hash));
+/** Comprueba que la página siga viva; si el sistema recreó el WebView, se reconecta. */
+const ensurePage = async () => {
+  try {
+    await page.evaluate(() => 1);
+  } catch (e) {
+    if (!/closed/.test(String(e))) throw e;
+    console.log('El WebView fue recreado por el sistema: reconectando…');
+    await sleep(1500);
+    page = await attach();
+  }
+};
 const goOnce = async (hash) => {
   const prev = await page.evaluate(() => document.querySelector('#page-title')?.textContent ?? '');
   await page.evaluate((h) => (location.hash = h), hash);
@@ -150,7 +161,9 @@ if (phase === 'phase1') {
   for (const f of ['costo', 'margen', 'markup', 'ganancia', 'proveedor', 'maderera', 'combustible', 'peaje', 'paga a 30']) {
     assert(!text.toLowerCase().includes(f) && !meta.includes(f), `el PDF generado en Android no contiene "${f}"`);
   }
-  await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+  // Al volver del selector nativo, Android puede recrear la actividad (y el WebView): reconectar.
+  await ensurePage();
+  await withPage(() => page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark')));
   await go('#/personalizacion');
   await page.getByText('Oscuro', { exact: true }).dispatchEvent('click');
   await page.getByRole('button', { name: 'Aplicar' }).dispatchEvent('click');
