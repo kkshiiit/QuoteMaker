@@ -17,11 +17,24 @@ const assert = (c, m) => {
 const [device] = await android.devices();
 if (!device) throw new Error('No hay dispositivo Android conectado por adb');
 // Tras un arranque en frío el sistema puede recrear el WebView: siempre se toma el actual.
+// El socket de depuración del WebView puede tardar en publicarse tras un arranque en frío:
+// hasta 3 intentos, trayendo la actividad al frente entre uno y otro.
 async function attach() {
-  const webview = await device.webView({ pkg: 'app.quotemaker.mobile' }, { timeout: 60_000 });
-  const p = await webview.page();
-  await p.waitForSelector('#page-title', { timeout: 30_000 });
-  return p;
+  let last;
+  for (let i = 1; i <= 3; i++) {
+    try {
+      const webview = await device.webView({ pkg: 'app.quotemaker.mobile' }, { timeout: 30_000 });
+      const p = await webview.page();
+      await p.waitForSelector('#page-title', { timeout: 30_000 });
+      return p;
+    } catch (e) {
+      last = e;
+      console.log(`No se encontró el WebView (intento ${i}/3): ${String(e).split('\n')[0]}`);
+      execFileSync('adb', ['shell', 'am', 'start', '-n', 'app.quotemaker.mobile/.MainActivity']);
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+  }
+  throw last;
 }
 let page = await attach();
 /** Ejecuta fn; si el WebView fue recreado («has been closed»), se reconecta y reintenta una vez. */
