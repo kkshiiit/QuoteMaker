@@ -239,3 +239,29 @@ jobs:
           gh release create "$TAG" "QuoteMaker-${TAG}.apk" --repo "$GITHUB_REPOSITORY" --target "$TARGET" $PRE \
             --title "QuoteMaker ${TAG}" \
             --notes "APK Android ($KIND) compilado y probado en CI (build, lint, pruebas JVM y prueba en emulador). Instalación y cambios: ver docs/INSTALLATION.md y CHANGELOG.md."
+
+  pages:
+    name: Publicar la web en GitHub Pages
+    # Sólo desde main (push o disparo manual), después de que todas las pruebas pasaron.
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: [web, android, android-emulator]
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: dist
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deploy
+        uses: actions/deploy-pages@v4
