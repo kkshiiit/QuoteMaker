@@ -23,6 +23,7 @@ import {
   saveProduct,
   saveQuote,
   saveSale,
+  addStockMove,
   saveSettings,
   suggestedPrice,
 } from './services';
@@ -63,11 +64,28 @@ export async function loadDemoData(): Promise<void> {
   const textil = await sup({ name: 'Textiles Sur (ejemplo)', contactName: 'Paula', phone: '11 4000-0002' });
 
   const prod = async (x: Partial<Product>) => saveProduct({ ...emptyProduct(), ...x });
-  const mesa = await prod({ name: 'Mesa de roble 120 cm', description: 'Roble macizo, terminación aceite natural', categoryId: muebles.id, supplierId: maderera.id, sku: 'MES-120', unitWeight: '22', unitVolume: '180' });
+  const mesa = await prod({ favorite: true, name: 'Mesa de roble 120 cm', description: 'Roble macizo, terminación aceite natural', categoryId: muebles.id, supplierId: maderera.id, sku: 'MES-120', unitWeight: '22', unitVolume: '180' });
   const silla = await prod({ name: 'Silla tapizada', description: 'Estructura de roble, tapizado lino gris', categoryId: muebles.id, supplierId: textil.id, sku: 'SIL-01', unitWeight: '6', unitVolume: '90' });
   const banco = await prod({ name: 'Banco largo', description: 'Para mesa de 120 cm', categoryId: muebles.id, supplierId: maderera.id, sku: 'BAN-01', unitWeight: '9', unitVolume: '60' });
-  const lampara = await prod({ name: 'Lámpara de pie', description: 'Pantalla de lino', categoryId: deco.id, sku: 'LAM-01', unitWeight: '3', unitVolume: '40', manualCost: '28000' });
-  const cojin = await prod({ name: 'Almohadón 45×45', categoryId: deco.id, supplierId: textil.id, sku: 'ALM-45', unitWeight: '0.5', unitVolume: '10' });
+  const lampara = await prod({ name: 'Lámpara de pie', description: 'Pantalla de lino', categoryId: deco.id, sku: 'LAM-01', unitWeight: '3', unitVolume: '40', manualCost: '28000', favorite: true });
+  const cojin = await prod({
+    name: 'Almohadón 45×45',
+    categoryId: deco.id,
+    supplierId: textil.id,
+    sku: 'ALM-45',
+    unitWeight: '0.5',
+    unitVolume: '10',
+    trackStock: true,
+    lowStockAt: '2',
+    variants: [
+      { id: 'alm-crudo', color: 'Crudo', colorHex: '#efe6d2', size: '' },
+      { id: 'alm-salvia', color: 'Verde salvia', colorHex: '#9cb59a', size: '' },
+      { id: 'alm-terracota', color: 'Terracota', colorHex: '#c0643f', size: '' },
+    ],
+  });
+  await addStockMove(cojin.id, 'alm-crudo', '8', 'in', 'Compra a Textiles Sur');
+  await addStockMove(cojin.id, 'alm-salvia', '6', 'in', 'Compra a Textiles Sur');
+  await addStockMove(cojin.id, 'alm-terracota', '3', 'in', 'Compra a Textiles Sur');
   await prod({ name: 'Servicio de armado', description: 'Armado e instalación en domicilio', unit: 'servicio', manualCost: '8000', manualPrice: '15000' });
 
   const purchase = async (date: string, supplierId: string, items: Array<[Product, string, string]>, extra = '0', ref = '') => {
@@ -117,7 +135,24 @@ export async function loadDemoData(): Promise<void> {
   // Ventas: en el local y online, con y sin cliente registrado
   const sale = async (x: Partial<Sale>, items: Awaited<ReturnType<typeof item>>[]) => saveSale({ ...emptySale(), ...x, items: items.map((it) => ({ ...it, description: it.description.split(' — ')[0] ?? it.description })) });
   await sale({ date: d(9), channel: 'presencial', customerId: martin.id, customerName: martin.name, paymentMethod: 'Efectivo' }, [await item(lampara, '1')]);
-  await sale({ date: d(4), channel: 'online', platform: 'Instagram', customerId: lucia.id, customerName: lucia.name, paymentMethod: 'Transferencia', shippingCharged: '6000' }, [await item(cojin, '4')]);
+  const v = async (p: Product, qty: string, variantId: string, label: string) => ({ ...(await item(p, qty)), variantId, description: `${p.name} (${label})` });
+  await sale({ date: d(4), channel: 'online', platform: 'Instagram', customerId: lucia.id, customerName: lucia.name, paymentMethod: 'Transferencia', shippingCharged: '6000' }, [await v(cojin, '4', 'alm-crudo', 'Crudo')]);
   await sale({ date: d(2), channel: 'online', platform: 'WhatsApp', customerName: 'Sofía R.', paymentMethod: 'Mercado Pago' }, [await item(silla, '2')]);
-  await sale({ date: d(0), channel: 'presencial', paymentMethod: 'Débito' }, [await item(cojin, '2')]);
+  await sale({ date: d(0), channel: 'presencial', paymentMethod: 'Débito' }, [await v(cojin, '2', 'alm-salvia', 'Verde salvia')]);
+  // Pedido confirmado con seña, envío a domicilio y saldo pendiente
+  await sale(
+    {
+      date: d(1),
+      channel: 'online',
+      platform: 'Facebook',
+      customerId: estudio.id,
+      customerName: estudio.name,
+      paymentMethod: 'Transferencia',
+      status: 'confirmado',
+      shippingCharged: '3500',
+      payments: [{ id: newId(), date: d(1), amount: '30000', method: 'Transferencia', note: 'Seña' }],
+      delivery: { mode: 'envio', address: 'Av. Corrientes 1234, CABA', date: d(-3), internalCost: '2400', internalNote: '8,5 km ida y vuelta en Auto · 51 min' },
+    },
+    [await v(cojin, '2', 'alm-terracota', 'Terracota'), await item(lampara, '1')],
+  );
 }

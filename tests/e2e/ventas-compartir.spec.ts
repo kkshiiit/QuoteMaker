@@ -28,7 +28,7 @@ test('ventas: presencial y online, historial con totales por canal y por cliente
   await addProductToSale(page, 'Lámpara de pie');
   await page.getByLabel('Cant.').fill('2');
   await page.getByRole('button', { name: 'Registrar venta' }).click();
-  await expect(page.locator('#page-title')).toHaveText('Venta V-00005');
+  await expect(page.locator('#page-title')).toHaveText('Venta V-00006');
   await expect(page.locator('.page-header').getByText('En el local', { exact: true })).toBeVisible();
 
   // Venta online por Facebook a un cliente registrado
@@ -41,28 +41,28 @@ test('ventas: presencial y online, historial con totales por canal y por cliente
   await addProductToSale(page, 'Almohadón');
   await page.getByLabel('Cant.').fill('3');
   await page.getByRole('button', { name: 'Registrar venta' }).click();
-  await expect(page.locator('#page-title')).toHaveText('Venta V-00006');
+  await expect(page.locator('#page-title')).toHaveText('Venta V-00007');
   await expect(page.getByText('Online · Facebook').first()).toBeVisible();
 
   // Historial: el total creció y se puede filtrar por canal
   await page.goto('/#/ventas');
   await expect(page.getByTestId('sales-total')).not.toHaveText(before);
-  await expect(page.getByRole('link', { name: /V-00005 · Consumidor final/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /V-00006 · Consumidor final/ })).toBeVisible();
   await page.getByLabel('Canal').selectOption('online');
-  await expect(page.getByRole('link', { name: /V-00006 · Café Las Palmas/ })).toBeVisible();
-  await expect(page.getByRole('link', { name: /V-00005/ })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /V-00007 · Café Las Palmas/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /V-00006/ })).toHaveCount(0);
   await noHorizontalScroll(page);
 
   // La ficha del cliente muestra sus compras
   await page.goto('/#/clientes');
   await page.getByRole('link', { name: /Café Las Palmas/ }).click();
   await expect(page.getByRole('heading', { name: 'Ventas a este cliente' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /V-00006/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /V-00007/ })).toBeVisible();
 
   // Persiste al recargar
   await page.reload();
   await page.goto('/#/ventas');
-  await expect(page.getByRole('link', { name: /V-00006 · Café Las Palmas/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /V-00007 · Café Las Palmas/ })).toBeVisible();
 });
 
 test('presupuesto aceptado → registrar venta con los mismos ítems', async ({ page }) => {
@@ -73,8 +73,10 @@ test('presupuesto aceptado → registrar venta con los mismos ítems', async ({ 
   await page.getByRole('link', { name: 'Registrar venta' }).click();
   await expect(page.getByLabel('Nombre del cliente')).toHaveValue('Estudio Norte Arquitectura');
   await expect(page.getByTestId('sale-total')).toHaveText(total);
-  await page.getByRole('button', { name: 'Registrar venta' }).click();
-  await expect(page.locator('#page-title')).toHaveText(/Venta V-\d+/);
+  // Un presupuesto aceptado se convierte en pedido confirmado (por entregar, con seña opcional)
+  await expect(page.locator('#page-title')).toHaveText('Nuevo pedido');
+  await page.getByRole('button', { name: 'Guardar pedido' }).click();
+  await expect(page.locator('#page-title')).toHaveText(/Pedido V-\d+/);
   await page.goto('/#/presupuestos');
   await page.getByRole('link', { name: /Estudio Norte/ }).click();
   await expect(page.getByRole('link', { name: /Venta V-\d+/ })).toBeVisible();

@@ -66,6 +66,7 @@ Sin estos pasos la app funciona completa en modo local y muestra «Solo en este 
 2. SQL Editor → pegar y ejecutar (Run), **en orden**, los archivos de `supabase/migrations/`:
    1. `20261117000001_quotemaker_sync.sql` (tablas, RLS y función de sincronización)
    2. `20261118000002_sales.sql` (habilita sincronizar el **historial de ventas**; versión 1.1.0)
+   3. `20261118000003_stock.sql` (habilita sincronizar los **movimientos de stock**; versión 1.2.0)
 
    Son idempotentes: ejecutarlos de nuevo no rompe nada.
 3. Authentication → Providers → Email habilitado. Si dejás «Confirm email», cada cuenta debe confirmar su email antes de iniciar sesión.

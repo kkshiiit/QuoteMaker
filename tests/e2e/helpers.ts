@@ -32,8 +32,8 @@ export async function nav(page: Page, label: string) {
     await direct.click();
     return;
   }
-  await bottom.getByRole('link', { name: 'Más' }).click();
-  await page.getByRole('main').getByRole('link', { name: label, exact: true }).click();
+  await bottom.getByRole('button', { name: 'Menú' }).click();
+  await page.getByRole('dialog', { name: 'Menú' }).getByRole('link', { name: label, exact: true }).click();
 }
 
 export async function noHorizontalScroll(page: Page) {

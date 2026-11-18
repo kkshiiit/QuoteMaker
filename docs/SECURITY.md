@@ -48,7 +48,7 @@ La app no envía logs. No se imprimen datos de negocio en consola.
 
 ## Pendiente / límites
 
-- RLS y sincronización probadas sobre PostgreSQL 16 (stub de `auth.uid()`) **y en vivo contra el proyecto Supabase real** desde la CI (`npm run test:live`: rol anónimo bloqueado, dos dispositivos, conflicto, borrado, aislamiento entre cuentas, idempotencia y, con la migración 0002 aplicada, ventas).
+- RLS y sincronización probadas sobre PostgreSQL 16 (stub de `auth.uid()`) **y en vivo contra el proyecto Supabase real** desde la CI (`npm run test:live`: rol anónimo bloqueado, dos dispositivos, conflicto, borrado, aislamiento entre cuentas, idempotencia y, con las migraciones 0002 y 0003 aplicadas, ventas y movimientos de stock).
 - Sin cifrado adicional de IndexedDB ni bloqueo con PIN (ver [ROADMAP](ROADMAP.md)).
 
 ## Reportar vulnerabilidades

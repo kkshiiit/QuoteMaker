@@ -15,7 +15,8 @@
 | `customers` | `id`, name, archived | Clientes privados (notas privadas) | Sí |
 | `quotes` | `id`, number, status, customerId, issueDate | Presupuesto editable + copia congelada + eventos | Sí |
 | `quoteDocuments` | `id`, quoteId | Registro de cada PDF/mensaje generado (nombre, canal, SHA-256) | Sí |
-| `sales` | `id`, number, date, channel, customerId, quoteId | Venta (presencial/online, plataforma, cliente, ítems con costo congelado, descuentos, impuesto, envío, forma de pago, anulada) | Sí (migración 0002) |
+| `sales` | `id`, number, date, channel, customerId, quoteId | Venta o pedido (presencial/online, plataforma, cliente, ítems con costo congelado y variante, descuentos, impuesto, envío, forma de pago; estado borrador/confirmado/entregado/cancelado; pagos —seña, saldo—; entrega con dirección, fecha y costo interno del envío) | Sí (migración 0002) |
+| `stockMoves` | `id`, productId, [productId+variantId], refId, at | Movimiento de stock **inmutable** (+ entra / − sale): ingreso, ajuste por conteo, venta, rotura/pérdida, devolución. El saldo es la suma: no se guarda, así dos dispositivos no generan conflictos | Sí (migración 0003) |
 | `productVideos` | `id`, productId | Videos de productos (Blob) | **No** (sólo este dispositivo; tampoco van al respaldo JSON) |
 | `prefs` | `id` | Tema y preferencias de este dispositivo | No |
 | `outbox` | `mutationId`, `[collection+recordId]` | Cola durable de mutaciones pendientes | No |
@@ -56,7 +57,9 @@ No se suben PDF a Storage: cada PDF se regenera de forma determinista desde la c
 
 ## Migraciones
 
-- `20261117000001_quotemaker_sync.sql`: tablas, RLS, `qm_push`. `20261118000002_sales.sql`: agrega `sales` a la lista cerrada de colecciones.
+- `20261117000001_quotemaker_sync.sql`: tablas, RLS, `qm_push`. `20261118000002_sales.sql`: agrega `sales` a la lista cerrada de colecciones. `20261118000003_stock.sql`: agrega `stockMoves`.
+
+`products` ahora puede tener `variants` (color con muestra `#rrggbb` y talle), `trackStock`, `lowStockAt` y `favorite`; los registros viejos sin esos campos siguen funcionando igual.
 - Versionadas en `supabase/migrations/` (prefijo de fecha). Idempotentes (`if not exists`, `drop policy if exists`, `create or replace`).
 - Probadas en CI y localmente sobre **PostgreSQL 16 real**, aplicándolas dos veces (`tests/integration/sync.pg.test.ts`). `tests/integration/supabase-local-stub.sql` reproduce sólo lo que Supabase ya trae (`auth.uid()` idéntica, roles `anon`/`authenticated`).
 

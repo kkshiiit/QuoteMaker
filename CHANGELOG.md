@@ -2,6 +2,22 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado semántico.
 
+## [1.2.0] — 2026-11-18
+
+### Agregado
+- **Colores, talles y stock:** variantes por producto (muestras de color, selector libre con nombre sugerido, talles frecuentes), control de stock por variante con ingreso, ajuste por conteo, rotura/pérdida y devolución; aviso de stock bajo; pantalla **Stock**. El saldo es la suma de movimientos inmutables (sin conflictos de sincronización entre dispositivos).
+- **Pedidos:** estados borrador / confirmado / entregado / cancelado (sólo manuales); el stock se descuenta al confirmar o vender y vuelve al cancelar (idempotente: editar no descuenta dos veces); aviso de faltantes. Presupuesto aceptado → pedido confirmado.
+- **Seña y saldo:** pagos parciales con fecha, medio y concepto; filtro «con saldo a cobrar».
+- **Entrega:** retiro o envío con dirección y fecha; costo interno del envío.
+- **Estimador de envíos:** nafta, pasajes, tiempo, peajes, recargo y redondeo; link gratuito a la ruta en el mapa; aplica el precio al pedido.
+- **Comprobante / recibo** en PDF y WhatsApp con la nueva allowlist `PublicReceipt` y pruebas anti-filtración (texto, streams y metadatos del PDF).
+- **Panel de gastos** diario / quincenal / mensual con promedio diario y gráfico por categoría.
+- **Rediseño según las propuestas:** barra inferior Inicio / Productos / Ventas / Clientes + **menú lateral**; catálogo en **grilla** con chips de categorías, **favoritos** y «Destacados» en el Inicio; KPIs de pedidos por entregar y stock bajo.
+- Migración `20261118000003_stock.sql` (colección `stockMoves`).
+
+### Corregido
+- Los diálogos dentro de un formulario ya no envían el formulario de fondo.
+
 ## [1.1.0] — 2026-11-18 · Chediek Home
 
 ### Agregado

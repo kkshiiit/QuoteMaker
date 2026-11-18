@@ -129,6 +129,8 @@ if (phase === 'phase1') {
     ['#/estadisticas', '09-estadisticas'],
     ['#/mas', '10-mas'],
     ['#/ventas', '16-ventas'],
+    ['#/stock', '17-stock'],
+    ['#/gastos', '18-panel-gastos'],
   ]) {
     // Navegar + medir como una unidad: si Android recrea el WebView en el medio, se reconecta y se repite.
     await withPage(async () => {

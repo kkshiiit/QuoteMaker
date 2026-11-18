@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { isDatabaseEmpty, loadDemoData } from '../../data/demo';
 import { db } from '../../data/db';
+import { suggestedPrice } from '../../data/services';
 import { todayIso } from '../../data/defaults';
 import { D, sum } from '../../domain/money';
 import { isPastValidity, quoteTotals } from '../../domain/quote';
-import { summarizeSales } from '../../domain/sales';
+import { saleStatus, summarizeSales } from '../../domain/sales';
+import { productStock, stockBalances } from '../../domain/stock';
 import { APP_NAME, Icon, LogoMark } from '../components/Icon';
 import { InternalLabel, PageHeader, StatusBadge } from '../components/ui';
 import { useMoney, usePrefs, useSettings, pct } from '../hooks';
@@ -26,7 +28,8 @@ export default function Dashboard() {
       db.customers.count(),
       db.sales.toArray(),
     ]);
-    return { products, quotes, purchases, expenses, customers, sales };
+    const balances = stockBalances(await db.stockMoves.toArray());
+    return { products, quotes, purchases, expenses, customers, sales, balances };
   }, []);
 
   const view = useMemo(() => {
@@ -51,7 +54,10 @@ export default function Dashboard() {
       .sort((a, b) => b.at.localeCompare(a.at))
       .slice(0, 6);
     const salesMonth = summarizeSales(data.sales.filter((x) => x.date >= monthStart));
-    return { salesMonth, noCost, stale, sent, sentTotal, pastValidity, acceptedMonth, accRevenue, accProfit, unassigned, monthPurchases, activity, activeProducts };
+    const toDeliver = data.sales.filter((x) => saleStatus(x) === 'confirmado');
+    const lowStock = activeProducts.filter((p) => p.trackStock && productStock(p, data.balances).low);
+    const favorites = activeProducts.filter((p) => p.favorite).slice(0, 8);
+    return { toDeliver, lowStock, favorites, salesMonth, noCost, stale, sent, sentTotal, pastValidity, acceptedMonth, accRevenue, accProfit, unassigned, monthPurchases, activity, activeProducts };
   }, [data, settings.costStaleDays]);
 
   if (!data || !view) return <p role="status">Cargando…</p>;
@@ -167,6 +173,30 @@ export default function Dashboard() {
         </section>
       )}
 
+      {view.favorites.length > 0 && (
+        <section aria-labelledby="fav-h" style={{ marginTop: 16 }}>
+          <div className="row-between">
+            <h2 id="fav-h">Destacados</h2>
+            <Link to="/productos?filtro=favoritos" className="small">
+              Ver todos
+            </Link>
+          </div>
+          <ul className="catalog-grid">
+            {view.favorites.map((p) => (
+              <li key={p.id} className="catalog-card">
+                <Link to={`/productos/${p.id}`} className="catalog-link">
+                  <span className="catalog-img">{p.image ? <img src={p.image} alt="" loading="lazy" /> : <span aria-hidden="true">{p.name.slice(0, 1).toUpperCase()}</span>}</span>
+                  <span className="catalog-body">
+                    <span className="title">{p.name}</span>
+                    <span className="num catalog-price">{money(p.manualPrice ?? suggestedPrice(p, settings) ?? '0')}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section aria-labelledby="k" style={{ marginTop: 16 }}>
         <h2 id="k" className="sr-only">
           Resumen
@@ -179,6 +209,18 @@ export default function Dashboard() {
               {view.salesMonth.count} venta(s) · local {view.salesMonth.byChannel.presencial.count} · online {view.salesMonth.byChannel.online.count}
             </div>
           </Link>
+          <Link className="kpi" to="/ventas?estado=pendientes">
+            <div className="label">Pedidos por entregar</div>
+            <div className="value">{view.toDeliver.length}</div>
+            <div className="context">{view.toDeliver.length ? 'Confirmados, esperando entrega' : 'Nada pendiente de entrega'}</div>
+          </Link>
+          {view.lowStock.length > 0 && (
+            <Link className="kpi" to="/stock?filtro=bajo">
+              <div className="label">Stock bajo</div>
+              <div className="value warn-text">{view.lowStock.length}</div>
+              <div className="context">{view.lowStock.slice(0, 3).map((p) => p.name).join(' · ')}</div>
+            </Link>
+          )}
           <Link className="kpi" to="/presupuestos?estado=sent">
             <div className="label">Presupuestos enviados</div>
             <div className="value">{view.sent.length}</div>

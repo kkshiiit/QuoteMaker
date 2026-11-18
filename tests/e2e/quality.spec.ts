@@ -31,6 +31,10 @@ const ROUTES = [
   '/nube',
   '/informacion',
   '/mas',
+  '/stock',
+  '/gastos',
+  '/envios',
+  '/ventas/nueva?tipo=pedido',
 ];
 
 async function axe(page: import('@playwright/test').Page, where: string) {

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { HashRouter, Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { SyncProvider, useSync } from '../sync/controller';
 import { APP_NAME, Icon, LogoMark, type IconName } from './components/Icon';
@@ -28,6 +28,9 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const BackupPage = lazy(() => import('./pages/BackupPage'));
 const CloudPage = lazy(() => import('./pages/CloudPage'));
 const About = lazy(() => import('./pages/About'));
+const Stock = lazy(() => import('./pages/Stock'));
+const ExpensesPanel = lazy(() => import('./pages/ExpensesPanel'));
+const ShippingPage = lazy(() => import('./pages/ShippingPage'));
 
 function ThemeApplier() {
   const [prefs] = usePrefs();
@@ -48,12 +51,20 @@ const PRIMARY: Array<{ to: string; label: string; icon: IconName; end?: boolean 
   { to: '/', label: 'Inicio', icon: 'home', end: true },
   { to: '/productos', label: 'Productos', icon: 'box' },
   { to: '/ventas', label: 'Ventas', icon: 'cart' },
+  { to: '/clientes', label: 'Clientes', icon: 'users' },
+];
+
+/** Herramientas del día a día (menú lateral). */
+const TOOLS: Array<{ to: string; label: string; icon: IconName }> = [
   { to: '/presupuestos', label: 'Presupuestos', icon: 'file' },
+  { to: '/stock', label: 'Stock', icon: 'layers' },
+  { to: '/gastos', label: 'Panel de gastos', icon: 'wallet' },
+  { to: '/costos/calculadora', label: 'Calculadora de precios', icon: 'calculator' },
+  { to: '/envios', label: 'Envíos', icon: 'route' },
 ];
 
 const SECONDARY: Array<{ to: string; label: string; icon: IconName }> = [
-  { to: '/costos', label: 'Costos', icon: 'calculator' },
-  { to: '/clientes', label: 'Clientes', icon: 'users' },
+  { to: '/costos', label: 'Costos', icon: 'receipt' },
   { to: '/proveedores', label: 'Proveedores', icon: 'truck' },
   { to: '/gastos-generales', label: 'Gastos generales', icon: 'wallet' },
   { to: '/categorias', label: 'Categorías', icon: 'tag' },
@@ -68,7 +79,59 @@ const SYSTEM: Array<{ to: string; label: string; icon: IconName }> = [
   { to: '/informacion', label: 'Información', icon: 'info' },
 ];
 
-export const MORE_LINKS = [...SECONDARY, ...SYSTEM];
+export const MORE_GROUPS = [
+  { title: 'Herramientas', links: TOOLS },
+  { title: 'Gestión', links: SECONDARY },
+  { title: 'Sistema', links: SYSTEM },
+];
+export const MORE_LINKS = [...TOOLS, ...SECONDARY, ...SYSTEM];
+
+/** Menú lateral (móvil): herramientas, gestión y sistema. */
+function Drawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const loc = useLocation();
+  useEffect(() => {
+    const d = ref.current;
+    if (!d) return;
+    if (open && !d.open) d.showModal?.();
+    if (!open && d.open) d.close();
+  }, [open]);
+  useEffect(() => {
+    onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loc.pathname]);
+  return (
+    <dialog ref={ref} className="drawer" aria-label="Menú" onClose={onClose} onCancel={onClose} onClick={(e) => e.target === ref.current && onClose()}>
+      {open && (
+        <div className="drawer-body">
+          <div className="row-between">
+            <span className="brand">
+              <LogoMark size={28} />
+              {APP_NAME}
+            </span>
+            <button className="btn btn-icon btn-ghost" aria-label="Cerrar menú" onClick={onClose}>
+              <Icon name="x" />
+            </button>
+          </div>
+          {MORE_GROUPS.map((g) => (
+            <nav key={g.title} aria-label={g.title}>
+              <h2>{g.title}</h2>
+              {g.links.map((l) => (
+                <NavLink key={l.to} to={l.to}>
+                  <Icon name={l.icon} />
+                  {l.label}
+                </NavLink>
+              ))}
+            </nav>
+          ))}
+          <div style={{ marginTop: 16 }}>
+            <SyncChip />
+          </div>
+        </div>
+      )}
+    </dialog>
+  );
+}
 
 export function SyncChip() {
   const s = useSync();
@@ -136,6 +199,7 @@ function UpdateBanner() {
 function Shell({ children }: { children: ReactNode }) {
   const loc = useLocation();
   const moreActive = MORE_LINKS.some((l) => loc.pathname.startsWith(l.to)) || loc.pathname === '/mas';
+  const [menu, setMenu] = useState(false);
   return (
     <div className="app">
       <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>
@@ -148,6 +212,17 @@ function Shell({ children }: { children: ReactNode }) {
         </Link>
         {PRIMARY.map((l) => (
           <NavLink key={l.to} to={l.to} end={l.end}>
+            <Icon name={l.icon} />
+            {l.label}
+          </NavLink>
+        ))}
+        <NavLink to="/presupuestos">
+          <Icon name="file" />
+          Presupuestos
+        </NavLink>
+        <h2>Herramientas</h2>
+        {TOOLS.filter((l) => l.to !== '/presupuestos').map((l) => (
+          <NavLink key={l.to} to={l.to}>
             <Icon name={l.icon} />
             {l.label}
           </NavLink>
@@ -190,13 +265,14 @@ function Shell({ children }: { children: ReactNode }) {
             {l.label}
           </NavLink>
         ))}
-        <Link to="/mas" aria-current={moreActive ? 'page' : undefined}>
+        <button type="button" className={moreActive ? 'active' : undefined} aria-current={moreActive ? 'page' : undefined} aria-haspopup="dialog" onClick={() => setMenu(true)}>
           <span className="nav-pill">
-            <Icon name="grid" />
+            <Icon name="menu" />
           </span>
-          Más
-        </Link>
+          Menú
+        </button>
       </nav>
+      <Drawer open={menu} onClose={() => setMenu(false)} />
     </div>
   );
 }
@@ -232,6 +308,9 @@ export function App() {
                 <Route path="/ventas" element={<Sales />} />
                 <Route path="/ventas/:id" element={<SaleEdit />} />
                 <Route path="/mas" element={<More />} />
+                <Route path="/stock" element={<Stock />} />
+                <Route path="/gastos" element={<ExpensesPanel />} />
+                <Route path="/envios" element={<ShippingPage />} />
                 <Route path="/clientes" element={<Customers />} />
                 <Route path="/clientes/:id" element={<Customers />} />
                 <Route path="/proveedores" element={<Suppliers />} />
