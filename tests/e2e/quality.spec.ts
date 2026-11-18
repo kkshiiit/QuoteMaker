@@ -176,7 +176,7 @@ test('offline: la app (PWA) abre sin conexión, guarda y conserva datos', async 
   await page.reload();
   await page.goto('/#/clientes');
   await expect(page.getByRole('link', { name: /Cliente Offline/ })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Solo en este dispositivo/ }).first()).toBeAttached();
+  await expect(page.getByRole('link', { name: /Solo en este dispositivo|Nube: sin sesión/ }).first()).toBeAttached();
   await context.setOffline(false);
 });
 

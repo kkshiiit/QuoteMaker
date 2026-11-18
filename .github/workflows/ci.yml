@@ -25,7 +25,9 @@ jobs:
   web:
     name: Web · tipos, lint, pruebas y build
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    env:
+      HAS_SUPABASE: ${{ secrets.VITE_SUPABASE_URL != '' && secrets.VITE_SUPABASE_ANON_KEY != '' }}
     services:
       postgres:
         image: postgres:16
@@ -49,7 +51,16 @@ jobs:
         run: npm run test:integration
         env:
           QM_PG_URL: postgres://postgres:postgres@localhost:5432/postgres
+      - name: Prueba en vivo contra Supabase real (sólo si hay secretos configurados)
+        if: env.HAS_SUPABASE == 'true'
+        run: npm run test:live
+        env:
+          QM_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          QM_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       - run: npx playwright install --with-deps chromium firefox webkit
       - name: Pruebas e2e (Playwright + axe; Chromium, Firefox, WebKit)
         run: npm run test:e2e
@@ -92,6 +103,9 @@ jobs:
           cache: gradle
       - run: npm ci
       - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
       - run: npx cap sync android
       - name: Compilar APK, lint y pruebas JVM
         working-directory: android
