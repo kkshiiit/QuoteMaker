@@ -6,6 +6,7 @@ import { D, type Dec } from '../domain/money';
 import { applyRounding, solvePrice } from '../domain/pricing';
 import { ALLOWED_TRANSITIONS, addDays, effectiveQuote, formatQuoteNumber } from '../domain/quote';
 import { formatSaleNumber } from '../domain/sales';
+import { adjustmentDelta, saleStockDeltas, stockBalances, stockKey, toQty, validateVariants } from '../domain/stock';
 import type {
   BusinessSettings,
   CostHistoryEntry,
@@ -18,9 +19,12 @@ import type {
   QuoteDocumentRecord,
   QuoteEvent,
   QuoteItem,
+  OrderStatus,
   QuoteStatus,
   Sale,
   SaleItem,
+  StockMove,
+  StockMoveKind,
   Supplier,
 } from '../domain/types';
 import { QUOTE_STATUS_LABELS } from '../domain/types';
@@ -80,6 +84,8 @@ export async function validateProduct(p: Product): Promise<string[]> {
   const others = (await db.products.toArray()).filter((x) => x.id !== p.id && !x.archived);
   if (others.some((x) => norm(x.name) === norm(p.name))) errors.push(`Ya existe un producto llamado "${p.name.trim()}".`);
   if (p.sku.trim() && others.some((x) => x.sku && norm(x.sku) === norm(p.sku))) errors.push(`El código "${p.sku.trim()}" ya está en uso.`);
+  errors.push(...validateVariants(p.variants ?? []));
+  if (p.lowStockAt && D(p.lowStockAt).lt(0)) errors.push('El aviso de stock bajo no puede ser negativo.');
   return errors;
 }
 
@@ -382,19 +388,69 @@ export function saleItemFromProduct(p: Product, suggested: Dec | null): SaleItem
   return { ...itemFromProduct(p, suggested), description: p.name };
 }
 
-/** Guarda la venta. Si es nueva, le asigna el próximo número de venta en la misma transacción. */
+/**
+ * Guarda la venta o pedido. Si es nueva, le asigna el próximo número en la misma transacción.
+ * En la misma transacción ajusta el stock de los productos con control de existencias, con
+ * movimientos compensatorios (idempotente: editar, cancelar o restaurar deja el saldo correcto).
+ */
 export async function saveSale(sale: Sale): Promise<Sale> {
-  return db.transaction('rw', [db.settings, db.sales, db.outbox, db.syncState], async () => {
-    if (sale.number) return putRecord('sales', sale);
-    const st = await getSettings();
-    const n = st.nextSaleNumber ?? 1;
-    await putRecord('settings', { ...st, nextSaleNumber: n + 1 });
-    return putRecord('sales', { ...sale, number: formatSaleNumber(st.salePrefix ?? 'V-', n) });
+  return db.transaction('rw', [db.settings, db.sales, db.products, db.stockMoves, db.outbox, db.syncState], async () => {
+    let saved: Sale;
+    if (sale.number) saved = await putRecord('sales', sale);
+    else {
+      const st = await getSettings();
+      const n = st.nextSaleNumber ?? 1;
+      await putRecord('settings', { ...st, nextSaleNumber: n + 1 });
+      saved = await putRecord('sales', { ...sale, number: formatSaleNumber(st.salePrefix ?? 'V-', n) });
+    }
+    await syncSaleStock(saved);
+    return saved;
   });
 }
 
+async function syncSaleStock(sale: Sale) {
+  const existing = await db.stockMoves.where('refId').equals(sale.id).toArray();
+  const ids = [...new Set(sale.items.map((i) => i.productId).filter((x): x is string => !!x))];
+  const products = await db.products.bulkGet(ids);
+  const tracked = new Set(products.filter((p) => p?.trackStock).map((p) => p!.id));
+  // Productos sin control de stock: no se tocan (ni sus movimientos anteriores).
+  const deltas = saleStockDeltas(
+    sale,
+    existing.filter((m) => tracked.has(m.productId)),
+    (pid) => tracked.has(pid),
+  );
+  const at = nowIso();
+  await putRecords(
+    'stockMoves',
+    deltas.map((d) => ({ ...createBase(), ...d, kind: 'sale' as const, reason: `Venta ${sale.number}`, refId: sale.id, at })),
+  );
+}
+
+/** Cambia el estado de un pedido (acción explícita). Cancelar devuelve el stock; reactivar lo vuelve a descontar. */
+export async function setSaleStatus(sale: Sale, status: OrderStatus): Promise<Sale> {
+  return saveSale({ ...sale, status, cancelled: status === 'cancelado' });
+}
+
 export async function setSaleCancelled(sale: Sale, cancelled: boolean) {
-  return putRecord('sales', { ...sale, cancelled });
+  return setSaleStatus(sale, cancelled ? 'cancelado' : sale.status && sale.status !== 'cancelado' ? sale.status : 'entregado');
+}
+
+// ---------------- Stock ----------------
+
+/** Registra un movimiento (ingreso, pérdida, devolución). `qty` con signo. */
+export async function addStockMove(productId: string, variantId: string, qty: Dec, kind: StockMoveKind, reason: string): Promise<StockMove | null> {
+  const q = toQty(qty);
+  if (D(q).eq(0)) return null;
+  return putRecord('stockMoves', { ...createBase(), productId, variantId, qty: q, kind, reason, refId: null, at: nowIso() });
+}
+
+/** Ajuste por conteo: deja el saldo exactamente en `target` agregando la diferencia. */
+export async function adjustStockTo(productId: string, variantId: string, target: Dec, reason: string): Promise<StockMove | null> {
+  return db.transaction('rw', [db.stockMoves, db.outbox, db.syncState], async () => {
+    const moves = await db.stockMoves.where('[productId+variantId]').equals([productId, variantId]).toArray();
+    const current = stockBalances(moves).get(stockKey(productId, variantId)) ?? '0';
+    return addStockMove(productId, variantId, adjustmentDelta(current, target), 'adjust', reason || 'Ajuste por conteo');
+  });
 }
 
 /** Venta precargada desde un presupuesto (usa la copia congelada si existe). No se guarda sola. */

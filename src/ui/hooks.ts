@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { stockBalances } from '../domain/stock';
 import { useCallback, useMemo } from 'react';
 import { db } from '../data/db';
 import { defaultPreferences, defaultSettings, SETTINGS_ID } from '../data/defaults';
@@ -33,3 +34,8 @@ export function useMoney() {
 }
 
 export const pct = (v: Big | null) => formatPct(v);
+
+/** Saldos de stock (todos los productos, o sólo uno). Se recalculan solos al cambiar movimientos. */
+export function useStockBalances(productId?: string): Map<string, string> | undefined {
+  return useLiveQuery(async () => stockBalances(productId ? await db.stockMoves.where('productId').equals(productId).toArray() : await db.stockMoves.toArray()), [productId]);
+}

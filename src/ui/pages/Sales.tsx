@@ -2,8 +2,9 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useDeferredValue, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { db } from '../../data/db';
-import { computeSaleTotals, summarizeSales } from '../../domain/sales';
-import { SALE_CHANNEL_LABELS, type SaleChannel } from '../../domain/types';
+import { D } from '../../domain/money';
+import { computeSaleTotals, saleCounts, salePayments, saleStatus, summarizeSales } from '../../domain/sales';
+import { ORDER_STATUS_LABELS, SALE_CHANNEL_LABELS, type Sale, type SaleChannel } from '../../domain/types';
 import { Icon } from '../components/Icon';
 import { EmptyState, InternalLabel, PageHeader, SelectField } from '../components/ui';
 import { useMoney, usePrefs } from '../hooks';
@@ -21,6 +22,13 @@ export function ChannelBadge({ channel, platform }: { channel: SaleChannel; plat
   );
 }
 
+export function OrderBadge({ sale }: { sale: Pick<Sale, 'status' | 'cancelled'> }) {
+  const st = saleStatus(sale);
+  if (st === 'entregado' && !sale.status) return null;
+  const cls = st === 'cancelado' ? 'badge-warn' : st === 'entregado' ? 'badge-ok' : st === 'borrador' ? '' : 'badge-accent';
+  return <span className={`badge ${cls}`}>{ORDER_STATUS_LABELS[st]}</span>;
+}
+
 export default function Sales() {
   const [params, setParams] = useSearchParams();
   const money = useMoney();
@@ -29,6 +37,7 @@ export default function Sales() {
   const query = useDeferredValue(q);
   const [limit, setLimit] = useState(PAGE);
   const channel = (params.get('canal') ?? '') as Filter;
+  const state = params.get('estado') ?? '';
   const period = params.get('periodo') ?? 'todo';
   const sales = useLiveQuery(() => db.sales.orderBy('date').reverse().toArray(), []);
 
@@ -45,9 +54,19 @@ export default function Sales() {
     () =>
       inPeriod
         .filter((s) => !channel || s.channel === channel)
+        .filter((s) => {
+          const st = saleStatus(s);
+          if (!state) return true;
+          if (state === 'pendientes') return st === 'borrador' || st === 'confirmado';
+          if (state === 'saldo') return st !== 'cancelado' && !!s.payments && !salePayments(s, computeSaleTotals(s).total).fullyPaid;
+          return st === state;
+        })
         .filter((s) => matches(`${s.number} ${s.customerName} ${s.platform} ${s.items.map((i) => i.description).join(' ')}`, query))
-        .map((s) => ({ s, total: computeSaleTotals(s).total })),
-    [inPeriod, channel, query],
+        .map((s) => {
+          const total = computeSaleTotals(s).total;
+          return { s, total, balance: salePayments(s, total).balance };
+        }),
+    [inPeriod, channel, query, state],
   );
 
   const setParam = (k: string, v: string) => {
@@ -61,12 +80,18 @@ export default function Sales() {
     <>
       <PageHeader
         title="Ventas"
-        subtitle="Historial de lo vendido, en el local y online."
+        subtitle="Pedidos e historial de lo vendido, en el local y online."
         actions={
-          <Link className="btn btn-primary" to="/ventas/nueva">
-            <Icon name="plus" />
-            Registrar venta
-          </Link>
+          <>
+            <Link className="btn" to="/ventas/nueva?tipo=pedido">
+              <Icon name="truck" />
+              Nuevo pedido
+            </Link>
+            <Link className="btn btn-primary" to="/ventas/nueva">
+              <Icon name="plus" />
+              Registrar venta
+            </Link>
+          </>
         }
       />
       {sales && sales.length === 0 ? (
@@ -136,6 +161,18 @@ export default function Sales() {
               options={[{ value: '', label: 'Todos' }, { value: 'presencial', label: SALE_CHANNEL_LABELS.presencial }, { value: 'online', label: SALE_CHANNEL_LABELS.online }]}
             />
             <SelectField<string>
+              label="Estado"
+              value={state}
+              onChange={(v) => setParam('estado', v)}
+              options={[
+                { value: '', label: 'Todos' },
+                { value: 'pendientes', label: 'Pedidos por entregar' },
+                { value: 'saldo', label: 'Con saldo a cobrar' },
+                { value: 'entregado', label: 'Entregados' },
+                { value: 'cancelado', label: 'Cancelados' },
+              ]}
+            />
+            <SelectField<string>
               label="Período"
               value={period}
               onChange={(v) => setParam('periodo', v === 'todo' ? '' : v)}
@@ -170,7 +207,7 @@ export default function Sales() {
             {rows.length} venta{rows.length === 1 ? '' : 's'}
           </p>
           <ul className="list" style={{ marginTop: 8 }}>
-            {rows.slice(0, limit).map(({ s, total }) => (
+            {rows.slice(0, limit).map(({ s, total, balance }) => (
               <li key={s.id}>
                 <Link className="list-item" to={`/ventas/${s.id}`}>
                   <div className="grow">
@@ -179,13 +216,15 @@ export default function Sales() {
                     </div>
                     <div className="sub">
                       {new Date(`${s.date}T12:00:00`).toLocaleDateString('es-AR')} · {s.items.length} ítem(s) · {s.paymentMethod}
+                      {s.delivery?.mode === 'envio' && ` · Envío${s.delivery.date ? ` ${new Date(`${s.delivery.date}T12:00:00`).toLocaleDateString('es-AR')}` : ''}`}
+                      {saleCounts(s) && balance !== '0.00' && D(balance).gt(0) && <strong className="warn-text"> · Saldo {money(balance)}</strong>}
                     </div>
                   </div>
                   <div className="end">
-                    <div className={`num ${s.cancelled ? 'muted' : ''}`} style={{ fontWeight: 650, textDecoration: s.cancelled ? 'line-through' : undefined }}>
+                    <div className={`num ${!saleCounts(s) ? 'muted' : ''}`} style={{ fontWeight: 650, textDecoration: s.cancelled ? 'line-through' : undefined }}>
                       {money(total)}
                     </div>
-                    {s.cancelled ? <span className="badge badge-warn">Anulada</span> : <ChannelBadge channel={s.channel} platform={s.platform} />}
+                    {s.cancelled ? <span className="badge badge-warn">Cancelada</span> : s.status && s.status !== 'entregado' ? <OrderBadge sale={s} /> : <ChannelBadge channel={s.channel} platform={s.platform} />}
                   </div>
                 </Link>
               </li>

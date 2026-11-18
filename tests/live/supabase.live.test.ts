@@ -139,6 +139,24 @@ describe.runIf(!!cfg)('Supabase EN VIVO: sync real con RLS', () => {
     expect((await new SupabaseRemote(b).pull(0, 1000)).some((r) => r.recordId === id)).toBe(false);
   }, 60_000);
 
+  it('stock: los movimientos se sincronizan y quedan aislados por cuenta (requiere la migración 0003)', async (ctx) => {
+    const id = `mov-${run}`;
+    const push = () =>
+      new SupabaseRemote(a1).push({ mutationId: randomUUID(), collection: 'stockMoves', recordId: id, op: 'upsert', payload: { id, productId: 'p', variantId: 'rosa-q', qty: '5', kind: 'in' }, baseVersion: 0 });
+    try {
+      expect(await push()).toMatchObject({ status: 'applied' });
+    } catch (e) {
+      if (/collection_chk/.test(String(e))) {
+        console.warn('[supabase.live] Falta aplicar supabase/migrations/20261118000003_stock.sql en el proyecto: prueba de stock SALTEADA.');
+        ctx.skip();
+        return;
+      }
+      throw e;
+    }
+    expect((await new SupabaseRemote(a1).pull(0, 1000)).some((r) => r.collection === 'stockMoves' && r.recordId === id)).toBe(true);
+    expect((await new SupabaseRemote(b).pull(0, 1000)).some((r) => r.recordId === id)).toBe(false);
+  }, 60_000);
+
   it('RLS: la cuenta B no ve ni modifica los datos de la cuenta A', async () => {
     const id = `rls-${run}`;
     await new SupabaseRemote(a1).push({ mutationId: randomUUID(), collection: 'products', recordId: id, op: 'upsert', payload: { id, name: 'Secreto de A', updatedAt: new Date().toISOString() }, baseVersion: 0 });

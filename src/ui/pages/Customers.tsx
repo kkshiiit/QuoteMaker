@@ -6,7 +6,7 @@ import { matches } from '../search';
 import { putRecord } from '../../data/repo';
 import { createQuote, emptyCustomer, findDuplicateCustomer, validateContact } from '../../data/services';
 import { quoteTotals } from '../../domain/quote';
-import { computeSaleTotals } from '../../domain/sales';
+import { computeSaleTotals, saleCounts } from '../../domain/sales';
 import { sum, toDec } from '../../domain/money';
 import type { Customer } from '../../domain/types';
 import { Icon } from '../components/Icon';
@@ -203,10 +203,10 @@ function CustomerDetail({ id }: { id: string }) {
                 Registrar venta
               </Link>
             </div>
-            {sales && sales.filter((x) => !x.cancelled).length > 0 ? (
+            {sales && sales.filter(saleCounts).length > 0 ? (
               <>
                 <p className="small muted" style={{ marginBottom: 8 }} data-testid="customer-sales-total">
-                  {sales.filter((x) => !x.cancelled).length} compra(s) · Total {money(toDec(sum(sales.filter((x) => !x.cancelled).map((x) => computeSaleTotals(x).total))))}
+                  {sales.filter(saleCounts).length} compra(s) · Total {money(toDec(sum(sales.filter(saleCounts).map((x) => computeSaleTotals(x).total))))}
                 </p>
                 <ul className="list">
                   {sales.map((x) => (
@@ -218,7 +218,7 @@ function CustomerDetail({ id }: { id: string }) {
                           </span>
                           <span className="sub">
                             {x.channel === 'online' ? `Online · ${x.platform}` : 'En el local'}
-                            {x.cancelled ? ' · Anulada' : ''}
+                            {!saleCounts(x) ? ` · ${x.cancelled ? 'Cancelada' : 'Borrador'}` : ''}
                           </span>
                         </span>
                         <span className="end num">{money(computeSaleTotals(x).total)}</span>

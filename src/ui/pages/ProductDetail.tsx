@@ -10,6 +10,7 @@ import type { Product } from '../../domain/types';
 import { MAX_PHOTOS, resizePhoto, thumbFromDataUrl, validateVideo } from '../../platform/image';
 import { newId, nowIso } from '../../data/defaults';
 import { ShareProductDialog, productPhotos } from '../components/ShareProduct';
+import { StockPanel } from '../components/StockPanel';
 import { Icon } from '../components/Icon';
 import { Check, DecimalField, ErrorSummary, InternalLabel, Menu, PageHeader, SelectField, TextField, useConfirm, useToast } from '../components/ui';
 import { pct, useMoney, useSettings } from '../hooks';
@@ -287,6 +288,8 @@ function ProductDetailForm() {
               Hasta {MAX_PHOTOS} fotos (se optimizan en tu dispositivo y se sincronizan). Los videos quedan sólo en este dispositivo.
             </p>
           </section>
+
+          <StockPanel form={form} saved={stored ?? null} onChange={(patch) => setForm((f) => (f ? { ...f, ...patch } : f))} />
 
           <section className="card" aria-labelledby="sec-int">
             <div className="card-header">
