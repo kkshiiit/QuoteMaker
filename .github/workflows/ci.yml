@@ -260,3 +260,20 @@ jobs:
           path: dist
       - id: deploy
         uses: actions/deploy-pages@v4
+      - name: Verificar la web publicada (HTML, CSP, manifiesto, service worker y script principal)
+        env:
+          URL: ${{ steps.deploy.outputs.page_url }}
+        run: |
+          for i in $(seq 1 20); do
+            code=$(curl -s -o index.html -w '%{http_code}' "$URL") || true
+            [ "$code" = 200 ] && grep -q '<title>QuoteMaker' index.html && break
+            sleep 6
+          done
+          echo "Página: $URL → HTTP $code"; test "$code" = 200
+          grep -q '<title>QuoteMaker' index.html
+          grep -q 'Content-Security-Policy' index.html
+          JS=$(grep -oE 'assets/index-[^"]+\.js' index.html | head -1)
+          for f in "$JS" manifest.webmanifest sw.js; do
+            c=$(curl -s -o /dev/null -w '%{http_code}' "${URL%/}/$f"); echo "$f → HTTP $c"; test "$c" = 200
+          done
+          echo "## Web publicada" >> "$GITHUB_STEP_SUMMARY"; echo "$URL (verificada)" >> "$GITHUB_STEP_SUMMARY"
