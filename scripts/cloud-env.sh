@@ -9,14 +9,20 @@
 # Nunca imprime la clave: sólo informa si está presente y su longitud.
 set -euo pipefail
 
-pick() { # $1 = nombre de la variable dentro del texto combinado
-  printf '%s\n' "${QM_CLOUD_COMBINED:-}" | sed -nE "s/^[[:space:]]*$1[[:space:]]*[=:][[:space:]]*\"?([^\" ]+)\"?[[:space:]]*\$/\\1/p" | head -1
-}
+# Extrae del texto combinado la URL del proyecto y la clave pública, sin depender del formato
+# (nombres, "=", comillas, espacios, CRLF o caracteres invisibles copiados del navegador).
+combined_url() { printf '%s' "${QM_CLOUD_COMBINED:-}" | tr -d '\r' | grep -oE 'https://[a-z0-9-]+\.supabase\.co' | head -1 || true; }
+combined_key() { printf '%s' "${QM_CLOUD_COMBINED:-}" | tr -d '\r' | grep -oE 'sb_publishable_[A-Za-z0-9_-]+|eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+' | head -1 || true; }
+combined_secret() { printf '%s' "${QM_CLOUD_COMBINED:-}" | grep -qE 'sb_secret_|service_role'; }
 
 URL="${QM_CLOUD_URL:-}"
 KEY="${QM_CLOUD_KEY:-}"
-[ -n "$URL" ] || URL="$(pick VITE_SUPABASE_URL)"
-[ -n "$KEY" ] || KEY="$(pick VITE_SUPABASE_ANON_KEY)"
+[ -n "$URL" ] || URL="$(combined_url)"
+[ -n "$KEY" ] || KEY="$(combined_key)"
+if combined_secret; then
+  echo "::error::El secreto combinado contiene una clave SECRETA. Usá sólo la publishable (sb_publishable_…)."
+  exit 1
+fi
 URL="$(printf '%s' "$URL" | tr -d '[:space:]')"
 KEY="$(printf '%s' "$KEY" | tr -d '[:space:]')"
 
