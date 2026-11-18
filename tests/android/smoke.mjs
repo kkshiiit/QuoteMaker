@@ -29,7 +29,7 @@ async function withPage(fn) {
   try {
     return await fn();
   } catch (e) {
-    if (!/has been closed/.test(String(e))) throw e;
+    if (!/has been closed|Target page, context or browser has been closed/.test(String(e))) throw e;
     console.log('El WebView fue recreado por el sistema: reconectando…');
     await sleep(1500);
     page = await attach();
@@ -54,13 +54,14 @@ const settle = async (title) => {
   await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
   await sleep(700);
 };
-const go = async (hash) => {
+const go = (hash) => withPage(() => goOnce(hash));
+const goOnce = async (hash) => {
   const prev = await page.evaluate(() => document.querySelector('#page-title')?.textContent ?? '');
   await page.evaluate((h) => (location.hash = h), hash);
   await page.waitForFunction((h) => location.hash === h, hash);
   // Espera a que se monte la pantalla NUEVA (el título anterior sigue en el DOM durante la transición).
   await page
-    .waitForFunction((p) => (document.querySelector('#page-title')?.textContent ?? '') !== p, prev, { timeout: 15_000 })
+    .waitForFunction((p) => (document.querySelector('#page-title')?.textContent ?? '') !== p, prev, { timeout: 5_000 })
     .catch(() => {}); // misma pantalla (mismo título): no hay cambio que esperar
   await settle();
 };
