@@ -3491,3 +3491,40 @@ textarea.input {
 .welcome-art {
   height: min(46vh, 520px);
 }
+
+/* =====================================================================
+   Barra inferior: 4 accesos grandes y claros (WCAG 2.5.8: objetivos amplios)
+   ===================================================================== */
+.bottom-nav {
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  height: calc(var(--bottom-nav) + 10px + env(safe-area-inset-bottom));
+}
+.bottom-nav a {
+  min-height: 56px;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 550;
+  border-radius: 16px;
+}
+.bottom-nav a svg {
+  width: 24px;
+  height: 24px;
+}
+.bottom-nav [aria-current='page'] {
+  font-weight: 700;
+}
+.bottom-nav a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+@media (max-width: 899px) {
+  .main {
+    padding-bottom: calc(var(--bottom-nav) + 40px + env(safe-area-inset-bottom));
+  }
+  .fab,
+  .fab-group {
+    bottom: calc(var(--bottom-nav) + 26px + env(safe-area-inset-bottom));
+  }
+}
