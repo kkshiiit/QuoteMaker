@@ -108,3 +108,20 @@ npm run build && npm run test:e2e   # Playwright (escritorio + móvil) con axe
 2. PR `releases → main`, revisar y fusionar (decisión del titular).
 3. `git tag v1.0.0 && git push origin v1.0.0` → CI compila, prueba y publica el APK en Releases.
    Alternativa sin empujar etiquetas: Actions → CI → *Run workflow* sobre la rama `main` (otra rama se rechaza) con `release_tag` en formato `v1.2.3` o `v1.2.3-rc.1`; si la etiqueta ya existe en otro commit, la publicación se rechaza; GitHub crea la etiqueta sobre el commit exacto que se compiló y probó, y publica la release al terminar las pruebas. Las etiquetas con sufijo (`-rc.1`) se publican como pre-release.
+
+
+## Actualizar la app Android sin perder datos
+
+Desde la versión 1.2 el APK se firma siempre con la **misma clave** (guardada como secreto en GitHub), así cada versión nueva se instala **encima** de la anterior y los datos se conservan.
+
+**Una sola vez**, al pasar de un APK de prueba (firmado con una clave temporal) al primero firmado con la clave fija, Android pide desinstalar. Para no perder nada:
+
+1. En la app vieja: **Menú → Respaldo → Exportar respaldo** (o tené la sincronización con la nube activa).
+2. Desinstalá la app vieja e instalá el APK nuevo.
+3. En la app nueva: **Respaldo → Importar** el archivo (o iniciá sesión en la nube).
+
+Secretos que usa la CI para firmar: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`. Guardá una copia de la clave fuera de GitHub: si se pierde, las versiones nuevas ya no se podrán instalar encima.
+
+## Datos en el navegador
+
+La app pide al navegador **almacenamiento persistente** para que no borre los datos si falta espacio. En **Respaldo** se ve el estado y la fecha del último respaldo; sin nube, el Inicio recuerda hacer un respaldo cada 14 días.

@@ -20,6 +20,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). V
 - **Tema al instante:** tocar un modo o paleta cambia toda la app (con Deshacer); cambio rápido en el menú; paletas de firma Rosé, Arena y cacao, Salvia y Glicina en claro y oscuro.
 - **Interfaz rehecha desde cero según el mockup:** fondo liso, tarjetas blancas con borde fino (sin vidrio ni desenfoque), títulos serif, barra inferior pegada al borde con la sección activa en rosa, grilla de 3 columnas, botón «+» único en listas, «Agregar gasto» al final de la lista, botones de guardar al final del contenido (nunca tapan campos), controles de 24 px o más y animaciones suaves que respetan «reducir movimiento».
 
+- **Datos protegidos:** se pide almacenamiento persistente al navegador; aviso en el Inicio para hacer un respaldo (sin nube, cada 14 días, posponible); estado y fecha del último respaldo en Respaldo.
+- **APK con firma fija** (secretos de GitHub): las versiones nuevas se instalan encima sin perder datos.
+
 ### Corregido
 - Los diálogos dentro de un formulario ya no envían el formulario de fondo.
 

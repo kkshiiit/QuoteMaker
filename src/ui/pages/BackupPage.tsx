@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { backupFileName, exportBackup, importBackup, validateBackup } from '../../data/backup';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { useEffect, useState } from 'react';
+import { importBackup, validateBackup } from '../../data/backup';
 import { db } from '../../data/db';
-import { saveFile } from '../../platform/share';
+import { ensurePersistentStorage, storageProtection, type StorageProtection } from '../../platform/storage';
+import { exportBackupNow } from '../backupActions';
 import { Icon } from '../components/Icon';
 import { Dialog, InternalLabel, PageHeader, Segmented, useConfirm, useToast } from '../components/ui';
 
@@ -12,16 +14,17 @@ export default function BackupPage() {
   const [mode, setMode] = useState<'merge' | 'replace'>('merge');
   const [busy, setBusy] = useState(false);
 
+  const last = useLiveQuery(async () => ((await db.meta.get('lastBackupAt'))?.value as string | undefined) ?? null, []);
+  const [protection, setProtection] = useState<StorageProtection>('desconocido');
+  useEffect(() => {
+    void storageProtection().then(setProtection);
+  }, []);
+
   const doExport = async () => {
     setBusy(true);
     try {
-      const file = await exportBackup(__APP_VERSION__);
-      const name = backupFileName();
-      const out = await saveFile(JSON.stringify(file, null, 2), name, 'application/json');
-      if (out !== 'cancelled') {
-        await db.meta.put({ key: 'lastBackupAt', value: new Date().toISOString() });
-        toast(out === 'downloaded' ? `Respaldo descargado: ${name}` : 'Respaldo listo para guardar');
-      }
+      const { outcome, name } = await exportBackupNow();
+      if (outcome !== 'cancelled') toast(outcome === 'downloaded' ? `Respaldo descargado: ${name}` : 'Respaldo listo para guardar');
     } finally {
       setBusy(false);
     }
@@ -58,6 +61,24 @@ export default function BackupPage() {
   return (
     <>
       <PageHeader title="Respaldo" subtitle="Copias de seguridad versionadas de todos tus datos." />
+      <section className="card" aria-labelledby="bk-state" style={{ marginBottom: 16 }}>
+        <h2 id="bk-state">Estado de tus datos</h2>
+        <dl className="dl">
+          <dt>Último respaldo</dt>
+          <dd data-testid="last-backup">{last ? new Date(last).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Nunca'}</dd>
+          <dt>Almacenamiento del dispositivo</dt>
+          <dd>{protection === 'protegido' ? 'Protegido (no se borra solo)' : protection === 'puede-borrarse' ? 'Puede borrarse si falta espacio' : 'Sin información del navegador'}</dd>
+        </dl>
+        {protection === 'puede-borrarse' && (
+          <div className="actions" style={{ marginTop: 10 }}>
+            <button className="btn btn-sm" onClick={async () => setProtection(await ensurePersistentStorage())}>
+              <Icon name="lock" />
+              Proteger almacenamiento
+            </button>
+            <span className="small muted">Instalar la app (Agregar a inicio) también lo protege.</span>
+          </div>
+        )}
+      </section>
       <div className="grid grid-2">
         <section className="card">
           <h2>Exportar</h2>

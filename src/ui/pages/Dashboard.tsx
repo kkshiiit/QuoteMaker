@@ -11,6 +11,7 @@ import { saleStatus, summarizeSales } from '../../domain/sales';
 import { productStock, stockBalances } from '../../domain/stock';
 import { APP_NAME, Icon, Wordmark } from '../components/Icon';
 import { CategoryTiles } from '../components/CategoryTiles';
+import { BackupReminder } from '../components/BackupReminder';
 import { Swatch } from '../components/StockPanel';
 import { InternalLabel, PageHeader, StatusBadge } from '../components/ui';
 import { useMoney, usePrefs, useSettings, pct, plural } from '../hooks';
@@ -61,9 +62,10 @@ export default function Dashboard() {
     const salesMonth = summarizeSales(data.sales.filter((x) => x.date >= monthStart));
     const toDeliver = data.sales.filter((x) => saleStatus(x) === 'confirmado');
     const lowStock = activeProducts.filter((p) => p.trackStock && productStock(p, data.balances).low);
+    const firstDataAt = [...data.products, ...data.sales, ...data.quotes].map((x) => x.createdAt).sort()[0] ?? null;
     const favs = activeProducts.filter((p) => p.favorite);
     const favorites = (favs.length ? favs : [...activeProducts].sort((a, b) => Number(!!b.image) - Number(!!a.image) || b.updatedAt.localeCompare(a.updatedAt))).slice(0, 6);
-    return { toDeliver, lowStock, favorites, salesMonth, noCost, stale, sent, sentTotal, pastValidity, acceptedMonth, accRevenue, accProfit, unassigned, monthPurchases, activity, activeProducts };
+    return { firstDataAt, toDeliver, lowStock, favorites, salesMonth, noCost, stale, sent, sentTotal, pastValidity, acceptedMonth, accRevenue, accProfit, unassigned, monthPurchases, activity, activeProducts };
   }, [data, settings.costStaleDays]);
 
   if (!data || !view) return <p role="status">Cargando…</p>;
@@ -178,6 +180,8 @@ export default function Dashboard() {
           </ol>
         </section>
       )}
+
+      <BackupReminder firstDataAt={view.firstDataAt} />
 
       {data.products.length > 0 && (
         <section aria-label="Catálogo" style={{ marginTop: 4 }}>
