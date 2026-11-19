@@ -14,7 +14,7 @@ const styleOf = (t: ResolvedTheme): CSSProperties => ({ ...(t.vars as CSSPropert
 /** Muestra rápida: mini pantalla pintada con los colores del tema. */
 function MiniPreview({ theme }: { theme: ResolvedTheme }) {
   return (
-    <span className="mini-preview spatial-bg" data-theme={theme.mode} style={styleOf(theme)} aria-hidden="true">
+    <span className="mini-preview" data-theme={theme.mode} style={styleOf(theme)} aria-hidden="true">
       <span className="mini-glass">
         <span className="mini-row">
           <span className="mini-dot" />

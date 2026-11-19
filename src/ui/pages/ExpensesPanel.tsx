@@ -45,15 +45,10 @@ export default function ExpensesPanel() {
       <PageHeader
         title="Panel de gastos"
         subtitle={<>Controlá cuánto gastás por día, quincena o mes. <InternalLabel text="Interno" /></>}
-        actions={
-          <Link className="btn btn-primary fab" to="/costos/gastos/nuevo">
-            <Icon name="plus" />
-            <span className="fab-text">Agregar gasto</span>
-          </Link>
-        }
       />
       <div className="row-between" style={{ marginBottom: 12, gap: 12, flexWrap: 'wrap' }}>
         <Segmented<PeriodKind>
+          hideLegend
           legend="Período"
           value={kind}
           onChange={(v) => set({ periodo: v === 'mes' ? '' : v })}
@@ -147,6 +142,10 @@ export default function ExpensesPanel() {
               </ul>
             </>
           )}
+          <Link className="btn btn-accent btn-block" to="/costos/gastos/nuevo" style={{ marginTop: 14 }}>
+            <Icon name="plus" />
+            Agregar gasto
+          </Link>
         </>
       )}
     </>

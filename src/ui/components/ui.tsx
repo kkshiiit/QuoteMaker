@@ -296,11 +296,11 @@ export function Check({ label, checked, onChange, hint }: { label: string; check
   );
 }
 
-export function Segmented<T extends string>({ legend, value, onChange, options }: { legend: string; value: T; onChange: (v: T) => void; options: Array<{ value: T; label: string }> }) {
+export function Segmented<T extends string>({ legend, value, onChange, options, hideLegend = false }: { legend: string; value: T; onChange: (v: T) => void; options: Array<{ value: T; label: string }>; hideLegend?: boolean }) {
   const name = useId();
   return (
     <fieldset>
-      <legend>{legend}</legend>
+      <legend className={hideLegend ? 'sr-only' : undefined}>{legend}</legend>
       <div className="segmented">
         {options.map((o) => (
           <label key={o.value}>

@@ -92,7 +92,7 @@ export default function Dashboard() {
       />
 
       {data.products.length === 0 && data.quotes.length === 0 && data.sales.length === 0 && (
-        <section className="card glass intro-hero" aria-labelledby="intro-h" style={{ marginBottom: 16 }}>
+        <section className="card intro-hero" aria-labelledby="intro-h" style={{ marginBottom: 16 }}>
           <div className="intro-hero-head">
             <Wordmark size={72} />
             <div>
@@ -195,7 +195,7 @@ export default function Dashboard() {
             <input id="home-q" className="input" type="search" placeholder="Buscar productos, código o categoría…" value={search} onChange={(e) => setSearch(e.target.value)} />
           </form>
           <CategoryTiles categories={data.categories} value="" all={false} onChange={(id) => navigate(`/productos?categoria=${id}`)} />
-          <div className="row-between" style={{ marginTop: 8 }}>
+          <div className="section-head">
             <h2 id="fav-h">Productos destacados</h2>
             <Link to={view.favorites.some((p) => p.favorite) ? '/productos?filtro=favoritos' : '/productos'} className="small">
               Ver todo →
