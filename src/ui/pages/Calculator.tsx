@@ -1,3 +1,4 @@
+import { Icon } from '../components/Icon';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
@@ -119,15 +120,17 @@ export default function Calculator() {
       </section>
 
       <aside className="stack" aria-label="Resultados">
-        <section className="card" aria-live="polite">
-          <h2>Precio recomendado</h2>
+        <section className="card price-card" aria-live="polite">
+          <h2>
+            <Icon name="tag" /> Precio recomendado
+          </h2>
           {!result ? (
             <p className="muted">Ingresá el costo unitario para calcular.</p>
           ) : !result.solved.ok ? (
             <p className="danger-text">{REASON[result.solved.reason]}</p>
           ) : (
             <>
-              <p className="num" style={{ fontSize: '2rem', fontWeight: 750 }}>
+              <p className="num price-big">
                 {money(result.recommended)}
               </p>
               <p className="small muted">

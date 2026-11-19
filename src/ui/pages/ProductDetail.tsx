@@ -3,16 +3,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../data/db';
 import { createBase, putRecord } from '../../data/repo';
-import { emptyProduct, saveProduct, suggestedPrice, validateProduct } from '../../data/services';
+import { emptyProduct, saveProduct, suggestedPrice, validateProduct, deleteProduct } from '../../data/services';
 import { lotCosts, productCost } from '../../domain/costing';
 import { analyzePrice } from '../../domain/pricing';
 import type { Product } from '../../domain/types';
 import { MAX_PHOTOS, resizePhoto, thumbFromDataUrl, validateVideo } from '../../platform/image';
 import { newId, nowIso } from '../../data/defaults';
 import { ShareProductDialog, productPhotos } from '../components/ShareProduct';
+import { StockPanel } from '../components/StockPanel';
+import { ProductHero } from '../components/ProductHero';
 import { Icon } from '../components/Icon';
 import { Check, DecimalField, ErrorSummary, InternalLabel, Menu, PageHeader, SelectField, TextField, useConfirm, useToast } from '../components/ui';
-import { pct, useMoney, useSettings } from '../hooks';
+import { pct, useMoney, usePrefs, useSettings } from '../hooks';
 
 const SOURCE_LABEL = { purchase: 'Compra', expense: 'Gasto asignado', manual: 'Carga manual', recalc: 'Recalculado' } as const;
 
@@ -29,6 +31,7 @@ function ProductDetailForm() {
   const toast = useToast();
   const money = useMoney();
   const settings = useSettings();
+  const [prefs] = usePrefs();
   const [confirm, confirmNode] = useConfirm();
   const stored = useLiveQuery(async () => (isNew ? null : ((await db.products.get(id)) ?? null)), [id]);
   const categories = useLiveQuery(() => db.categories.filter((c) => !c.archived).toArray(), []);
@@ -109,9 +112,9 @@ function ProductDetailForm() {
         actions={
           !isNew && (
             <>
-            <button className="btn btn-primary" onClick={() => setSharing(true)}>
+            <button className="btn btn-icon-m" onClick={() => setSharing(true)}>
               <Icon name="share" />
-              Compartir
+              <span className="btn-label">Compartir</span>
             </button>
             <Menu label="Más acciones del producto">
               <Link to={`/costos/calculadora?producto=${form.id}`}>
@@ -126,12 +129,25 @@ function ProductDetailForm() {
                 <Icon name="archive" />
                 {form.archived ? 'Restaurar' : 'Archivar'}
               </button>
+              <button
+                className="danger-item"
+                onClick={async () => {
+                  if (!(await confirm('Eliminar producto', `Se borra «${form.name}» con sus fotos y videos. Los presupuestos y ventas ya hechos conservan su descripción y precio. Si sólo querés ocultarlo, usá «Archivar». Esta acción no se puede deshacer.`, 'Eliminar', true))) return;
+                  await deleteProduct(form.id);
+                  toast('Producto eliminado');
+                  navigate('/productos', { replace: true });
+                }}
+              >
+                <Icon name="trash" />
+                Eliminar
+              </button>
             </Menu>
             </>
           )
         }
       />
       <ErrorSummary errors={errors} />
+      {!isNew && stored && <ProductHero product={stored} price={stored.manualPrice || suggestedPrice(stored, settings)} suggested={suggestedPrice(stored, settings)} hideInternal={prefs.hideInternalByDefault} />}
       <div className="grid grid-main-aside">
         <form
           className="stack"
@@ -287,6 +303,8 @@ function ProductDetailForm() {
               Hasta {MAX_PHOTOS} fotos (se optimizan en tu dispositivo y se sincronizan). Los videos quedan sólo en este dispositivo.
             </p>
           </section>
+
+          <StockPanel form={form} saved={stored ?? null} onChange={(patch) => setForm((f) => (f ? { ...f, ...patch } : f))} />
 
           <section className="card" aria-labelledby="sec-int">
             <div className="card-header">

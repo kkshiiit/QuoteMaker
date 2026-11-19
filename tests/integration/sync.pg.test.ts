@@ -179,6 +179,11 @@ describe.runIf(process.env.QM_SKIP_PG !== '1')('Supabase: migración y RLS (Post
     expect(sold.rows[0].r.status).toBe('applied');
     const seenByB = await asUser(USER_B, (c) => c.query(`select * from qm_records where collection = 'sales'`));
     expect(seenByB.rowCount).toBe(0);
+    // Migración 0003: movimientos de stock
+    const moved = await asUser(USER_A, (c) => c.query(`select qm_push(gen_random_uuid(),'stockMoves','m1','upsert','{"id":"m1","productId":"p1","variantId":"","qty":"5","kind":"in"}',0) r`));
+    expect(moved.rows[0].r.status).toBe('applied');
+    const movesB = await asUser(USER_B, (c) => c.query(`select * from qm_records where collection = 'stockMoves'`));
+    expect(movesB.rowCount).toBe(0);
   });
 });
 

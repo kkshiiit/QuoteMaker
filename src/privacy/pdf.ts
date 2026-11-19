@@ -29,7 +29,7 @@ export interface PdfOptions {
   accent?: string; // hex
 }
 
-function hexToRgb(hex: string): [number, number, number] {
+export function hexToRgb(hex: string): [number, number, number] {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
   if (!m) return [20, 83, 45];
   const n = parseInt(m[1]!, 16);

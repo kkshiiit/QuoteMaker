@@ -8,7 +8,7 @@
  */
 import { D, type Dec, roundMoney, sum, toDec } from './money';
 import { computeCommercialTotals, type QuoteCommercialTotals } from './quote';
-import type { Sale, SaleChannel } from './types';
+import type { OrderStatus, Sale, SaleChannel } from './types';
 
 export interface SaleTotals {
   commercial: QuoteCommercialTotals;
@@ -26,6 +26,32 @@ export function computeSaleTotals(sale: Pick<Sale, 'items' | 'globalDiscountPct'
   return { commercial, total: commercial.total, cost: toDec(cost), profit: toDec(profit) };
 }
 
+/** Estado efectivo (registros viejos sin `status` = entregado; `cancelled` manda). */
+export function saleStatus(s: Pick<Sale, 'status' | 'cancelled'>): OrderStatus {
+  if (s.cancelled) return 'cancelado';
+  return s.status ?? 'entregado';
+}
+
+/** ¿Suma en el historial de ventas? Borradores y cancelados no. */
+export const saleCounts = (s: Pick<Sale, 'status' | 'cancelled'>) => {
+  const st = saleStatus(s);
+  return st === 'confirmado' || st === 'entregado';
+};
+
+export interface SalePaymentInfo {
+  paid: Dec;
+  balance: Dec;
+  fullyPaid: boolean;
+}
+
+/** Cobrado y saldo. Sin lista de pagos = cobrada en su totalidad. */
+export function salePayments(s: Pick<Sale, 'payments'>, total: Dec): SalePaymentInfo {
+  if (!s.payments) return { paid: toDec(D(total)), balance: '0.00', fullyPaid: true };
+  const paid = toDec(sum(s.payments.map((p) => roundMoney(D(p.amount || '0')))));
+  const balance = toDec(D(total).minus(D(paid)));
+  return { paid, balance, fullyPaid: D(balance).lte(0) };
+}
+
 export function validateSale(s: Sale): string[] {
   const e: string[] = [];
   if (!/^\d{4}-\d{2}-\d{2}$/.test(s.date)) e.push('Indicá la fecha de la venta.');
@@ -41,6 +67,12 @@ export function validateSale(s: Sale): string[] {
   if (s.shippingCharged && D(s.shippingCharged).lt(0)) e.push('El envío no puede ser negativo.');
   if (s.taxPct && (D(s.taxPct).lt(0) || D(s.taxPct).gt(100))) e.push('El impuesto debe estar entre 0 y 100 %.');
   if (s.channel === 'online' && !s.platform.trim()) e.push('Indicá por dónde se hizo la venta online.');
+  (s.payments ?? []).forEach((p, i) => {
+    if (!p.amount || D(p.amount).lte(0)) e.push(`Pago ${i + 1}: el importe debe ser mayor que 0.`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date)) e.push(`Pago ${i + 1}: indicá la fecha.`);
+  });
+  if (s.delivery?.mode === 'envio' && !s.delivery.address.trim()) e.push('Indicá la dirección de entrega.');
+  if (s.delivery && D(s.delivery.internalCost || '0').lt(0)) e.push('El costo del envío no puede ser negativo.');
   return e;
 }
 
@@ -53,9 +85,9 @@ export interface SalesSummary {
   byCustomer: Array<{ key: string; name: string; count: number; total: Dec }>;
 }
 
-/** Resume ventas no anuladas. `byCustomer` agrupa por cliente registrado o por nombre libre. */
+/** Resume ventas confirmadas o entregadas (sin borradores ni cancelaciones). `byCustomer` agrupa por cliente registrado o por nombre libre. */
 export function summarizeSales(sales: Sale[]): SalesSummary {
-  const live = sales.filter((s) => !s.cancelled);
+  const live = sales.filter(saleCounts);
   const totals = live.map((s) => ({ s, t: computeSaleTotals(s) }));
   const byChannel: SalesSummary['byChannel'] = {
     presencial: { count: 0, total: '0.00' },

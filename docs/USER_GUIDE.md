@@ -106,7 +106,36 @@ En **Ventas** anotás lo que efectivamente vendiste:
 
 Arriba ves el **total vendido**, cuánto fue **en el local** y cuánto **online** (por plataforma), y la **ganancia** (interna, con el costo de cada producto congelado al vender). Podés filtrar por canal y período, buscar por cliente o producto y ver el ranking «Ventas por cliente». Una venta se puede **anular** (queda en el historial pero no suma) y restaurar.
 
-Desde un presupuesto **aceptado**, el botón **Registrar venta** la carga con los mismos ítems, cliente, descuentos e impuesto.
+Desde un presupuesto **aceptado**, el botón **Registrar venta** lo carga como **pedido confirmado** con los mismos ítems, cliente, descuentos e impuesto.
+
+### Pedidos, seña y saldo
+
+**Nuevo pedido** (arriba en Ventas) sirve para lo que todavía no se entregó:
+
+- **Estado:** *Borrador* (no descuenta stock ni suma en ventas), *Confirmado · por entregar* y *Entregado*. Sólo cambia cuando vos lo elegís. **Cancelar** (menú ⋯) devuelve el stock.
+- **Cobro:** destildá «Cobrado en su totalidad» y tocá **Registrar seña** (propone el 50 %). Después, **Registrar pago** propone el saldo. Ves *Cobrado* y *Saldo* a la derecha; la lista de Ventas marca los pedidos **con saldo a cobrar** y se puede filtrar por estado.
+- **Entrega:** retira en el local o envío a domicilio, con dirección y fecha. **Calcular envío** abre el estimador y aplica el precio al pedido; el costo real del envío queda como dato interno.
+- **Comprobante / Recibo:** PDF para descargar o compartir y mensaje para WhatsApp con ítems, total, seña, saldo y entrega. Nunca incluye costos, ganancia, el costo del envío ni notas internas. Dice «Comprobante no válido como factura».
+
+## 8 quater. Colores, talles y stock
+
+En la ficha de un producto, sección **Colores, talles y stock**:
+
+1. Tocá una **muestra de color** para agregarla (o «Agregar variante» y escribí color y talle: S, M, Queen, 2 plazas…). Tocando el círculo elegís cualquier color y te sugiere el nombre.
+2. Marcá **Controlar stock de este producto** y guardá.
+3. Con **Stock de …** registrás un **ingreso**, un **ajuste por conteo** (deja el número exacto que contaste), una **rotura o pérdida** o una **devolución**.
+
+Al vender o confirmar un pedido, elegís el **color / talle** en el renglón y el stock se descuenta solo (y vuelve si se cancela). Si pedís más de lo que hay, te avisa (no te bloquea). Con **Avisar con stock bajo** el Inicio y la pantalla **Stock** (menú) te muestran lo que hay que reponer. Cada movimiento queda en el historial del producto (interno).
+
+## 8 quinquies. Envíos y panel de gastos
+
+- **Envíos** (menú): distancia (copiala de **Ver ruta en el mapa**, gratis), medio (auto, moto, bici, colectivo/tren, a pie), ida y vuelta, espera y peajes. Calcula nafta (km × consumo ÷ 100 × precio), pasajes, el valor de tu tiempo y un **precio sugerido** con recargo y redondeo. Guardá tus valores habituales una vez.
+- **Panel de gastos** (menú): total **diario, quincenal o mensual** (quincena = 1 al 15 y 16 a fin de mes), promedio diario, categoría principal y gráfico por categoría; flechas para ver períodos anteriores. Cada gasto se cuenta una sola vez.
+
+## 8 sexies. Catálogo y navegación
+
+- **Productos** se ve en **grilla** con fotos (o en lista), con chips de **categorías**, muestras de color y stock. El **corazón** marca **favoritos**: aparecen primero y en «Destacados» del Inicio.
+- Abajo: **Inicio, Productos, Ventas, Clientes** y **Menú**, que abre el panel lateral con Presupuestos, Stock, Panel de gastos, Calculadora, Envíos y el resto. En computadoras, todo está en la barra lateral.
 
 ## 8 ter. Compartir productos (fotos, videos y redes)
 
@@ -115,6 +144,16 @@ En la ficha de un producto, sección **Fotos y videos**: hasta 6 fotos (la prime
 El botón **Compartir** muestra una vista previa (portada, nombre, descripción, precio y tus redes) y por defecto incluye **todo**; podés destildar fotos, videos, precio o links. El texto se puede editar. Al tocar **Compartir** se abre el menú del sistema para elegir Instagram, Facebook, TikTok, WhatsApp u otra app (en computadoras sin esa función, se descargan los archivos y el texto queda copiado). Nunca se comparten costos, márgenes, proveedores ni notas internas.
 
 Para que salgan los links directos a tus perfiles, cargalos en **Configuración → Redes sociales** (@usuario o link; Facebook recomendado). Los presupuestos (PDF y WhatsApp) también pueden incluirlos: en la pantalla del documento, «Incluir links a mis redes».
+
+## 8 septies. Eliminar
+
+En la ficha de cada cliente, producto, proveedor, gasto general, venta o pedido, menú **⋯ → Eliminar** (en Categorías, el ícono de papelera). Siempre aparece una **confirmación** que explica qué pasa; el foco empieza en **Cancelar** para que nunca se borre por accidente.
+
+- Los presupuestos y ventas ya hechos **conservan** nombres, precios y costos aunque borres el cliente o el producto.
+- Borrar una venta o pedido **devuelve el stock** que había descontado.
+- Proveedores y categorías: sus productos quedan «sin proveedor» / «sin categoría».
+- Presupuestos: sólo se borran los **borradores** (los enviados quedan como histórico). Compras y gastos: primero **anular**, después se pueden eliminar.
+- Si sólo querés ocultar algo, usá **Archivar** (se puede restaurar).
 
 ## 9. Estadísticas
 

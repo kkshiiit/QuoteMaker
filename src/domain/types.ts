@@ -8,6 +8,7 @@
 import type { Dec } from './money';
 import type { AllocationMethod } from './allocation';
 import type { RoundingRule } from './pricing';
+import type { ShippingDefaults } from './shipping';
 
 export interface BaseRecord {
   id: string;
@@ -47,6 +48,10 @@ export interface BusinessSettings extends BaseRecord {
   tiktok?: string;
   salePrefix?: string;
   nextSaleNumber?: number;
+  /** Valores del estimador de envíos (INTERNOS). */
+  shipping?: ShippingDefaults;
+  /** Dirección desde donde salen los envíos (sólo para abrir la ruta en el mapa). */
+  shippingOrigin?: string;
 }
 
 export interface Category extends BaseRecord {
@@ -87,6 +92,55 @@ export interface Product extends BaseRecord {
   manualPrice: Dec | null; // precio de venta fijado por la persona usuaria
   targetMarginPct: Dec | null; // si es null se usa el de configuración
   internalNotes: string;
+  /** Variantes por color y/o talle (registros viejos: sin campo = sin variantes). */
+  variants?: ProductVariant[];
+  /** Controlar existencias de este producto (saldo = suma de movimientos de stock). */
+  trackStock?: boolean;
+  /** Avisar cuando el stock (por variante o total) llegue a esta cantidad o menos. Vacío = no avisar. */
+  lowStockAt?: Dec | null;
+  /** Marcado como favorito (aparece primero en el catálogo). */
+  favorite?: boolean;
+}
+
+/** Combinación vendible de un producto: color, talle o ambos. */
+export interface ProductVariant {
+  id: string;
+  /** Nombre del color ('' = sin color). */
+  color: string;
+  /** Color de muestra en #rrggbb ('' = sin muestra). */
+  colorHex: string;
+  /** Talle o medida ('' = sin talle): S, M, Queen, 2 plazas… */
+  size: string;
+  /** Índice de la foto del producto que muestra esta variante (opcional). */
+  photo?: number | null;
+}
+
+export type StockMoveKind = 'in' | 'adjust' | 'sale' | 'loss' | 'return';
+
+export const STOCK_MOVE_LABELS: Record<StockMoveKind, string> = {
+  in: 'Ingreso',
+  adjust: 'Ajuste por conteo',
+  sale: 'Venta',
+  loss: 'Rotura o pérdida',
+  return: 'Devolución',
+};
+
+/**
+ * Movimiento de stock. Es INMUTABLE (sólo se agregan movimientos): el saldo es la suma de
+ * `qty` por producto y variante. Así dos dispositivos pueden cargar movimientos a la vez sin
+ * pisarse ni generar conflictos de sincronización.
+ */
+export interface StockMove extends BaseRecord {
+  productId: string;
+  /** '' = producto sin variantes. */
+  variantId: string;
+  /** Cantidad con signo: + entra, − sale. Entera para unidades. */
+  qty: Dec;
+  kind: StockMoveKind;
+  reason: string; // interno
+  /** Venta que originó el movimiento (kind 'sale'). */
+  refId: string | null;
+  at: string; // ISO
 }
 
 export interface CostHistoryEntry extends BaseRecord {
@@ -318,6 +372,39 @@ export interface SaleItem {
   discountPct: Dec;
   /** INTERNO: costo unitario congelado al registrar la venta. */
   unitCost: Dec;
+  /** Variante vendida (color/talle). '' o sin campo = sin variante. */
+  variantId?: string;
+}
+
+/** Estado del pedido. Sólo cambia por acción explícita de la persona usuaria. */
+export type OrderStatus = 'borrador' | 'confirmado' | 'entregado' | 'cancelado';
+
+export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
+  borrador: 'Borrador',
+  confirmado: 'Confirmado · por entregar',
+  entregado: 'Entregado',
+  cancelado: 'Cancelado',
+};
+
+export interface SalePayment {
+  id: string;
+  date: string; // YYYY-MM-DD
+  amount: Dec;
+  method: string;
+  /** 'Seña', 'Saldo'… (se puede mostrar en el recibo). */
+  note: string;
+}
+
+export interface SaleDelivery {
+  mode: 'retiro' | 'envio';
+  /** Dirección de entrega (aparece en el recibo). */
+  address: string;
+  /** Fecha prevista de entrega (YYYY-MM-DD, '' = sin fecha). */
+  date: string;
+  /** INTERNO: costo real estimado del envío (nafta, pasajes, tiempo). Nunca en el recibo. */
+  internalCost: Dec;
+  /** INTERNO: resumen del cálculo (km, medio de transporte). */
+  internalNote: string;
 }
 
 export interface Sale extends BaseRecord {
@@ -338,6 +425,11 @@ export interface Sale extends BaseRecord {
   quoteId: string | null;
   notes: string; // internas
   cancelled: boolean;
+  /** Estado del pedido. Registros viejos: sin campo = entregado (o cancelado si `cancelled`). */
+  status?: OrderStatus;
+  /** Pagos recibidos (seña, saldo…). Sin campo = cobrada en su totalidad. */
+  payments?: SalePayment[];
+  delivery?: SaleDelivery;
 }
 
 /**
@@ -375,7 +467,8 @@ export type CollectionName =
   | 'customers'
   | 'quotes'
   | 'quoteDocuments'
-  | 'sales';
+  | 'sales'
+  | 'stockMoves';
 
 export const SYNCED_COLLECTIONS: CollectionName[] = [
   'settings',
@@ -390,4 +483,5 @@ export const SYNCED_COLLECTIONS: CollectionName[] = [
   'quotes',
   'quoteDocuments',
   'sales',
+  'stockMoves',
 ];

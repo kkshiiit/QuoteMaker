@@ -4,7 +4,7 @@
  */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { loadDemo, noHorizontalScroll } from './helpers';
+import { loadDemo, noHorizontalScroll, skipWelcome } from './helpers';
 
 const ROUTES = [
   '/',
@@ -31,6 +31,10 @@ const ROUTES = [
   '/nube',
   '/informacion',
   '/mas',
+  '/stock',
+  '/gastos',
+  '/envios',
+  '/ventas/nueva?tipo=pedido',
 ];
 
 async function axe(page: import('@playwright/test').Page, where: string) {
@@ -83,7 +87,6 @@ test.describe('con datos de ejemplo', () => {
       await page.getByRole('tab', { name: '(+) Pasteles' }).click();
       await page.getByText(palette, { exact: true }).click();
       await page.getByText(mode, { exact: true }).click();
-      await page.getByRole('button', { name: 'Aplicar' }).click();
       await expect(page.locator('html')).toHaveAttribute('data-pastel', 'true');
       for (const r of ['/', '/ventas', '/personalizacion']) {
         await page.goto(`/#${r}`);
@@ -97,7 +100,6 @@ test.describe('con datos de ejemplo', () => {
   test('tema oscuro también cumple contraste', async ({ page }) => {
     await page.goto('/#/personalizacion');
     await page.getByText('Oscuro', { exact: true }).click();
-    await page.getByRole('button', { name: 'Aplicar' }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     for (const r of ['/', '/productos', '/presupuestos', '/costos/calculadora']) {
       await page.goto(`/#${r}`);
@@ -109,15 +111,14 @@ test.describe('con datos de ejemplo', () => {
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   });
 
-  test('paleta personalizada con contraste ajustado y vista previa antes de aplicar', async ({ page }) => {
+  test('paleta personalizada: se aplica al instante con contraste ajustado y se puede deshacer', async ({ page }) => {
     await page.goto('/#/personalizacion');
     const before = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent'));
     await page.getByRole('tab', { name: 'Personalizado' }).click();
     await page.getByLabel('Color personalizado').fill('#ffee00'); // amarillo: ilegible sin ajuste
-    // aún no aplicado
-    expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent'))).toBe(before);
+    // aplicado al instante en toda la app
+    await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent'))).not.toBe(before);
     await expect(page.getByText(/Se ajustó el tono/)).toBeVisible();
-    await page.getByRole('button', { name: 'Aplicar' }).click();
     const ratio = await page.evaluate(() => {
       const hex = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
       const n = parseInt(hex.slice(1), 16);
@@ -160,6 +161,7 @@ test.describe('con datos de ejemplo', () => {
 
 test('teclado: enlace para saltar al contenido y foco visible', async ({ page }) => {
   await page.goto('/');
+  await skipWelcome(page);
   await expect(page.locator('#page-title')).toBeVisible(); // la pantalla terminó de montarse
   await page.keyboard.press('Tab');
   const skip = page.getByRole('link', { name: 'Saltar al contenido' });
@@ -183,6 +185,7 @@ test('respeta prefers-reduced-motion', async ({ browser }) => {
 test('offline: la app (PWA) abre sin conexión, guarda y conserva datos', async ({ page, context }, info) => {
   test.skip(info.project.name !== 'desktop', 'Se verifica una vez');
   await page.goto('/');
+  await skipWelcome(page);
   await page.evaluate(async () => {
     await navigator.serviceWorker.register('./sw.js');
     await navigator.serviceWorker.ready;

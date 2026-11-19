@@ -4,9 +4,9 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { db } from '../../data/db';
 import { matches } from '../search';
 import { putRecord } from '../../data/repo';
-import { createQuote, emptyCustomer, findDuplicateCustomer, validateContact } from '../../data/services';
+import { createQuote, emptyCustomer, findDuplicateCustomer, validateContact, deleteCustomer } from '../../data/services';
 import { quoteTotals } from '../../domain/quote';
-import { computeSaleTotals } from '../../domain/sales';
+import { computeSaleTotals, saleCounts } from '../../domain/sales';
 import { sum, toDec } from '../../domain/money';
 import type { Customer } from '../../domain/types';
 import { Icon } from '../components/Icon';
@@ -35,9 +35,9 @@ function CustomerList() {
         title="Clientes"
         subtitle="Contactos privados. No tienen cuenta ni acceso a la app."
         actions={
-          <Link className="btn btn-primary" to="/clientes/nuevo">
+          <Link className="btn btn-primary fab" to="/clientes/nuevo">
             <Icon name="plus" />
-            Nuevo cliente
+            <span className="fab-text">Nuevo cliente</span>
           </Link>
         }
       />
@@ -151,6 +151,18 @@ function CustomerDetail({ id }: { id: string }) {
                   <Icon name="archive" />
                   {form.archived ? 'Restaurar' : 'Archivar'}
                 </button>
+                <button
+                  className="danger-item"
+                  onClick={async () => {
+                    if (!(await confirm('Eliminar cliente', `Se borra «${form.name}» en todos tus dispositivos. Sus presupuestos y ventas se conservan con el nombre guardado. Esta acción no se puede deshacer.`, 'Eliminar', true))) return;
+                    await deleteCustomer(form.id);
+                    toast('Cliente eliminado');
+                    navigate('/clientes', { replace: true });
+                  }}
+                >
+                  <Icon name="trash" />
+                  Eliminar
+                </button>
               </Menu>
             </>
           )
@@ -203,10 +215,10 @@ function CustomerDetail({ id }: { id: string }) {
                 Registrar venta
               </Link>
             </div>
-            {sales && sales.filter((x) => !x.cancelled).length > 0 ? (
+            {sales && sales.filter(saleCounts).length > 0 ? (
               <>
                 <p className="small muted" style={{ marginBottom: 8 }} data-testid="customer-sales-total">
-                  {sales.filter((x) => !x.cancelled).length} compra(s) · Total {money(toDec(sum(sales.filter((x) => !x.cancelled).map((x) => computeSaleTotals(x).total))))}
+                  {sales.filter(saleCounts).length} compra(s) · Total {money(toDec(sum(sales.filter(saleCounts).map((x) => computeSaleTotals(x).total))))}
                 </p>
                 <ul className="list">
                   {sales.map((x) => (
@@ -218,7 +230,7 @@ function CustomerDetail({ id }: { id: string }) {
                           </span>
                           <span className="sub">
                             {x.channel === 'online' ? `Online · ${x.platform}` : 'En el local'}
-                            {x.cancelled ? ' · Anulada' : ''}
+                            {!saleCounts(x) ? ` · ${x.cancelled ? 'Cancelada' : 'Borrador'}` : ''}
                           </span>
                         </span>
                         <span className="end num">{money(computeSaleTotals(x).total)}</span>

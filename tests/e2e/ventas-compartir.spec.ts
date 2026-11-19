@@ -19,7 +19,7 @@ async function addProductToSale(page: Page, name: string) {
 test('ventas: presencial y online, historial con totales por canal y por cliente', async ({ page }) => {
   await loadDemo(page);
   await page.goto('/#/ventas');
-  await expect(page.locator('#page-title')).toHaveText('Ventas');
+  await expect(page.locator('#page-title')).toHaveText('Pedidos y ventas');
   const before = await page.getByTestId('sales-total').innerText();
 
   // Venta presencial en el local, consumidor final
@@ -28,7 +28,7 @@ test('ventas: presencial y online, historial con totales por canal y por cliente
   await addProductToSale(page, 'Lámpara de pie');
   await page.getByLabel('Cant.').fill('2');
   await page.getByRole('button', { name: 'Registrar venta' }).click();
-  await expect(page.locator('#page-title')).toHaveText('Venta V-00005');
+  await expect(page.locator('#page-title')).toHaveText('Venta V-00006');
   await expect(page.locator('.page-header').getByText('En el local', { exact: true })).toBeVisible();
 
   // Venta online por Facebook a un cliente registrado
@@ -41,28 +41,28 @@ test('ventas: presencial y online, historial con totales por canal y por cliente
   await addProductToSale(page, 'Almohadón');
   await page.getByLabel('Cant.').fill('3');
   await page.getByRole('button', { name: 'Registrar venta' }).click();
-  await expect(page.locator('#page-title')).toHaveText('Venta V-00006');
+  await expect(page.locator('#page-title')).toHaveText('Venta V-00007');
   await expect(page.getByText('Online · Facebook').first()).toBeVisible();
 
   // Historial: el total creció y se puede filtrar por canal
   await page.goto('/#/ventas');
   await expect(page.getByTestId('sales-total')).not.toHaveText(before);
-  await expect(page.getByRole('link', { name: /V-00005 · Consumidor final/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /V-00006 · Consumidor final/ })).toBeVisible();
   await page.getByLabel('Canal').selectOption('online');
-  await expect(page.getByRole('link', { name: /V-00006 · Café Las Palmas/ })).toBeVisible();
-  await expect(page.getByRole('link', { name: /V-00005/ })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /V-00007 · Café Las Palmas/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /V-00006/ })).toHaveCount(0);
   await noHorizontalScroll(page);
 
   // La ficha del cliente muestra sus compras
   await page.goto('/#/clientes');
   await page.getByRole('link', { name: /Café Las Palmas/ }).click();
   await expect(page.getByRole('heading', { name: 'Ventas a este cliente' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /V-00006/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /V-00007/ })).toBeVisible();
 
   // Persiste al recargar
   await page.reload();
   await page.goto('/#/ventas');
-  await expect(page.getByRole('link', { name: /V-00006 · Café Las Palmas/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /V-00007 · Café Las Palmas/ })).toBeVisible();
 });
 
 test('presupuesto aceptado → registrar venta con los mismos ítems', async ({ page }) => {
@@ -73,8 +73,10 @@ test('presupuesto aceptado → registrar venta con los mismos ítems', async ({ 
   await page.getByRole('link', { name: 'Registrar venta' }).click();
   await expect(page.getByLabel('Nombre del cliente')).toHaveValue('Estudio Norte Arquitectura');
   await expect(page.getByTestId('sale-total')).toHaveText(total);
-  await page.getByRole('button', { name: 'Registrar venta' }).click();
-  await expect(page.locator('#page-title')).toHaveText(/Venta V-\d+/);
+  // Un presupuesto aceptado se convierte en pedido confirmado (por entregar, con seña opcional)
+  await expect(page.locator('#page-title')).toHaveText('Nuevo pedido');
+  await page.getByRole('button', { name: 'Guardar pedido' }).click();
+  await expect(page.locator('#page-title')).toHaveText(/Pedido V-\d+/);
   await page.goto('/#/presupuestos');
   await page.getByRole('link', { name: /Estudio Norte/ }).click();
   await expect(page.getByRole('link', { name: /Venta V-\d+/ })).toBeVisible();
@@ -131,18 +133,14 @@ test('presupuesto: links a redes opcionales en WhatsApp y PDF', async ({ page })
   await expect(page.getByRole('article')).not.toContainText('Facebook:');
 });
 
-test('personalización: paleta pastel con vista previa antes de aplicar, en claro y oscuro', async ({ page }) => {
+test('personalización: tocar una paleta la aplica al instante a toda la app, en claro y oscuro, y se puede deshacer', async ({ page }) => {
   await page.goto('/#/personalizacion');
   await expect(page.locator('#page-title')).toHaveText('Personalización');
-  const beforeFill = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent-fill'));
+  const fill = () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent-fill').trim());
   await page.getByRole('tab', { name: '(+) Pasteles' }).click();
-  await expect(page.getByText('Lavanda', { exact: true })).toBeVisible();
   await page.getByText('Lavanda', { exact: true }).click();
-  // Vista previa cambia; la app todavía no
-  await expect(page.locator('.theme-preview')).toHaveAttribute('style', /--accent-fill: #c7b8f5/);
-  expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent-fill'))).toBe(beforeFill);
+  await expect.poll(fill).toBe('#c7b8f5');
   await page.getByText('Oscuro', { exact: true }).click();
-  await page.getByRole('button', { name: 'Aplicar' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect(page.locator('html')).toHaveAttribute('data-pastel', 'true');
   const ratio = await page.evaluate(() => {
@@ -157,5 +155,11 @@ test('personalización: paleta pastel con vista previa antes de aplicar, en clar
   });
   expect(ratio).toBeGreaterThanOrEqual(4.5);
   await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-pastel', 'true');
+  // Volver a la paleta de la casa y deshacer
+  await page.getByRole('tab', { name: 'Chediek' }).click();
+  await page.getByText('Rosé Chediek', { exact: true }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-pastel', 'false');
+  await page.getByRole('button', { name: 'Deshacer' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-pastel', 'true');
 });

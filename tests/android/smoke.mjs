@@ -113,6 +113,10 @@ const noOverflow = async (where) => {
 if (phase === 'phase1') {
   assert((await page.evaluate(() => navigator.userAgent)).includes('Android'), 'se ejecuta dentro del WebView de Android');
   assert(await page.evaluate(() => !!window.Capacitor?.isNativePlatform?.()), 'Capacitor reporta plataforma nativa');
+  await page.getByRole('button', { name: 'Comenzar' }).waitFor({ timeout: 30_000 });
+  shot('00-bienvenida');
+  await page.getByRole('button', { name: 'Comenzar' }).dispatchEvent('click');
+  await page.getByRole('button', { name: 'Probar con datos de ejemplo' }).waitFor({ timeout: 30_000 });
   shot('01-inicio-vacio');
   await page.getByRole('button', { name: 'Probar con datos de ejemplo' }).dispatchEvent('click');
   await page.getByRole('heading', { name: 'Hola, Taller Aurora' }).waitFor({ timeout: 30_000 });
@@ -129,6 +133,8 @@ if (phase === 'phase1') {
     ['#/estadisticas', '09-estadisticas'],
     ['#/mas', '10-mas'],
     ['#/ventas', '16-ventas'],
+    ['#/stock', '17-stock'],
+    ['#/gastos', '18-panel-gastos'],
   ]) {
     // Navegar + medir como una unidad: si Android recrea el WebView en el medio, se reconecta y se repite.
     await withPage(async () => {
@@ -186,11 +192,9 @@ if (phase === 'phase1') {
   await withPage(() => page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark')));
   await go('#/personalizacion');
   await page.getByText('Oscuro', { exact: true }).dispatchEvent('click');
-  await page.getByRole('button', { name: 'Aplicar' }).dispatchEvent('click');
   await sleep(600);
   shot('14-personalizacion-oscuro');
   await page.getByText('Claro', { exact: true }).dispatchEvent('click');
-  await page.getByRole('button', { name: 'Aplicar' }).dispatchEvent('click');
   await go('#/');
 }
 

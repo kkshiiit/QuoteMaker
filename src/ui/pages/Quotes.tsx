@@ -97,9 +97,9 @@ export default function Quotes() {
         title="Presupuestos"
         subtitle="Los estados los cambiás vos; nada cambia solo."
         actions={
-          <button className="btn btn-primary" onClick={() => setPicking(true)}>
+          <button className="btn btn-primary fab" onClick={() => setPicking(true)}>
             <Icon name="plus" />
-            Nuevo presupuesto
+            <span className="fab-text">Nuevo presupuesto</span>
           </button>
         }
       />

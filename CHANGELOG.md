@@ -2,6 +2,27 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado semántico.
 
+## [1.2.0] — 2026-11-18
+
+### Agregado
+- **Colores, talles y stock:** variantes por producto (muestras de color, selector libre con nombre sugerido, talles frecuentes), control de stock por variante con ingreso, ajuste por conteo, rotura/pérdida y devolución; aviso de stock bajo; pantalla **Stock**. El saldo es la suma de movimientos inmutables (sin conflictos de sincronización entre dispositivos).
+- **Pedidos:** estados borrador / confirmado / entregado / cancelado (sólo manuales); el stock se descuenta al confirmar o vender y vuelve al cancelar (idempotente: editar no descuenta dos veces); aviso de faltantes. Presupuesto aceptado → pedido confirmado.
+- **Seña y saldo:** pagos parciales con fecha, medio y concepto; filtro «con saldo a cobrar».
+- **Entrega:** retiro o envío con dirección y fecha; costo interno del envío.
+- **Estimador de envíos:** nafta, pasajes, tiempo, peajes, recargo y redondeo; link gratuito a la ruta en el mapa; aplica el precio al pedido.
+- **Comprobante / recibo** en PDF y WhatsApp con la nueva allowlist `PublicReceipt` y pruebas anti-filtración (texto, streams y metadatos del PDF).
+- **Panel de gastos** diario / quincenal / mensual con promedio diario y gráfico por categoría.
+- **Rediseño según las propuestas:** barra inferior Inicio / Productos / Ventas / Clientes + **menú lateral**; catálogo en **grilla** con chips de categorías, **favoritos** y «Destacados» en el Inicio; KPIs de pedidos por entregar y stock bajo.
+- Migración `20261118000003_stock.sql` (colección `stockMoves`).
+- **Estilo de la referencia visual:** paleta de firma **Rosé Chediek** (predeterminada) en claro y oscuro (rosa empolvado y beige, botones cacao en claro y rosa en oscuro), títulos serif, monograma **CH · CHEDIEK HOME**, encabezado móvil con menú, logo, avisos de stock bajo y pedidos por entregar; barra inferior Inicio · Productos · Pedidos · Clientes · Gastos · Calc.; pantalla de bienvenida con «Comenzar»; Inicio con buscador, categorías con ícono y productos destacados; ficha de producto con foto grande, colores con nombre, talles en cápsulas, stock con − / + e «Ingresar stock» y precio sugerido; pedido con foto por renglón y − / +.
+
+- **Eliminar con confirmación** clientes, productos, proveedores, categorías, gastos generales, ventas y pedidos (devuelve el stock), presupuestos en borrador y compras/gastos anulados. El foco inicial queda en «Cancelar»; los históricos se conservan.
+- **Tema al instante:** tocar un modo o paleta cambia toda la app (con Deshacer); cambio rápido en el menú; paletas de firma Rosé, Arena y cacao, Salvia y Glicina en claro y oscuro.
+- **Skin del mockup:** compacto, vidrio translúcido, grilla de 3 columnas, botón flotante «+» único por pantalla, animaciones suaves (respetan «reducir movimiento»), el foco nunca queda tapado por barras fijas.
+
+### Corregido
+- Los diálogos dentro de un formulario ya no envían el formulario de fondo.
+
 ## [1.1.0] — 2026-11-18 · Chediek Home
 
 ### Agregado

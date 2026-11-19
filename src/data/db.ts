@@ -18,6 +18,7 @@ import type {
   Quote,
   QuoteDocumentRecord,
   Sale,
+  StockMove,
   Supplier,
 } from '../domain/types';
 
@@ -67,6 +68,7 @@ export class QuoteMakerDB extends Dexie {
   quotes!: Table<Quote, string>;
   quoteDocuments!: Table<QuoteDocumentRecord, string>;
   sales!: Table<Sale, string>;
+  stockMoves!: Table<StockMove, string>;
   /** Videos de productos: SOLO locales (no se sincronizan ni se incluyen en el respaldo JSON). */
   productVideos!: Table<ProductVideo, string>;
   prefs!: Table<Preferences, string>;
@@ -96,6 +98,9 @@ export class QuoteMakerDB extends Dexie {
     this.version(2).stores({
       sales: 'id, number, date, channel, customerId, quoteId, updatedAt',
       productVideos: 'id, productId, createdAt',
+    });
+    this.version(3).stores({
+      stockMoves: 'id, productId, [productId+variantId], refId, at',
     });
   }
 

@@ -2,13 +2,14 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../data/db';
+import { deleteOverhead } from '../../data/services';
 import { todayIso } from '../../data/defaults';
 import { createBase, putRecord } from '../../data/repo';
 import { overheadMonthlyEquivalent, overheadPerUnit } from '../../domain/costing';
 import { D, sum } from '../../domain/money';
 import { OVERHEAD_CATEGORIES, type Overhead, type OverheadFrequency } from '../../domain/types';
 import { Icon } from '../components/Icon';
-import { Check, DecimalField, EmptyState, ErrorSummary, InternalLabel, PageHeader, Segmented, SelectField, TextField, useToast } from '../components/ui';
+import { Check, DecimalField, EmptyState, ErrorSummary, InternalLabel, PageHeader, Segmented, SelectField, TextField, useConfirm, useToast } from '../components/ui';
 import { useMoney, useSettings } from '../hooks';
 
 const FREQ: Record<OverheadFrequency, string> = { once: 'Único', weekly: 'Semanal', monthly: 'Mensual', quarterly: 'Trimestral', yearly: 'Anual' };
@@ -85,6 +86,7 @@ function OverheadDetail({ id }: { id: string }) {
   const isNew = id === 'nuevo';
   const navigate = useNavigate();
   const toast = useToast();
+  const [confirm, confirmNode] = useConfirm();
   const settings = useSettings();
   const stored = useLiveQuery(async () => (isNew ? null : ((await db.overheads.get(id)) ?? null)), [id]);
   const [form, setForm] = useState<Overhead | null>(null);
@@ -150,8 +152,25 @@ function OverheadDetail({ id }: { id: string }) {
           <Link className="btn btn-ghost" to="/gastos-generales">
             Cancelar
           </Link>
+          {!isNew && (
+            <button
+              type="button"
+              className="btn btn-danger btn-icon"
+              aria-label="Eliminar gasto general"
+              title="Eliminar gasto general"
+              onClick={async () => {
+                if (!(await confirm('Eliminar gasto general', `Se borra «${form.name || 'este gasto'}» y deja de contarse en los costos y estadísticas. Esta acción no se puede deshacer.`, 'Eliminar', true))) return;
+                await deleteOverhead(form.id);
+                toast('Gasto general eliminado');
+                navigate('/gastos-generales', { replace: true });
+              }}
+            >
+              <Icon name="trash" />
+            </button>
+          )}
         </div>
       </form>
+      {confirmNode}
     </>
   );
 }

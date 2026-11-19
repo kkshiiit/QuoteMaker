@@ -211,3 +211,77 @@ describe('WhatsApp sin filtraciones', () => {
     expectClean(decodeURIComponent(url), 'URL de WhatsApp');
   });
 });
+
+// ---------------- Recibos de ventas y pedidos ----------------
+import { assertPublicReceipt, buildPublicReceipt, receiptFileName, receiptText, type PublicReceipt } from '../../src/privacy/publicReceipt';
+import { generateReceiptPdf } from '../../src/privacy/receiptPdf';
+import { formatMoney } from '../../src/domain/money';
+import type { Sale } from '../../src/domain/types';
+
+function sale(): Sale {
+  return {
+    id: 's1',
+    createdAt: '2026-03-01T10:00:00Z',
+    updatedAt: '2026-03-01T10:00:00Z',
+    number: 'V-00042',
+    date: '2026-03-02',
+    channel: 'online',
+    platform: 'Instagram',
+    customerId: 'c1',
+    customerName: 'Lucía Fernández',
+    items: [
+      { id: 'a', productId: 'p1', variantId: 'v1', description: 'Sábana algodón (Rosa · Queen)', unit: 'u', quantity: '2', unitPrice: '24990', discountPct: '0', unitCost: SECRET_COST },
+      { id: 'b', productId: 'p2', description: 'Vela de soja', unit: 'u', quantity: '1', unitPrice: '3990', discountPct: '0', unitCost: SECRET_COST },
+    ],
+    globalDiscountPct: '0',
+    taxPct: '0',
+    shippingCharged: '3500',
+    paymentMethod: 'Transferencia',
+    quoteId: null,
+    notes: INTERNAL_NOTE,
+    cancelled: false,
+    status: 'confirmado',
+    payments: [{ id: 'p', date: '2026-03-02', amount: '26735', method: 'Transferencia', note: 'Seña' }],
+    delivery: { mode: 'envio', address: 'Av. Siempreviva 742', date: '2026-03-05', internalCost: SECRET_SHIPPING_COST, internalNote: 'ZZPRIVADOZZ combustible 8,5 km ida y vuelta' },
+  };
+}
+
+describe('recibo de venta / pedido sin filtraciones', () => {
+  it('el documento público sólo tiene campos permitidos y montos correctos', () => {
+    const doc = buildPublicReceipt(sale(), settings());
+    expectClean(JSON.stringify(doc), 'payload del recibo');
+    expect(doc.kind).toBe('Pedido');
+    expect(doc.totals.total).toBe('57470.00'); // 2 × 24.990 + 3.990 + 3.500
+    expect(doc.paid).toBe('26735.00');
+    expect(doc.balance).toBe('30735.00');
+    expect(doc.delivery).toEqual({ mode: 'envio', address: 'Av. Siempreviva 742', date: '2026-03-05' });
+    expect(() => assertPublicReceipt({ ...doc, cost: '1' } as unknown as PublicReceipt)).toThrow(PrivacyViolationError);
+    expect(() => assertPublicReceipt({ ...doc, lines: [{ ...doc.lines[0]!, unitCost: '1' }] } as unknown as PublicReceipt)).toThrow(PrivacyViolationError);
+    expect(buildPublicReceipt({ ...sale(), status: 'entregado' }, settings()).kind).toBe('Recibo');
+  });
+
+  it('PDF real: contenido comercial, saldo, sin datos internos en texto, streams ni metadatos', async () => {
+    const doc = buildPublicReceipt(sale(), settings());
+    const { bytes, fileName } = await generateReceiptPdf(doc);
+    expect(fileName).toBe('Pedido-V-00042.pdf');
+    expectClean(fileName, 'nombre de archivo');
+    const { text, meta } = await extractPdf(bytes);
+    expect(text).toContain('Lucía Fernández');
+    expect(text).toContain('Sábana algodón (Rosa · Queen)'.replace('·', '·'));
+    expect(text).toContain('SALDO');
+    expect(text).toContain('Av. Siempreviva 742');
+    expectClean(text, 'texto del PDF');
+    expectClean(meta, 'metadatos del PDF');
+    expectClean(rawPdfText(bytes), 'streams del PDF');
+  });
+
+  it('texto para WhatsApp sin datos internos', () => {
+    const doc = buildPublicReceipt(sale(), settings());
+    const t = receiptText(doc, (v) => formatMoney(v, 'ARS', 'es-AR'));
+    expect(t).toContain('*Pedido V-00042*');
+    expect(t).toContain('Seña');
+    expect(t).toMatch(/Saldo: \$\s?30\.735,00/);
+    expectClean(t, 'texto de WhatsApp');
+    expect(receiptFileName({ kind: 'Recibo', number: '../x' })).toBe('Recibo-x.pdf');
+  });
+});

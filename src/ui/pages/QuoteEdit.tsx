@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../data/db';
 import { matches } from '../search';
 import { newId, todayIso } from '../../data/defaults';
-import { changeQuoteStatus, customerSnapshot, duplicateQuote, itemFromProduct, saveQuote, suggestedPrice } from '../../data/services';
+import { changeQuoteStatus, customerSnapshot, duplicateQuote, itemFromProduct, saveQuote, suggestedPrice, canDeleteQuote, deleteQuote } from '../../data/services';
 import { D } from '../../domain/money';
 import { ALLOWED_TRANSITIONS, computeCommercialTotals, computeInternal, effectiveQuote, isPastValidity, validateQuote } from '../../domain/quote';
 import { QUOTE_STATUS_LABELS, type Quote, type QuoteItem, type QuoteStatus } from '../../domain/types';
@@ -168,6 +168,20 @@ export default function QuoteEdit() {
                 <Icon name={hideInternal ? 'eye' : 'eyeOff'} />
                 {hideInternal ? 'Mostrar datos internos' : 'Ocultar datos internos (modo cliente)'}
               </button>
+              {canDeleteQuote(form) && (
+                <button
+                  className="danger-item"
+                  onClick={async () => {
+                    if (!(await confirm('Eliminar borrador', `Se borra el presupuesto ${form.number}. Sólo los borradores se pueden eliminar; los enviados quedan como histórico. Esta acción no se puede deshacer.`, 'Eliminar', true))) return;
+                    await deleteQuote(form);
+                    toast('Borrador eliminado');
+                    navigate('/presupuestos', { replace: true });
+                  }}
+                >
+                  <Icon name="trash" />
+                  Eliminar borrador
+                </button>
+              )}
             </Menu>
           </>
         }

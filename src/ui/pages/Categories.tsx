@@ -4,10 +4,12 @@ import { db } from '../../data/db';
 import { createBase, putRecord } from '../../data/repo';
 import type { Category } from '../../domain/types';
 import { Icon } from '../components/Icon';
-import { EmptyState, ErrorSummary, PageHeader, useToast } from '../components/ui';
+import { EmptyState, ErrorSummary, PageHeader, useConfirm, useToast } from '../components/ui';
+import { deleteCategory } from '../../data/services';
 
 export default function Categories() {
   const toast = useToast();
+  const [confirm, confirmNode] = useConfirm();
   const cats = useLiveQuery(() => db.categories.toArray(), []);
   const counts = useLiveQuery(async () => {
     const m = new Map<string, number>();
@@ -60,10 +62,24 @@ export default function Categories() {
               </div>
               {editing[c.id] !== undefined && <button className="btn btn-sm" onClick={() => rename(c)}>Guardar</button>}
               <button className="btn btn-sm btn-ghost" onClick={() => putRecord('categories', { ...c, archived: !c.archived })}>{c.archived ? 'Restaurar' : 'Archivar'}</button>
+              <button
+                className="btn btn-sm btn-icon btn-ghost btn-danger"
+                aria-label={`Eliminar categoría ${c.name}`}
+                title="Eliminar"
+                onClick={async () => {
+                  const n = counts?.get(c.id) ?? 0;
+                  if (!(await confirm('Eliminar categoría', `Se borra «${c.name}».${n ? ` Sus ${n} producto(s) quedan sin categoría (no se borran).` : ''} Esta acción no se puede deshacer.`, 'Eliminar', true))) return;
+                  await deleteCategory(c.id);
+                  toast('Categoría eliminada');
+                }}
+              >
+                <Icon name="trash" />
+              </button>
             </li>
           ))}
         </ul>
       )}
+      {confirmNode}
     </>
   );
 }
