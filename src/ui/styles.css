@@ -3153,3 +3153,181 @@ dialog::backdrop {
     min-height: 48px;
   }
 }
+
+/* =====================================================================
+   Escala tipográfica (legible en teléfono, jerarquía del mockup)
+   Base 16 px · cuerpo 15–16 · secundarios ≥ 13 · mínimos ≥ 12 px
+   ===================================================================== */
+html {
+  font-size: 16px;
+}
+body {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+#page-title,
+.page-header h1 {
+  font-size: clamp(1.9rem, 1.6rem + 1.2vw, 2.3rem);
+  line-height: 1.1;
+}
+.page-header p {
+  font-size: 0.94rem;
+}
+h2,
+.card > h2,
+.card-header h2 {
+  font-size: 1.32rem;
+}
+h3,
+.hero-block h3 {
+  font-size: 0.97rem;
+}
+.small {
+  font-size: 0.875rem;
+}
+.field label,
+.label,
+legend {
+  font-size: 0.875rem;
+}
+.hint {
+  font-size: 0.82rem;
+}
+.input,
+select.input,
+textarea.input {
+  font-size: 1rem;
+}
+.btn {
+  font-size: 0.95rem;
+}
+.btn-sm {
+  font-size: 0.875rem;
+}
+.badge {
+  font-size: 0.78rem;
+}
+.back-link {
+  font-size: 0.92rem;
+}
+/* Listas */
+.list-item .title {
+  font-size: 1rem;
+}
+.list-item .sub {
+  font-size: 0.86rem;
+}
+/* Barra inferior y menú */
+.bottom-nav a {
+  font-size: 0.72rem;
+}
+.drawer nav a {
+  font-size: 1rem;
+}
+.drawer h2 {
+  font-size: 0.75rem;
+}
+/* Categorías y catálogo */
+.cat-tile {
+  width: 72px;
+  min-height: 72px;
+  font-size: 0.75rem;
+}
+.catalog-body .title {
+  font-size: 0.84rem;
+  line-height: 1.25;
+}
+.catalog-price {
+  font-size: 0.98rem;
+}
+@media (min-width: 560px) {
+  .catalog-body .title {
+    font-size: 0.95rem;
+  }
+  .catalog-price {
+    font-size: 1.08rem;
+  }
+}
+.section-head a {
+  font-size: 0.9rem;
+}
+/* KPIs */
+.kpi .label {
+  font-size: 0.84rem;
+}
+.kpi .value {
+  font-size: 1.55rem;
+}
+.kpi .context {
+  font-size: 0.82rem;
+}
+.kpis-3 .kpi .label {
+  font-size: 0.78rem;
+}
+.kpis-3 .kpi .value {
+  font-size: 1.15rem;
+}
+.kpis-3 .kpi .value-text {
+  font-size: 1rem;
+}
+.kpis-3 .kpi .context {
+  font-size: 0.75rem;
+}
+/* Ficha de producto */
+.hero-desc {
+  font-size: 0.95rem;
+}
+.hero-price {
+  font-size: 2.1rem;
+}
+.hero-stock {
+  font-size: 0.875rem;
+}
+.hero-color {
+  font-size: 0.8rem;
+}
+.hero-size {
+  font-size: 0.92rem;
+}
+.stepper {
+  font-size: 0.92rem;
+}
+.hero-price-sm {
+  font-size: 1.2rem;
+}
+/* Totales y documentos */
+.dl dt,
+.dl dd {
+  font-size: 0.97rem;
+}
+.dl .total {
+  font-size: 1.25rem;
+}
+.bars li {
+  font-size: 0.92rem;
+}
+.stock-lines {
+  font-size: 0.875rem;
+}
+/* Segmentados, tema y elección */
+.segmented label,
+.segmented .seg-btn,
+.mode-switch button {
+  font-size: 0.92rem;
+}
+.segmented[role='tablist'] .seg-btn {
+  font-size: 0.86rem;
+}
+.choice-label {
+  font-size: 0.92rem;
+}
+.welcome-tagline {
+  font-size: 1.75rem;
+}
+.price-big {
+  font-size: 2.7rem;
+}
+.kpis > .card + .card,
+.kpis > .kpi + .kpi {
+  margin-top: 0;
+}
