@@ -3528,3 +3528,136 @@ textarea.input {
     bottom: calc(var(--bottom-nav) + 26px + env(safe-area-inset-bottom));
   }
 }
+
+/* =====================================================================
+   Ajuste de textos: nada cortado ni saliéndose de su tarjeta
+   ===================================================================== */
+/* Listas: el título puede ocupar 2 líneas y los datos secundarios pasan de línea */
+.list-item {
+  align-items: center;
+}
+.list-item .grow {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.list-item .title {
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: clip;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+.list-item .sub {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.35;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+.list-item .end {
+  flex: none;
+  max-width: 46%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+.list-item .end .badge {
+  white-space: normal;
+  text-align: center;
+}
+.list-item > .grow > .title + .sub {
+  display: block;
+}
+/* Saldo pendiente: en su propia línea, sin salirse */
+.list-item .sub .warn-text {
+  display: inline-block;
+}
+/* Indicadores: sin guiones raros; el texto se achica un poco para entrar */
+.kpi .value,
+.kpis-3 .kpi .value {
+  hyphens: manual;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.kpis-3 .kpi .value {
+  font-size: clamp(0.98rem, 3.6vw, 1.2rem);
+}
+.kpis-3 .kpi .value-text {
+  font-size: clamp(0.8rem, 3.1vw, 1rem);
+  overflow-wrap: anywhere;
+}
+.kpi .context {
+  overflow-wrap: anywhere;
+}
+/* Botones: el texto nunca se parte en dos líneas */
+.btn,
+.seg-btn,
+.segmented label,
+.mode-switch button {
+  white-space: nowrap;
+}
+.badge {
+  max-width: 100%;
+}
+/* Títulos largos de pantalla: cortan entre palabras, no dentro de ellas */
+#page-title {
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+/* Tarjetas del catálogo: nombres en 2 líneas como máximo, con altura pareja */
+.catalog-body .title {
+  min-height: calc(2 * 1.25em);
+  overflow-wrap: anywhere;
+}
+/* Campos de búsqueda: el texto de ayuda nunca se corta en el medio */
+.input::placeholder {
+  text-overflow: ellipsis;
+}
+/* Filtros de listas: buscador a todo el ancho y filtros en una fila pareja */
+.toolbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+.toolbar > .search {
+  grid-column: 1 / -1;
+}
+.toolbar .field {
+  margin: 0;
+  min-width: 0;
+}
+.toolbar select.input {
+  width: 100%;
+  padding-right: 28px;
+  text-overflow: ellipsis;
+}
+@media (min-width: 900px) {
+  .toolbar {
+    grid-template-columns: minmax(240px, 2fr) repeat(auto-fit, minmax(150px, 1fr));
+  }
+  .toolbar > .search {
+    grid-column: auto;
+  }
+}
+.nowrap {
+  white-space: nowrap;
+}
+.list-item .sub .saldo-line {
+  display: block;
+  margin-top: 2px;
+}
+/* Fechas y montos nunca se parten */
+.list-item .sub,
+.list-item .title {
+  overflow-wrap: break-word;
+}
+.num {
+  white-space: nowrap;
+}

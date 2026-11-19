@@ -93,7 +93,7 @@ test('pedido: seña, saldo, envío calculado y comprobante sin datos internos', 
   await expect(page.getByTestId('sale-balance')).not.toHaveText('$ 0,00');
   await page.getByRole('button', { name: 'Guardar pedido' }).click();
   await expect(page.locator('#page-title')).toHaveText(/Pedido V-\d+/);
-  await expect(page.locator('.page-header').getByText('Confirmado · por entregar')).toBeVisible();
+  await expect(page.locator('.page-header').getByText('Por entregar', { exact: true })).toBeVisible();
 
   // Comprobante para el cliente
   await page.getByRole('button', { name: 'Comprobante' }).click();

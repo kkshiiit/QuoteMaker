@@ -105,7 +105,7 @@ export default function Products() {
               <label htmlFor="psearch" className="sr-only">
                 Buscar productos
               </label>
-              <input id="psearch" className="input" type="search" placeholder="Buscar por nombre, código o descripción" value={q} onChange={(e) => setQ(e.target.value)} />
+              <input id="psearch" className="input" type="search" placeholder="Buscar productos…" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
             <details className="filters" open={filter !== 'activos' || sort !== 'nombre' ? true : undefined}>
               <summary className="btn">

@@ -8,7 +8,7 @@ import { quoteTotals } from '../../domain/quote';
 import { QUOTE_STATUS_LABELS, type Customer, type QuoteStatus } from '../../domain/types';
 import { Icon } from '../components/Icon';
 import { Dialog, EmptyState, PageHeader, SelectField, StatusBadge } from '../components/ui';
-import { useMoney } from '../hooks';
+import { useMoney, plural } from '../hooks';
 
 const PAGE = 50;
 
@@ -38,7 +38,7 @@ export function CustomerPicker({ open, onClose, onPick, title = '¿Para quién e
       <label htmlFor="cpick" className="sr-only">
         Buscar cliente
       </label>
-      <input id="cpick" className="input" type="search" placeholder="Buscar por nombre, teléfono o email" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
+      <input id="cpick" className="input" type="search" placeholder="Buscar clientes…" value={q} onChange={(e) => setQ(e.target.value)} autoFocus />
       <ul className="list" style={{ marginTop: 10 }}>
         {list.length === 0 && <li className="list-item muted">No hay clientes que coincidan.</li>}
         {list.map((c) => (
@@ -115,7 +115,7 @@ export default function Quotes() {
               <label htmlFor="qsearch" className="sr-only">
                 Buscar presupuestos
               </label>
-              <input id="qsearch" className="input" type="search" placeholder="Buscar por número o cliente" value={q} onChange={(e) => setQ(e.target.value)} />
+              <input id="qsearch" className="input" type="search" placeholder="Buscar presupuestos…" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
             <SelectField<QuoteStatus | ''>
               label="Estado"
@@ -141,7 +141,7 @@ export default function Quotes() {
                       {x.number} · {x.customerSnapshot.name || 'Sin cliente'}
                     </div>
                     <div className="sub">
-                      {new Date(`${x.issueDate}T12:00:00`).toLocaleDateString('es-AR')} · {x.items.length || x.frozen?.items.length || 0} ítem(s)
+                      {new Date(`${x.issueDate}T12:00:00`).toLocaleDateString('es-AR')} · {plural(x.items.length || x.frozen?.items.length || 0, 'ítem', 'ítems')}
                     </div>
                   </div>
                   <div className="end">

@@ -8,7 +8,7 @@ import { D, sum, toDec } from '../../domain/money';
 import { elapsedDays, periodOf, shiftPeriod, type PeriodKind } from '../../domain/periods';
 import { Icon, type IconName } from '../components/Icon';
 import { EmptyState, InternalLabel, PageHeader, Segmented } from '../components/ui';
-import { useMoney } from '../hooks';
+import { useMoney, plural } from '../hooks';
 
 const expenseIcon = (c: string): IconName =>
   /flete|env[ií]o|via|nafta|combust|peaje/i.test(c) ? 'truck' : /luz|electric|gas|agua|internet|servicio/i.test(c) ? 'sparkle' : /embal|etiqu/i.test(c) ? 'tag' : /mercad|compra|insumo|madera|pintura/i.test(c) ? 'box' : 'receipt';
@@ -89,7 +89,7 @@ export default function ExpensesPanel() {
               <div className="value num" data-testid="exp-daily">
                 {money(view.daily)}
               </div>
-              <div className="context">Sobre {view.days} día(s)</div>
+              <div className="context">Sobre {plural(view.days, 'día', 'días')}</div>
             </div>
             <div className="card kpi">
               <div className="label">

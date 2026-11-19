@@ -13,7 +13,7 @@ import { APP_NAME, Icon, Wordmark } from '../components/Icon';
 import { CategoryTiles } from '../components/CategoryTiles';
 import { Swatch } from '../components/StockPanel';
 import { InternalLabel, PageHeader, StatusBadge } from '../components/ui';
-import { useMoney, usePrefs, useSettings, pct } from '../hooks';
+import { useMoney, usePrefs, useSettings, pct, plural } from '../hooks';
 import { marginPct } from '../../domain/pricing';
 
 export default function Dashboard() {
@@ -192,7 +192,7 @@ export default function Dashboard() {
             <label htmlFor="home-q" className="sr-only">
               Buscar productos
             </label>
-            <input id="home-q" className="input" type="search" placeholder="Buscar productos, código o categoría…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input id="home-q" className="input" type="search" placeholder="Buscar productos…" value={search} onChange={(e) => setSearch(e.target.value)} />
           </form>
           <CategoryTiles categories={data.categories} value="" all={false} onChange={(id) => navigate(`/productos?categoria=${id}`)} />
           <div className="section-head">
@@ -234,7 +234,7 @@ export default function Dashboard() {
             <div className="label">Ventas del mes</div>
             <div className="value">{money(view.salesMonth.total)}</div>
             <div className="context">
-              {view.salesMonth.count} venta(s) · local {view.salesMonth.byChannel.presencial.count} · online {view.salesMonth.byChannel.online.count}
+              {plural(view.salesMonth.count, 'venta', 'ventas')} · local {view.salesMonth.byChannel.presencial.count} · online {view.salesMonth.byChannel.online.count}
             </div>
           </Link>
           <Link className="kpi" to="/ventas?estado=pendientes">

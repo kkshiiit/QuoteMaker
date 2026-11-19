@@ -4,6 +4,7 @@
  * `buildPublicProduct` (allowlist): nunca costos, márgenes, proveedores ni notas internas.
  */
 import { useLiveQuery } from 'dexie-react-hooks';
+import { plural } from '../hooks';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from '../../data/db';
@@ -100,8 +101,8 @@ export function ShareProductDialog({ open, onClose, product, settings, price }: 
           {doc.description && <p className="small">{doc.description}</p>}
           {doc.price && <p className="share-price">{doc.price}</p>}
           <div className="share-meta small muted">
-            {opts.includePhotos && photos.length > 0 && <span><Icon name="image" /> {photos.length} foto(s)</span>}
-            {opts.includeVideos && (videos?.length ?? 0) > 0 && <span><Icon name="video" /> {videos!.length} video(s)</span>}
+            {opts.includePhotos && photos.length > 0 && <span><Icon name="image" /> {plural(photos.length, 'foto', 'fotos')}</span>}
+            {opts.includeVideos && (videos?.length ?? 0) > 0 && <span><Icon name="video" /> {plural(videos!.length, 'video', 'videos')}</span>}
             {doc.socials.map((s) => (
               <span key={s.network}>
                 <Icon name={s.network} /> {s.label}

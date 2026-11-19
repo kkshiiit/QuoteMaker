@@ -11,7 +11,7 @@ import { sum, toDec } from '../../domain/money';
 import type { Customer } from '../../domain/types';
 import { Icon } from '../components/Icon';
 import { EmptyState, ErrorSummary, InternalLabel, Menu, PageHeader, StatusBadge, TextField, useConfirm, useToast } from '../components/ui';
-import { useMoney } from '../hooks';
+import { useMoney, plural } from '../hooks';
 
 export default function Customers() {
   const { id } = useParams();
@@ -50,7 +50,7 @@ function CustomerList() {
               <label htmlFor="csearch" className="sr-only">
                 Buscar clientes
               </label>
-              <input id="csearch" className="input" type="search" placeholder="Buscar por nombre, teléfono, email o ID fiscal" value={q} onChange={(e) => setQ(e.target.value)} />
+              <input id="csearch" className="input" type="search" placeholder="Buscar clientes…" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
             <label className="check">
               <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
@@ -218,7 +218,7 @@ function CustomerDetail({ id }: { id: string }) {
             {sales && sales.filter(saleCounts).length > 0 ? (
               <>
                 <p className="small muted" style={{ marginBottom: 8 }} data-testid="customer-sales-total">
-                  {sales.filter(saleCounts).length} compra(s) · Total {money(toDec(sum(sales.filter(saleCounts).map((x) => computeSaleTotals(x).total))))}
+                  {plural(sales.filter(saleCounts).length, 'compra', 'compras')} · Total {money(toDec(sum(sales.filter(saleCounts).map((x) => computeSaleTotals(x).total))))}
                 </p>
                 <ul className="list">
                   {sales.map((x) => (

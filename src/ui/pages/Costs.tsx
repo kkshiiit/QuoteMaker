@@ -66,7 +66,12 @@ function PurchasesList() {
               <div className="title">{(p.supplierId && names.get(p.supplierId)) || 'Sin proveedor'}</div>
               <div className="sub">
                 {new Date(`${p.date}T12:00:00`).toLocaleDateString('es-AR')} · {p.items.length} artículo{p.items.length === 1 ? '' : 's'}
-                {p.reference ? ` · ${p.reference}` : ''}
+                {p.reference ? (
+                  <>
+                    {' · '}
+                    <span className="nowrap">{p.reference}</span>
+                  </>
+                ) : null}
               </div>
             </div>
             <div className="end">
