@@ -60,19 +60,15 @@ const PRIMARY: Array<{ to: string; label: string; icon: IconName; end?: boolean 
   { to: '/clientes', label: 'Clientes', icon: 'users' },
 ];
 
-/** Barra inferior (móvil), como en el diseño de referencia. */
-const BOTTOM: Array<{ to: string; label: string; icon: IconName; end?: boolean }> = [
-  ...PRIMARY,
-  { to: '/gastos', label: 'Gastos', icon: 'wallet' },
-  { to: '/costos/calculadora', label: 'Calc.', icon: 'calculator' },
-];
+/** Barra inferior (móvil): sólo los 4 destinos más usados. El resto está en el menú ☰. */
+const BOTTOM = PRIMARY;
 
 /** Herramientas del día a día (menú lateral). */
 const TOOLS: Array<{ to: string; label: string; icon: IconName }> = [
-  { to: '/presupuestos', label: 'Presupuestos', icon: 'file' },
-  { to: '/stock', label: 'Stock', icon: 'layers' },
   { to: '/gastos', label: 'Panel de gastos', icon: 'wallet' },
   { to: '/costos/calculadora', label: 'Calculadora de precios', icon: 'calculator' },
+  { to: '/presupuestos', label: 'Presupuestos', icon: 'file' },
+  { to: '/stock', label: 'Stock', icon: 'layers' },
   { to: '/envios', label: 'Envíos', icon: 'route' },
 ];
 

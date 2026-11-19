@@ -7,26 +7,46 @@ import { computeSaleTotals, saleCounts, salePayments, saleStatus, summarizeSales
 import { ORDER_STATUS_LABELS, SALE_CHANNEL_LABELS, type Sale, type SaleChannel } from '../../domain/types';
 import { Icon } from '../components/Icon';
 import { EmptyState, InternalLabel, PageHeader, SelectField } from '../components/ui';
-import { useMoney, usePrefs } from '../hooks';
+import { useMoney, usePrefs, plural } from '../hooks';
 import { matches } from '../search';
 
 const PAGE = 50;
 type Filter = '' | SaleChannel;
 
-export function ChannelBadge({ channel, platform }: { channel: SaleChannel; platform?: string }) {
+export function ChannelBadge({ channel, platform, compact = false }: { channel: SaleChannel; platform?: string; compact?: boolean }) {
+  const online = channel === 'online';
   return (
-    <span className={`badge ${channel === 'online' ? 'badge-accent' : ''}`}>
-      <Icon name={channel === 'online' ? 'globe' : 'store'} />
-      {channel === 'online' ? `Online${platform ? ` · ${platform}` : ''}` : 'En el local'}
+    <span className={`badge ${online ? 'badge-accent' : ''}`}>
+      <Icon name={online ? 'globe' : 'store'} />
+      {compact ? (
+        online ? (
+          <>
+            <span className="sr-only">Online · </span>
+            {platform || 'Online'}
+          </>
+        ) : (
+          'Local'
+        )
+      ) : online ? (
+        `Online${platform ? ` · ${platform}` : ''}`
+      ) : (
+        'En el local'
+      )}
     </span>
   );
 }
+
+const ORDER_STATUS_SHORT = { borrador: 'Borrador', confirmado: 'Por entregar', entregado: 'Entregado', cancelado: 'Cancelado' } as const;
 
 export function OrderBadge({ sale }: { sale: Pick<Sale, 'status' | 'cancelled'> }) {
   const st = saleStatus(sale);
   if (st === 'entregado' && !sale.status) return null;
   const cls = st === 'cancelado' ? 'badge-warn' : st === 'entregado' ? 'badge-ok' : st === 'borrador' ? '' : 'badge-accent';
-  return <span className={`badge ${cls}`}>{ORDER_STATUS_LABELS[st]}</span>;
+  return (
+    <span className={`badge ${cls}`} title={ORDER_STATUS_LABELS[st]}>
+      {ORDER_STATUS_SHORT[st]}
+    </span>
+  );
 }
 
 export default function Sales() {
@@ -123,7 +143,7 @@ export default function Sales() {
               <div className="value num" data-testid="sales-presencial">
                 {money(summary.byChannel.presencial.total)}
               </div>
-              <div className="context">{summary.byChannel.presencial.count} venta(s)</div>
+              <div className="context">{plural(summary.byChannel.presencial.count, 'venta', 'ventas')}</div>
             </div>
             <div className="card kpi">
               <div className="label">
@@ -133,7 +153,7 @@ export default function Sales() {
                 {money(summary.byChannel.online.total)}
               </div>
               <div className="context">
-                {summary.byPlatform.length ? summary.byPlatform.map((p) => `${p.platform} ${p.count}`).join(' · ') : `${summary.byChannel.online.count} venta(s)`}
+                {summary.byPlatform.length ? summary.byPlatform.map((p) => `${p.platform} ${p.count}`).join(' · ') : `${plural(summary.byChannel.online.count, 'venta', 'ventas')}`}
               </div>
             </div>
             {!prefs.hideInternalByDefault && (
@@ -152,7 +172,7 @@ export default function Sales() {
               <label htmlFor="ssearch" className="sr-only">
                 Buscar ventas
               </label>
-              <input id="ssearch" className="input" type="search" placeholder="Buscar por número, cliente o producto" value={q} onChange={(e) => setQ(e.target.value)} />
+              <input id="ssearch" className="input" type="search" placeholder="Buscar ventas…" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
             <SelectField<Filter>
               label="Canal"
@@ -194,7 +214,7 @@ export default function Sales() {
                   <li key={c.key} className="list-item">
                     <span className="grow">
                       <span className="title">{c.name}</span>
-                      <span className="sub"> · {c.count} compra(s)</span>
+                      <span className="sub"> · {plural(c.count, 'compra', 'compras')}</span>
                     </span>
                     <span className="end num">{money(c.total)}</span>
                   </li>
@@ -215,16 +235,16 @@ export default function Sales() {
                       {s.number} · {s.customerName || 'Consumidor final'}
                     </div>
                     <div className="sub">
-                      {new Date(`${s.date}T12:00:00`).toLocaleDateString('es-AR')} · {s.items.length} ítem(s) · {s.paymentMethod}
+                      {new Date(`${s.date}T12:00:00`).toLocaleDateString('es-AR')} · {plural(s.items.length, 'ítem', 'ítems')} · {s.paymentMethod}
                       {s.delivery?.mode === 'envio' && ` · Envío${s.delivery.date ? ` ${new Date(`${s.delivery.date}T12:00:00`).toLocaleDateString('es-AR')}` : ''}`}
-                      {saleCounts(s) && balance !== '0.00' && D(balance).gt(0) && <strong className="warn-text"> · Saldo {money(balance)}</strong>}
+                      {saleCounts(s) && balance !== '0.00' && D(balance).gt(0) && <strong className="warn-text saldo-line">Saldo {money(balance)}</strong>}
                     </div>
                   </div>
                   <div className="end">
                     <div className={`num ${!saleCounts(s) ? 'muted' : ''}`} style={{ fontWeight: 650, textDecoration: s.cancelled ? 'line-through' : undefined }}>
                       {money(total)}
                     </div>
-                    {s.cancelled ? <span className="badge badge-warn">Cancelada</span> : s.status && s.status !== 'entregado' ? <OrderBadge sale={s} /> : <ChannelBadge channel={s.channel} platform={s.platform} />}
+                    {s.cancelled ? <span className="badge badge-warn">Cancelada</span> : s.status && s.status !== 'entregado' ? <OrderBadge sale={s} /> : <ChannelBadge channel={s.channel} platform={s.platform} compact />}
                   </div>
                 </Link>
               </li>

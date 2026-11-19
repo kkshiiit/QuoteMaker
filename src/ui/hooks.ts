@@ -39,3 +39,8 @@ export const pct = (v: Big | null) => formatPct(v);
 export function useStockBalances(productId?: string): Map<string, string> | undefined {
   return useLiveQuery(async () => stockBalances(productId ? await db.stockMoves.where('productId').equals(productId).toArray() : await db.stockMoves.toArray()), [productId]);
 }
+
+/** «1 venta» / «3 ventas»: plurales correctos en lugar de «venta(s)». */
+export function plural(n: number, one: string, many: string): string {
+  return `${n} ${n === 1 ? one : many}`;
+}

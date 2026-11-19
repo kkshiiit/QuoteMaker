@@ -38,6 +38,8 @@ const ROUTES = [
 ];
 
 async function axe(page: import('@playwright/test').Page, where: string) {
+  // Medir con la pantalla quieta: sin transiciones de tema ni animaciones de entrada en curso.
+  await page.waitForFunction(() => !document.documentElement.classList.contains('theme-anim') && document.getAnimations().every((a) => a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity), null, { timeout: 5000 }).catch(() => undefined);
   const r = await new AxeBuilder({ page: page as unknown as ConstructorParameters<typeof AxeBuilder>[0]['page'] }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
   const summary = r.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).slice(0, 3).join(' | ')}`);
   expect(summary, `violaciones axe en ${where}`).toEqual([]);

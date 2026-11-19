@@ -7,7 +7,7 @@ import { productStock } from '../../domain/stock';
 import { Icon } from '../components/Icon';
 import { Swatch } from '../components/StockPanel';
 import { EmptyState, PageHeader, SelectField } from '../components/ui';
-import { useStockBalances } from '../hooks';
+import { useStockBalances, plural } from '../hooks';
 import { matches } from '../search';
 
 export default function Stock() {
@@ -30,7 +30,7 @@ export default function Stock() {
 
   return (
     <>
-      <PageHeader title="Stock" subtitle={lowCount ? `${lowCount} producto(s) con stock bajo.` : 'Existencias por color y talle.'} />
+      <PageHeader title="Stock" subtitle={lowCount ? `${plural(lowCount, 'producto', 'productos')} con stock bajo.` : 'Existencias por color y talle.'} />
       {products && products.length === 0 ? (
         <EmptyState
           icon="layers"
@@ -50,7 +50,7 @@ export default function Stock() {
               <label htmlFor="stsearch" className="sr-only">
                 Buscar en el stock
               </label>
-              <input id="stsearch" className="input" type="search" placeholder="Buscar producto, color o talle" value={q} onChange={(e) => setQ(e.target.value)} />
+              <input id="stsearch" className="input" type="search" placeholder="Buscar en el stock…" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
             <SelectField<string>
               label="Mostrar"

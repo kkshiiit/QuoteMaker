@@ -65,7 +65,7 @@ await page.evaluate(async () => {
 await page.reload();
 await page.locator('#page-title').waitFor();
 for (const [label, hash, sel] of [
-  ['lista_2000_productos_ms', '#/productos', 'ul.list > li'],
+  ['lista_2000_productos_ms', '#/productos', 'ul.catalog-grid > li'],
   ['lista_1000_presupuestos_ms', '#/presupuestos', 'ul.list > li'],
   ['inicio_con_1000_presupuestos_ms', '#/', '.kpi'],
 ]) {

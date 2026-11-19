@@ -93,7 +93,7 @@ test('pedido: seña, saldo, envío calculado y comprobante sin datos internos', 
   await expect(page.getByTestId('sale-balance')).not.toHaveText('$ 0,00');
   await page.getByRole('button', { name: 'Guardar pedido' }).click();
   await expect(page.locator('#page-title')).toHaveText(/Pedido V-\d+/);
-  await expect(page.locator('.page-header').getByText('Confirmado · por entregar')).toBeVisible();
+  await expect(page.locator('.page-header').getByText('Por entregar', { exact: true })).toBeVisible();
 
   // Comprobante para el cliente
   await page.getByRole('button', { name: 'Comprobante' }).click();
@@ -190,4 +190,14 @@ test('eliminar con confirmación: cancelar no borra, confirmar sí (cliente, pro
   await page.reload();
   await expect(page.getByRole('link', { name: /Mesa de roble/ })).toBeVisible();
   await expect(page.getByRole('link', { name: /Banco largo/ })).toHaveCount(0);
+});
+
+test('respaldo: muestra el estado y registra la fecha al exportar', async ({ page }) => {
+  await loadDemo(page);
+  await page.goto('/#/respaldo');
+  await expect(page.getByTestId('last-backup')).toHaveText('Nunca');
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Exportar respaldo' }).click();
+  expect((await download).suggestedFilename()).toMatch(/\.json$/);
+  await expect(page.getByTestId('last-backup')).not.toHaveText('Nunca');
 });

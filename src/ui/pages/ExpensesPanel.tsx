@@ -8,7 +8,7 @@ import { D, sum, toDec } from '../../domain/money';
 import { elapsedDays, periodOf, shiftPeriod, type PeriodKind } from '../../domain/periods';
 import { Icon, type IconName } from '../components/Icon';
 import { EmptyState, InternalLabel, PageHeader, Segmented } from '../components/ui';
-import { useMoney } from '../hooks';
+import { useMoney, plural } from '../hooks';
 
 const expenseIcon = (c: string): IconName =>
   /flete|env[ií]o|via|nafta|combust|peaje/i.test(c) ? 'truck' : /luz|electric|gas|agua|internet|servicio/i.test(c) ? 'sparkle' : /embal|etiqu/i.test(c) ? 'tag' : /mercad|compra|insumo|madera|pintura/i.test(c) ? 'box' : 'receipt';
@@ -45,15 +45,10 @@ export default function ExpensesPanel() {
       <PageHeader
         title="Panel de gastos"
         subtitle={<>Controlá cuánto gastás por día, quincena o mes. <InternalLabel text="Interno" /></>}
-        actions={
-          <Link className="btn btn-primary fab" to="/costos/gastos/nuevo">
-            <Icon name="plus" />
-            <span className="fab-text">Agregar gasto</span>
-          </Link>
-        }
       />
       <div className="row-between" style={{ marginBottom: 12, gap: 12, flexWrap: 'wrap' }}>
         <Segmented<PeriodKind>
+          hideLegend
           legend="Período"
           value={kind}
           onChange={(v) => set({ periodo: v === 'mes' ? '' : v })}
@@ -94,7 +89,7 @@ export default function ExpensesPanel() {
               <div className="value num" data-testid="exp-daily">
                 {money(view.daily)}
               </div>
-              <div className="context">Sobre {view.days} día(s)</div>
+              <div className="context">Sobre {plural(view.days, 'día', 'días')}</div>
             </div>
             <div className="card kpi">
               <div className="label">
@@ -147,6 +142,10 @@ export default function ExpensesPanel() {
               </ul>
             </>
           )}
+          <Link className="btn btn-accent btn-block" to="/costos/gastos/nuevo" style={{ marginTop: 14 }}>
+            <Icon name="plus" />
+            Agregar gasto
+          </Link>
         </>
       )}
     </>

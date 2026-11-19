@@ -7,7 +7,7 @@ import { D, sum } from '../../domain/money';
 import { marginPct } from '../../domain/pricing';
 import { effectiveQuote, quoteTotals } from '../../domain/quote';
 import { InternalLabel, PageHeader, SelectField, TextField } from '../components/ui';
-import { pct, useMoney } from '../hooks';
+import { pct, useMoney, plural } from '../hooks';
 
 type Range = 'month' | 'prev' | '90' | 'year' | 'custom';
 
@@ -173,7 +173,7 @@ export default function Stats() {
                 <dd className="total">{money(s.ledger.total)}</dd>
               </dl>
               <p className="small muted" style={{ marginTop: 8 }}>
-                {s.purchasesTotal} compra(s) en el período.
+                {plural(s.purchasesTotal, 'compra', 'compras')} en el período.
               </p>
             </section>
           </div>

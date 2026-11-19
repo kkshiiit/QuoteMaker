@@ -11,9 +11,10 @@ import { saleStatus, summarizeSales } from '../../domain/sales';
 import { productStock, stockBalances } from '../../domain/stock';
 import { APP_NAME, Icon, Wordmark } from '../components/Icon';
 import { CategoryTiles } from '../components/CategoryTiles';
+import { BackupReminder } from '../components/BackupReminder';
 import { Swatch } from '../components/StockPanel';
 import { InternalLabel, PageHeader, StatusBadge } from '../components/ui';
-import { useMoney, usePrefs, useSettings, pct } from '../hooks';
+import { useMoney, usePrefs, useSettings, pct, plural } from '../hooks';
 import { marginPct } from '../../domain/pricing';
 
 export default function Dashboard() {
@@ -61,9 +62,10 @@ export default function Dashboard() {
     const salesMonth = summarizeSales(data.sales.filter((x) => x.date >= monthStart));
     const toDeliver = data.sales.filter((x) => saleStatus(x) === 'confirmado');
     const lowStock = activeProducts.filter((p) => p.trackStock && productStock(p, data.balances).low);
+    const firstDataAt = [...data.products, ...data.sales, ...data.quotes].map((x) => x.createdAt).sort()[0] ?? null;
     const favs = activeProducts.filter((p) => p.favorite);
     const favorites = (favs.length ? favs : [...activeProducts].sort((a, b) => Number(!!b.image) - Number(!!a.image) || b.updatedAt.localeCompare(a.updatedAt))).slice(0, 6);
-    return { toDeliver, lowStock, favorites, salesMonth, noCost, stale, sent, sentTotal, pastValidity, acceptedMonth, accRevenue, accProfit, unassigned, monthPurchases, activity, activeProducts };
+    return { firstDataAt, toDeliver, lowStock, favorites, salesMonth, noCost, stale, sent, sentTotal, pastValidity, acceptedMonth, accRevenue, accProfit, unassigned, monthPurchases, activity, activeProducts };
   }, [data, settings.costStaleDays]);
 
   if (!data || !view) return <p role="status">Cargando…</p>;
@@ -92,7 +94,7 @@ export default function Dashboard() {
       />
 
       {data.products.length === 0 && data.quotes.length === 0 && data.sales.length === 0 && (
-        <section className="card glass intro-hero" aria-labelledby="intro-h" style={{ marginBottom: 16 }}>
+        <section className="card intro-hero" aria-labelledby="intro-h" style={{ marginBottom: 16 }}>
           <div className="intro-hero-head">
             <Wordmark size={72} />
             <div>
@@ -179,6 +181,8 @@ export default function Dashboard() {
         </section>
       )}
 
+      <BackupReminder firstDataAt={view.firstDataAt} />
+
       {data.products.length > 0 && (
         <section aria-label="Catálogo" style={{ marginTop: 4 }}>
           <form
@@ -192,10 +196,10 @@ export default function Dashboard() {
             <label htmlFor="home-q" className="sr-only">
               Buscar productos
             </label>
-            <input id="home-q" className="input" type="search" placeholder="Buscar productos, código o categoría…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input id="home-q" className="input" type="search" placeholder="Buscar productos…" value={search} onChange={(e) => setSearch(e.target.value)} />
           </form>
           <CategoryTiles categories={data.categories} value="" all={false} onChange={(id) => navigate(`/productos?categoria=${id}`)} />
-          <div className="row-between" style={{ marginTop: 8 }}>
+          <div className="section-head">
             <h2 id="fav-h">Productos destacados</h2>
             <Link to={view.favorites.some((p) => p.favorite) ? '/productos?filtro=favoritos' : '/productos'} className="small">
               Ver todo →
@@ -234,7 +238,7 @@ export default function Dashboard() {
             <div className="label">Ventas del mes</div>
             <div className="value">{money(view.salesMonth.total)}</div>
             <div className="context">
-              {view.salesMonth.count} venta(s) · local {view.salesMonth.byChannel.presencial.count} · online {view.salesMonth.byChannel.online.count}
+              {plural(view.salesMonth.count, 'venta', 'ventas')} · local {view.salesMonth.byChannel.presencial.count} · online {view.salesMonth.byChannel.online.count}
             </div>
           </Link>
           <Link className="kpi" to="/ventas?estado=pendientes">

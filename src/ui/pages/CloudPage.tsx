@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { plural } from '../hooks';
 import { useState } from 'react';
 import { db } from '../../data/db';
 import { resolveConflict } from '../../sync/engine';
@@ -70,7 +71,7 @@ export default function CloudPage() {
               credenciales públicas. Ver <code>docs/INSTALLATION.md</code> § Supabase.
             </p>
             <p className="small muted" style={{ marginTop: 8 }}>
-              {s.counts.local} registro(s) guardados sólo en este dispositivo. Exportá respaldos periódicamente.
+              {plural(s.counts.local, 'registro', 'registros')} guardados sólo en este dispositivo. Exportá respaldos periódicamente.
             </p>
           </>
         ) : !s.userEmail ? (

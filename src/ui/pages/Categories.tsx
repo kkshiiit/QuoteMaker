@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { plural } from '../hooks';
 import { useState } from 'react';
 import { db } from '../../data/db';
 import { createBase, putRecord } from '../../data/repo';
@@ -58,7 +59,7 @@ export default function Categories() {
               <div className="grow field">
                 <label htmlFor={`c-${c.id}`} className="sr-only">Nombre de la categoría</label>
                 <input id={`c-${c.id}`} className="input" value={editing[c.id] ?? c.name} onChange={(e) => setEditing({ ...editing, [c.id]: e.target.value })} disabled={c.archived} />
-                <span className="small muted">{counts?.get(c.id) ?? 0} producto(s){c.archived ? ' · Archivada' : ''}</span>
+                <span className="small muted">{plural(counts?.get(c.id) ?? 0, 'producto', 'productos')}{c.archived ? ' · Archivada' : ''}</span>
               </div>
               {editing[c.id] !== undefined && <button className="btn btn-sm" onClick={() => rename(c)}>Guardar</button>}
               <button className="btn btn-sm btn-ghost" onClick={() => putRecord('categories', { ...c, archived: !c.archived })}>{c.archived ? 'Restaurar' : 'Archivar'}</button>
@@ -68,7 +69,7 @@ export default function Categories() {
                 title="Eliminar"
                 onClick={async () => {
                   const n = counts?.get(c.id) ?? 0;
-                  if (!(await confirm('Eliminar categoría', `Se borra «${c.name}».${n ? ` Sus ${n} producto(s) quedan sin categoría (no se borran).` : ''} Esta acción no se puede deshacer.`, 'Eliminar', true))) return;
+                  if (!(await confirm('Eliminar categoría', `Se borra «${c.name}».${n ? ` Sus ${plural(n, 'producto', 'productos')} quedan sin categoría (no se borran).` : ''} Esta acción no se puede deshacer.`, 'Eliminar', true))) return;
                   await deleteCategory(c.id);
                   toast('Categoría eliminada');
                 }}
