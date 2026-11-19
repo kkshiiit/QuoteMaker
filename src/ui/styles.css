@@ -3661,3 +3661,14 @@ textarea.input {
 .num {
   white-space: nowrap;
 }
+.toolbar > .check,
+.toolbar > div:has(> .check),
+.toolbar > label.check {
+  grid-column: 1 / -1;
+}
+.check {
+  white-space: nowrap;
+}
+.check span {
+  white-space: normal;
+}
